@@ -20,7 +20,7 @@
         </script>
 
         <!-- Yandex.Metrika counter -->
-        <script type="text/javascript">
+        <script>
             (function(m,e,t,r,i,k,a){
                 m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
                 m[i].l=1*new Date();
@@ -30,9 +30,7 @@
 
             ym(104218170, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
         </script>
-        <noscript><div><img src="https://mc.yandex.ru/watch/104218170"
-                    style="position:absolute; left:-9999px;"
-                    alt /></div></noscript>
+
         <!-- /Yandex.Metrika counter -->
 
         <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
@@ -48,7 +46,7 @@
             content="Портфолио фронтенд-разработчика | Максим Парфенев">
         <meta property="og:description"
             content="Примеры работ: адаптивная вёрстка, HTML, CSS, JavaScript.">
-        <meta property="og:image" content="images/preview.png">
+        <meta property="og:image" content="https://www.maxpar.ru/images/og_preview.png">
         <meta property="og:type" content="website">
         <meta property="og:locale" content="ru_RU">
 
@@ -64,6 +62,11 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
+        <noscript>
+            <div>
+                <img src="https://mc.yandex.ru/watch/104218170" style="position:absolute; left:-9999px;" alt="">
+            </div>
+        </noscript>
         <header class="header">
             <div class="header__menu">
                 <!-- Левое меню -->
@@ -117,14 +120,14 @@
                 <img src="/images/avatar.png" alt="Моя фотография">
             </div>
             <div class="header__info">
-                <h2 class="header__info-titel">Максим Парфеньев</h2>
+                <h2 class="header__info-title">Максим Парфеньев</h2>
                 <p class="header__info-text">Современные адаптивные сайты на
                     HTML, CSS, JavaScript, Tilda.</p>
                 <p class="header__info-text">Чистый код внимание к
                     деталям.</p>
             </div>
             <div class="header__info-mobile">
-                <h2 class="header__info-titel-mobile">Максим Парфеньев</h2>
+                <h2 class="header__info-title-mobile">Максим Парфеньев</h2>
                 <p class="header__info-text-mobile">Современные адаптивные
                     сайты</p>
                 <p class="header__info-text-mobile">на HTML, CSS, JavaScript,
@@ -238,7 +241,7 @@
                 </div>
             </section>
             <section class="about" id="about">
-                <h2 class="about__titel">Обо мне</h2>
+                <h2 class="about__title">Обо мне</h2>
                 <div class="about__desc">
                     <p class="about__desc-text">Меня зовут Максим и я
                         фронтенд-разработчик. Специализируюсь на HTML, CSS/
@@ -252,7 +255,7 @@
                 </div>
             </section>
             <section class="testimonials" id="testimonials">
-                <h2 class="testimonials__titel">Отзывы</h2>
+                <h2 class="testimonials__title">Отзывы</h2>
                 <p class="testimonials__desc">У меня пока нет отзывов, потому
                     что я только начинаю путь во фронтенд-разработке. Но именно
                     вы можете стать первым человеком, который доверит мне проект
@@ -272,7 +275,7 @@
 
         <footer class="footer">
             <div class="footer__contacts" id="contacts">
-                <h2 class="footer__contacts-titel">Контакты</h2>
+                <h2 class="footer__contacts-title">Контакты</h2>
                 <p class="footer__contacts-desc">Email: <a
                         class="footer__contacts-link"
                         href="mailto:maxpar.fed@gmail.com">maxpar.fed@gmail.com</a></p>

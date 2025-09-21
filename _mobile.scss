@@ -162,6 +162,7 @@
     top: -1000%;
     right: 0;
   }
+  
 }
 
 /*  650px */
@@ -218,7 +219,7 @@
   .header__info-mobile {
     display: block;
   }
-  .header__info-titel-mobile {
+  .header__info-title-mobile {
     font-size: 24px;
     font-weight: 300;
   }
@@ -295,7 +296,7 @@
     justify-content: center;
     margin-bottom: 40px;
   }
-  .services__item-title, .project__title, .about__titel {
+  .services__item-title, .project__title, .about__title {
     font-size: 16px;
     font-weight: 500;
     margin-bottom: 20px;
@@ -329,7 +330,7 @@
     font-weight: 200;
     margin-bottom: 10px;
   }
-  .about .about__titel {
+  .about .about__title {
     text-align: center;
     font-size: 24px;
     font-weight: 500;
@@ -340,7 +341,7 @@
     width: 60%;
     margin-top: 20px;
   }
-  .testimonials .testimonials__titel {
+  .testimonials .testimonials__title {
     font-size: 24px;
     margin-bottom: 20px;
   }

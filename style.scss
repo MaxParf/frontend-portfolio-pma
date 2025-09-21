@@ -24,10 +24,6 @@ body {
 .header {
   position: relative;
   text-align: center;
-  // background-image: url("images/header.png");
-  // background-size: cover;
-  // background-position: center;
-  // background-repeat: no-repeat;
   height: 600px;
   margin-bottom: 350px;
 }
@@ -64,7 +60,7 @@ body {
   padding-top: 150px;
 }
 
-.header__info-titel {
+.header__infole {
   font-size: 32px;
   font-weight: 300;
 }
@@ -87,7 +83,6 @@ body {
   background-repeat: no-repeat;
   height: auto;
   min-height: 600px;
-  // width: 100vw;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -189,10 +184,16 @@ body {
   display: block;
   padding: 10px;
   text-decoration: none;
+  olor: #0e6ca4;
+  transition: color 0.2s;
 }
 
 .header__burger-menu.active {
   display: block;
+}
+
+.header__burger-menu a:hover {
+  color: #ff4d4f;
 }
 
 /* Разделитель блоков */
@@ -242,7 +243,7 @@ body {
 
 .services__item-title,
 .project__title,
-.about__titel {
+.about__title {
   font-size: 20px;
   font-weight: 500;
   margin-bottom: 20px;
@@ -357,7 +358,7 @@ body {
   align-items: center;
   max-width: 1000px;
 }
-.about .about__titel {
+.about .about__title {
   text-align: center;
   font-size: 38px;
   font-weight: 500;
@@ -394,7 +395,7 @@ body {
   align-items: center;
   max-width: 1000px;
 }
-.testimonials .testimonials__titel {
+.testimonials .testimonials__title {
   text-align: center;
   font-size: 38px;
   font-weight: 500;
@@ -452,7 +453,7 @@ body {
   margin-bottom: 100px;
 }
 
-.footer__contacts-titel {
+.footer__contacts-title {
   font-size: 20px;
   font-weight: 500;
   color: #000000;

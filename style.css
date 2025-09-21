@@ -60,7 +60,7 @@ body {
   padding-top: 150px;
 }
 
-.header__info-titel {
+.header__infole {
   font-size: 32px;
   font-weight: 300;
 }
@@ -189,10 +189,16 @@ body {
   display: block;
   padding: 10px;
   text-decoration: none;
+  olor: #0e6ca4;
+  transition: color 0.2s;
 }
 
 .header__burger-menu.active {
   display: block;
+}
+
+.header__burger-menu a:hover {
+  color: #ff4d4f;
 }
 
 /* Разделитель блоков */
@@ -241,7 +247,7 @@ body {
 
 .services__item-title,
 .project__title,
-.about__titel {
+.about__title {
   font-size: 20px;
   font-weight: 500;
   margin-bottom: 20px;
@@ -358,7 +364,7 @@ body {
   max-width: 1000px;
 }
 
-.about .about__titel {
+.about .about__title {
   text-align: center;
   font-size: 38px;
   font-weight: 500;
@@ -397,7 +403,7 @@ body {
   max-width: 1000px;
 }
 
-.testimonials .testimonials__titel {
+.testimonials .testimonials__title {
   text-align: center;
   font-size: 38px;
   font-weight: 500;
@@ -457,7 +463,7 @@ body {
   margin-bottom: 100px;
 }
 
-.footer__contacts-titel {
+.footer__contacts-title {
   font-size: 20px;
   font-weight: 500;
   color: #000000;
@@ -701,7 +707,7 @@ body {
   .header__info-mobile {
     display: block;
   }
-  .header__info-titel-mobile {
+  .header__info-title-mobile {
     font-size: 24px;
     font-weight: 300;
   }
@@ -773,7 +779,7 @@ body {
     justify-content: center;
     margin-bottom: 40px;
   }
-  .services__item-title, .project__title, .about__titel {
+  .services__item-title, .project__title, .about__title {
     font-size: 16px;
     font-weight: 500;
     margin-bottom: 20px;
@@ -807,7 +813,7 @@ body {
     font-weight: 200;
     margin-bottom: 10px;
   }
-  .about .about__titel {
+  .about .about__title {
     text-align: center;
     font-size: 24px;
     font-weight: 500;
@@ -818,7 +824,7 @@ body {
     width: 60%;
     margin-top: 20px;
   }
-  .testimonials .testimonials__titel {
+  .testimonials .testimonials__title {
     font-size: 24px;
     margin-bottom: 20px;
   }

@@ -20,7 +20,7 @@
         </script>
 
         <!-- Yandex.Metrika counter -->
-        <script type="text/javascript">
+        <script>
             (function(m,e,t,r,i,k,a){
                 m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
                 m[i].l=1*new Date();
@@ -30,9 +30,7 @@
 
             ym(104218170, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
         </script>
-        <noscript><div><img src="https://mc.yandex.ru/watch/104218170"
-                    style="position:absolute; left:-9999px;"
-                    alt /></div></noscript>
+
         <!-- /Yandex.Metrika counter -->
 
         <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
@@ -48,7 +46,8 @@
             content="Frontend Developer Portfolio | Maksim Parfenev">
         <meta property="og:description"
             content="Examples of work: responsive design, HTML, CSS, JavaScript.">
-        <meta property="og:image" content="images/preview.png">
+        <meta property="og:image"
+            content="https://www.maxpar.ru/images/og_preview.png">
         <meta property="og:type" content="website">
         <meta property="og:locale" content="en_US">
 
@@ -64,6 +63,12 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
+        <noscript>
+            <div>
+                <img src="https://mc.yandex.ru/watch/104218170"
+                    style="position:absolute; left:-9999px;" alt>
+            </div>
+        </noscript>
         <header class="header">
             <div class="header__menu">
                 <!-- Левое меню -->
@@ -115,17 +120,17 @@
 
             <!-- аватар -->
             <div class="header__avatar">
-                <img src="/images/avatar.png" alt="Моя фотография">
+                <img src="/images/avatar.png" alt="My Photo">
             </div>
             <div class="header__info">
-                <h2 class="header__info-titel">Maxim Parfeniev</h2>
+                <h2 class="header__info-title">Maxim Parfeniev</h2>
                 <p class="header__info-text">Creating modern, responsive
                     websites with HTML, CSS, JavaScript, Tilda,</p>
                 <p class="header__info-text">focusing on clean code and
                     attention to detail.</p>
             </div>
             <div class="header__info-mobile">
-                <h2 class="header__info-titel-mobile">Maxim Parfeniev</h2>
+                <h2 class="header__info-title-mobile">Maxim Parfeniev</h2>
                 <p class="header__info-text-mobile">Creating modern, responsive
                     websites</p>
                 <p class="header__info-text-mobile">with HTML, CSS, JavaScript,
@@ -214,7 +219,7 @@
                                 href="http://www.maxpar.ru/furniture_store/index.html"
                                 target="_blank">
                                 <img src="/images/furniture_store.png"
-                                    alt="Furniture Online Store">
+                                    alt="Furniture Online Store Website">
                             </a>
                         </div>
                     </div>
@@ -254,7 +259,7 @@
 
             </section>
             <section class="about" id="about">
-                <h2 class="about__titel">About Me</h2>
+                <h2 class="about__title">About Me</h2>
                 <div class="about__desc">
                     <p class="about__desc-text">I'm Maxim, a frontend developer
                         with expertise in HTML, CSS/SCSS, JavaScript, and
@@ -268,7 +273,7 @@
                 </div>
             </section>
             <section class="testimonials" id="testimonials">
-                <h2 class="testimonials__titel">Testimonials</h2>
+                <h2 class="testimonials__title">Testimonials</h2>
                 <p class="testimonials__desc"> don’t have testimonials yet, as
                     I’m just starting my journey in front-end development. But
                     you can be the very first person to trust me with a project
@@ -286,7 +291,7 @@
                 </main>
                 <footer class="footer" id="contacts">
                     <div class="footer__contacts">
-                        <h2 class="footer__contacts-titel">Contact</h2>
+                        <h2 class="footer__contacts-title">Contact</h2>
                         <p class="footer__contacts-desc">Email: <a
                                 class="footer__contacts-link"
                                 href="mailto:maxpar.fed@gmail.com">maxpar.fed@gmail.com</a></p>
