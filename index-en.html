@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Frontend Developer Portfolio | Maksim Parfenev</title>
+        <meta name="description"
+            content="Portfolio of frontend developer Maksim Parfenev. HTML, CSS, JavaScript, responsive design, and modern web technologies.">
+
+        <!-- Google tag (gtag.js) -->
+        <script async
+            src="https://www.googletagmanager.com/gtag/js?id=G-STJSYF0ZTP"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-STJSYF0ZTP');
+        </script>
+
+        <!-- Yandex.Metrika counter -->
+        <script type="text/javascript">
+            (function(m,e,t,r,i,k,a){
+                m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+                m[i].l=1*new Date();
+                for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+                k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+            })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=104218170', 'ym');
+
+            ym(104218170, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+        </script>
+        <noscript><div><img src="https://mc.yandex.ru/watch/104218170"
+                    style="position:absolute; left:-9999px;"
+                    alt /></div></noscript>
+        <!-- /Yandex.Metrika counter -->
+
+        <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
+        <link rel="icon" type="image/png" sizes="32x32"
+            href="/images/favicon/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16"
+            href="/images/favicon/favicon-16x16.png">
+        <link rel="apple-touch-icon" sizes="192x192"
+            href="/images/favicon/android-chrome-192x192.png">
+        <link rel="manifest" href="/images/favicon/site.webmanifest">
+
+        <meta property="og:title"
+            content="Frontend Developer Portfolio | Maksim Parfenev">
+        <meta property="og:description"
+            content="Examples of work: responsive design, HTML, CSS, JavaScript.">
+        <meta property="og:image" content="images/preview.png">
+        <meta property="og:type" content="website">
+        <meta property="og:locale" content="en_US">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+            rel="stylesheet">
+
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <header class="header">
+            <div class="header__menu">
+                <!-- Левое меню -->
+                <nav class="header__menu__nav header__menu__nav--left">
+                    <a class="header__menu__link"
+                        href="http://www.maxpar.ru/">Home</a>
+                    <a class="header__menu__link" href="#services">Services</a>
+                    <a class="header__menu__link" href="#projects">Projects</a>
+                </nav>
+                <!-- Заголовок в меню -->
+                <div class="header__title-block">
+                    <h1 class="header__title">Frontend Developer</h1>
+                </div>
+                <!-- Правое меню -->
+                <nav class="header__menu__nav header__menu__nav--right">
+                    <a class="header__menu__link" href="#about">About Me</a>
+                    <a class="header__menu__link"
+                        href="#testimonials">Testimonials</a>
+                    <a class="header__menu__link" href="#contacts">Contact</a>
+                </nav>
+            </div>
+            <!-- Заголовок на фоне -->
+            <div class="header__title-bg">
+                <h1 class="header__title-bg-white">Frontend Developer</h1>
+            </div>
+            <!-- Бургер меню -->
+            <div class="header__burger">
+                <span></span>
+                <span></span>
+                <span></span>
+                <div class="header__burger-menu">
+                    <a class="header__burger__link"
+                        href="#services">Services</a>
+                    <a class="header__burger__link"
+                        href="#projects">Projects</a>
+                    <a class="header__burger__link" href="#about">About Me</a>
+                    <a class="header__burger__link"
+                        href="#testimonials">Testimonials</a>
+                    <a class="header__burger__link" href="#contacts">Contact</a>
+                </div>
+            </div>
+
+            <div class="header__bg">
+                <nav class="header__language">
+                    <a class="header__language-link" href="index.html">RU</a>
+                    <a class="header__language-link" href="index-en.html">EN</a>
+                </nav>
+            </div>
+
+            <!-- аватар -->
+            <div class="header__avatar">
+                <img src="/images/avatar.png" alt="Моя фотография">
+            </div>
+            <div class="header__info">
+                <h2 class="header__info-titel">Maxim Parfeniev</h2>
+                <p class="header__info-text">Creating modern, responsive
+                    websites with HTML, CSS, JavaScript, Tilda,</p>
+                <p class="header__info-text">focusing on clean code and
+                    attention to detail.</p>
+            </div>
+            <div class="header__info-mobile">
+                <h2 class="header__info-titel-mobile">Maxim Parfeniev</h2>
+                <p class="header__info-text-mobile">Creating modern, responsive
+                    websites</p>
+                <p class="header__info-text-mobile">with HTML, CSS, JavaScript,
+                    Tilda,</p>
+                <p class="header__info-text-mobile">focusing on clean code and
+                    attention to detail.</p>
+            </div>
+
+        </header>
+
+        <main class="main-content">
+            <section class="services" id="services">
+                <h2 class="services__title">Frontend Development Services</h2>
+                <p class="services__description">JS, HTML, CSS, Tilda, Figma,
+                    Photoshop, responsive design and web layouts.</p>
+                <div class="services__items">
+                    <div class="services__item">
+                        <h3 class="services__item-title">Responsive Web Page
+                            Development</h3>
+                        <p class="services__item-text">Creating user-friendly
+                            and functional web pages optimized for all devices
+                            and screen sizes.
+                        </p>
+                    </div>
+                    <div class="services__item">
+                        <h3 class="services__item-title">HTML & CSS Layout</h3>
+                        <p class="services__item-text">Building web page
+                            structures with HTML and styling them with CSS to
+                            achieve the desired visual effect.
+                        </p>
+                    </div>
+                    <div class="services__item">
+                        <h3 class="services__item-title">JavaScript
+                            Programming</h3>
+                        <p class="services__item-text">Developing interactive
+                            elements and functionality for web pages using
+                            JavaScript.
+                        </p>
+                    </div>
+                    <div class="services__item">
+                        <h3 class="services__item-title">Tilda Website
+                            Development</h3>
+                        <p class="services__item-text">Quickly creating websites
+                            using the Tilda platform for fast and effective
+                            project launches.
+                        </p>
+                    </div>
+                    <div class="services__item">
+                        <h3 class="services__item-title">Graphic Design in
+                            Photoshop</h3>
+                        <p class="services__item-text">Designing graphic
+                            elements and illustrations for web projects using
+                            Adobe Photoshop.
+                        </p>
+                    </div>
+                    <div class="services__item">
+                        <h3 class="services__item-title">Design & Prototyping in
+                            Figma</h3>
+                        <p class="services__item-text">Creating prototypes,
+                            design systems, and user interfaces for web projects
+                            in Figma.
+                        </p>
+                    </div>
+                    <div class="services__item">
+                        <h3 class="services__item-title">Support and
+                            Updates</h3>
+                        <p class="services__item-text">Technical support and
+                            regular updates by agreement.</p>
+                    </div>
+                </div>
+            </section>
+            <section class="portfolio" id="portfolio">
+                <section class="projects" id="projects">
+                    <h2 class="projects__title">Projects</h2>
+
+                    <!-- Мебельный магазин -->
+                    <div class="project project--item-1">
+                        <div class="project__content">
+                            <h3 class="project__title">Furniture Online
+                                Store</h3>
+                            <p class="project__desc">Website built using CSS
+                                Grid, Flexbox, and responsive design.</p>
+                        </div>
+                        <div class="project__image">
+                            <a
+                                href="http://www.maxpar.ru/furniture_store/index.html"
+                                target="_blank">
+                                <img src="/images/furniture_store.png"
+                                    alt="Furniture Online Store">
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Кафе зернышко -->
+                    <div class="project project--item-2">
+                        <div class="project__content">
+                            <h3 class="project__title">Grain Cafe Website</h3>
+                            <p class="project__desc">Responsive layout, Figma
+                                design, and custom animations.</p>
+                        </div>
+                        <div class="project__image">
+                            <a href="http://www.maxpar.ru/cafe_grain/"
+                                target="_blank">
+                                <img src="/images/cafe_grain.png"
+                                    alt="Cafe Website">
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Мини игры -->
+                    <div class="project project--item-3">
+                        <div class="project__content">
+                            <h3 class="project__title">Mini Games Website</h3>
+                            <p class="project__desc">Interactive elements with
+                                JavaScript, mobile-friendly layout.</p>
+                        </div>
+                        <div class="project__image">
+                            <a href="http://www.maxpar.ru/games/"
+                                target="_blank">
+                                <img src="/images/mini_games.png"
+                                    alt="Mini Games Website">
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+            </section>
+            <section class="about" id="about">
+                <h2 class="about__titel">About Me</h2>
+                <div class="about__desc">
+                    <p class="about__desc-text">I'm Maxim, a frontend developer
+                        with expertise in HTML, CSS/SCSS, JavaScript, and
+                        responsive design. I help create modern websites from
+                        scratch and work confidently with Figma layouts. Before
+                        IT, I worked in tourism and video production, traveled
+                        extensively, and managed projects — this background
+                        helps me better understand clients’ needs and organize
+                        the workflow effectively.</p>
+                    <div class="about__avatar"></div>
+                </div>
+            </section>
+            <section class="testimonials" id="testimonials">
+                <h2 class="testimonials__titel">Testimonials</h2>
+                <p class="testimonials__desc"> don’t have testimonials yet, as
+                    I’m just starting my journey in front-end development. But
+                    you can be the very first person to trust me with a project
+                    and leave your feedback here. I’m open to new challenges,
+                    approach every task with responsibility, and always strive
+                    to deliver the highest quality results.</p>
+                <div class="testimonial-placeholder">
+                    <div class="testimonial-placeholder__image"></div>
+                    <div class="testimonial-placeholder__text">
+                        <p>Here could be your genuine gratitude and smile.<p>
+                                <p>Could this be our chance?</p>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+                <footer class="footer" id="contacts">
+                    <div class="footer__contacts">
+                        <h2 class="footer__contacts-titel">Contact</h2>
+                        <p class="footer__contacts-desc">Email: <a
+                                class="footer__contacts-link"
+                                href="mailto:maxpar.fed@gmail.com">maxpar.fed@gmail.com</a></p>
+                        <p class="footer__contacts-desc">Telegram: <a
+                                class="footer__contacts-link"
+                                href="https://t.me/ParMaxAlx">@ParMaxAlx</a></p>
+                    </div>
+                    <!-- <p>&copy; 2025 Maxim Parfeniev</p> -->
+                </footer>
+                <button class="scroll-to-top" id="scrollToTop"
+                    aria-label="Наверх"><i
+                        class="fa-solid fa-chevron-up"></i></button>
+                <script src="script.js"></script>
+            </body>
+        </html>
