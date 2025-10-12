@@ -267,26 +267,21 @@ body {
   margin-bottom: 40px;
 }
 
-.project--item-1 {
-  display: flex;
-  align-items: center;
-  margin-bottom: 60px;
-  gap: 30px;
-}
-
-.project--item-2 {
-  display: flex;
-  align-items: center;
-  margin-bottom: 60px;
-  gap: 30px;
-  flex-direction: row-reverse;
-}
-
+.project--item-1,
 .project--item-3 {
   display: flex;
   align-items: center;
   margin-bottom: 60px;
   gap: 30px;
+}
+
+.project--item-2,
+.project--item-4 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 60px;
+  gap: 30px;
+  flex-direction: row-reverse;
 }
 
 .project__desc {
