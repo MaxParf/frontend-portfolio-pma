@@ -1,27 +1,53 @@
-Портфолио Frontend-разработчика — Максима Парфенева
+# Frontend Portfolio - Maksim Parfeniev
 
-Это персональное портфолио фронтенд-разработчика, демонстрирующее мои навыки и проекты. Сайт показывает примеры адаптивной верстки, работу с HTML, CSS (SCSS) и JavaScript, включая интерактивные элементы и фильтры.
+A multilingual personal portfolio website built with HTML, SCSS, vanilla JavaScript, and a lightweight i18n system.
 
-Технологии:
+The site presents Maksim Parfeniev as a fullstack developer focused on React, TypeScript, Node.js/NestJS, real-world internal systems, and product prototypes.
 
-HTML5, CSS3, SCSS
+## Features
 
-JavaScript (Vanilla JS)
+- Responsive portfolio layout
+- English/Russian language switcher
+- Lightweight i18n dictionary with localStorage persistence
+- Featured project case studies
+- Real project screenshots
+- Accessible navigation and mobile menu
+- BEM-based CSS structure
+- SEO metadata and social preview assets
 
-Адаптивная верстка для мобильных и десктопных устройств
+## Tech Stack
 
-Использование Google Fonts и Font Awesome
+- HTML5
+- SCSS/CSS
+- Vanilla JavaScript
+- BEM methodology
+- Static hosting / GitHub Pages-ready structure
 
-Интеграция аналитики: Google Analytics и Yandex.Metrika
+## Project Structure
 
-Особенности:
+- `index.html` - main multilingual portfolio page
+- `i18n.js` - EN/RU translation dictionary and language switching logic
+- `script.js` - navigation and UI behavior
+- `style.scss` - SCSS source styles
+- `style.css` - compiled CSS used by the page
+- `_mobile.scss` - deprecated mobile partial kept as a note for the old structure
+- `images/projects/` - featured project screenshots
 
-Современный интерфейс с адаптивной сеткой
+## Featured Projects
 
-Анимации и интерактивные элементы
+- Construction Management Control Center / Центр управления строительством
+- FoodAI
 
-Примеры проектов с изображениями и описанием
+## Local Usage
 
-Дизайн вдохновлен проектами TILDA
+Open `index.html` directly in a browser or serve the folder with a local static server:
 
-Проект создан с целью демонстрации моих навыков фронтенд-разработки и может быть использован как пример для потенциальных работодателей.
+```bash
+python3 -m http.server 8080
+```
+
+Then open `http://localhost:8080/`.
+
+## Notes
+
+The old separate English page `index-en.html` is deprecated. It now redirects to the main multilingual `index.html` page.

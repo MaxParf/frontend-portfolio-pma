@@ -1,43 +1,39 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const burger = document.querySelector('.header__burger');
-  const menu = document.querySelector('.header__burger-menu');
-  
-  burger.addEventListener('click', () => {
-    menu.classList.toggle('active');
-    burger.classList.toggle('active');
-  });
-});
 document.addEventListener("DOMContentLoaded", () => {
-  const burger = document.querySelector(".header__burger");
-  const menu = document.querySelector(".header__menu");
+  const burger = document.querySelector(".site-header__burger");
+  const navigation = document.getElementById("site-navigation");
   const body = document.body;
   const scrollBtn = document.getElementById("scrollToTop");
-  const servicesSection = document.getElementById("services"); // якорь "Услуги"
+  const heroSection = document.getElementById("hero");
 
-  // Бургер-меню
-  if (burger) {
+  if (burger && navigation) {
     burger.addEventListener("click", () => {
-      burger.classList.toggle("active");
-      menu.classList.toggle("active");
-      body.classList.toggle("lock");
+      const isOpen = burger.getAttribute("aria-expanded") === "true";
+
+      burger.setAttribute("aria-expanded", String(!isOpen));
+      burger.classList.toggle("is-active", !isOpen);
+      navigation.classList.toggle("is-open", !isOpen);
+      body.classList.toggle("lock", !isOpen);
+    });
+
+    navigation.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        burger.setAttribute("aria-expanded", "false");
+        burger.classList.remove("is-active");
+        navigation.classList.remove("is-open");
+        body.classList.remove("lock");
+      });
     });
   }
 
-  // Кнопка наверх
-  if (scrollBtn && servicesSection) {
+  if (scrollBtn && heroSection) {
     window.addEventListener("scroll", () => {
-      const servicesTop = servicesSection.offsetTop;
-      if (window.scrollY >= servicesTop) {
-        scrollBtn.style.display = "flex";
-      } else {
-        scrollBtn.style.display = "none";
-      }
+      scrollBtn.style.display = window.scrollY > heroSection.offsetHeight ? "flex" : "none";
     });
 
     scrollBtn.addEventListener("click", () => {
       window.scrollTo({
         top: 0,
-        behavior: "smooth"
+        behavior: "smooth",
       });
     });
   }

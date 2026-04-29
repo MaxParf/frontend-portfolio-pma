@@ -1,39 +1,33 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>Портфолио Frontend-разработчика | Максим Парфенев</title>
+        <title>Fullstack Developer Portfolio | Maksim Parfeniev</title>
         <meta name="description"
-            content="Портфолио Frontend-разработчика Максима Парфенева. HTML, CSS, JavaScript, адаптивная вёрстка и современные веб-технологии.">
+            content="Portfolio of Maksim Parfeniev, a fullstack developer focused on React, TypeScript, Node.js, real-world systems, and product prototypes.">
 
-        <!-- Google tag (gtag.js) -->
-        <script async
-            src="https://www.googletagmanager.com/gtag/js?id=G-STJSYF0ZTP"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
+        <link rel="alternate" href="https://www.maxpar.ru/" hreflang="x-default">
+        <link rel="alternate" href="https://www.maxpar.ru/" hreflang="en">
+        <link rel="alternate" href="https://www.maxpar.ru/" hreflang="ru">
 
-            gtag('config', 'G-STJSYF0ZTP');
-        </script>
+        <link rel="stylesheet" href="style.css">
+        <link rel="preload" as="image" href="images/header.webp" fetchpriority="high">
 
-        <!-- Yandex.Metrika counter -->
-        <script>
-            (function(m,e,t,r,i,k,a){
-                m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-                m[i].l=1*new Date();
-                for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-                k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-            })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=104218170', 'ym');
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 
-            ym(104218170, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
-        </script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+            rel="stylesheet" media="print" onload="this.media='all'">
 
-        <!-- /Yandex.Metrika counter -->
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+            media="print" onload="this.media='all'">
 
-        <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/images/favicon/favicon.ico" type="image/x-icon">
         <link rel="icon" type="image/png" sizes="32x32"
             href="/images/favicon/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16"
@@ -43,270 +37,405 @@
         <link rel="manifest" href="/images/favicon/site.webmanifest">
 
         <meta property="og:title"
-            content="Портфолио фронтенд-разработчика | Максим Парфенев">
+            content="Fullstack Developer Portfolio | Maksim Parfeniev">
         <meta property="og:description"
-            content="Примеры работ: адаптивная вёрстка, HTML, CSS, JavaScript.">
+            content="React, TypeScript, Node.js, internal systems, and product prototypes.">
         <meta property="og:image"
-            content="https://www.maxpar.ru/images/og_preview.png">
+            content="https://www.maxpar.ru/images/og_preview.webp">
         <meta property="og:type" content="website">
-        <meta property="og:locale" content="ru_RU">
+        <meta property="og:locale" content="en_US">
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
-            rel="stylesheet">
-
-        <link rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-        <link rel="stylesheet" href="style.css">
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "Person",
+                "name": "Maksim Parfeniev",
+                "url": "https://www.maxpar.ru/",
+                "image": "https://www.maxpar.ru/images/avatar.webp",
+                "jobTitle": "Fullstack Developer",
+                "email": "maxpar.fed@gmail.com",
+                "knowsAbout": [
+                    "React",
+                    "TypeScript",
+                    "Node.js",
+                    "NestJS",
+                    "PostgreSQL",
+                    "Docker",
+                    "Product prototypes",
+                    "API integrations"
+                ],
+                "sameAs": [
+                    "https://www.linkedin.com/in/maksim-parfeniev-8a975b69/",
+                    "https://github.com/MaxParf",
+                    "https://t.me/ParMaxAlx"
+                ]
+            }
+        </script>
     </head>
     <body>
-        <noscript>
-            <div>
-                <img src="https://mc.yandex.ru/watch/104218170"
-                    style="position:absolute; left:-9999px;" alt>
-            </div>
-        </noscript>
-        <header class="header">
-            <div class="header__menu">
-                <!-- Левое меню -->
-                <nav class="header__menu__nav header__menu__nav--left">
-                    <a class="header__menu__link"
-                        href="http://www.maxpar.ru/">Главная</a>
-                    <a class="header__menu__link" href="#services">Услуги</a>
-                    <a class="header__menu__link" href="#projects">Проекты</a>
+        <header class="site-header">
+            <div class="container site-header__container">
+                <a class="site-header__logo" href="#hero" data-i18n="header.logo">Maksim Parfeniev</a>
+
+                <nav class="site-header__nav" id="site-navigation" aria-label="Primary navigation">
+                    <a class="site-header__nav-link" href="#featured-projects" data-i18n="nav.projects">Featured Projects</a>
+                    <a class="site-header__nav-link" href="#skills" data-i18n="nav.skills">Skills</a>
+                    <a class="site-header__nav-link" href="#services" data-i18n="nav.services">Services</a>
+                    <a class="site-header__nav-link" href="#about" data-i18n="nav.about">About</a>
+                    <a class="site-header__nav-link" href="#contact" data-i18n="nav.contact">Contact</a>
                 </nav>
-                <!-- Заголовок в меню -->
-                <div class="header__title-block">
-                    <h1 class="header__title">Frontend Разработчик</h1>
+
+                <div class="language-switcher" aria-label="Language switcher">
+                    <button type="button" class="language-switcher__button" data-lang="en" aria-pressed="true">EN</button>
+                    <button type="button" class="language-switcher__button" data-lang="ru" aria-pressed="false">RU</button>
                 </div>
-                <!-- Правое меню -->
-                <nav class="header__menu__nav header__menu__nav--right">
-                    <a class="header__menu__link" href="#about">Обо мне</a>
-                    <a class="header__menu__link"
-                        href="#testimonials">Отзывы</a>
-                    <a class="header__menu__link" href="#contacts">Контакты</a>
-                </nav>
-            </div>
-            <!-- Заголовок на фоне -->
-            <div class="header__title-bg">
-                <h1 class="header__title-bg-white">Frontend Разработчик</h1>
-            </div>
-            <!-- Бургер меню -->
-            <div class="header__burger">
-                <span></span>
-                <span></span>
-                <span></span>
-                <div class="header__burger-menu">
-                    <a class="header__burger__link" href="#services">Услуги</a>
-                    <a class="header__burger__link" href="#projects">Проекты</a>
-                    <a class="header__burger__link" href="#about">Обо мне</a>
-                    <a class="header__burger__link"
-                        href="#testimonials">Отзывы</a>
-                    <a class="header__burger__link"
-                        href="#contacts">Контакты</a>
-                </div>
-            </div>
 
-            <div class="header__bg">
-                <nav class="header__language">
-                    <a class="header__language-link" href="index.html">RU</a>
-                    <a class="header__language-link" href="index-en.html">EN</a>
-                </nav>
+                <button
+                    type="button"
+                    class="site-header__burger"
+                    aria-label="Open navigation menu"
+                    aria-controls="site-navigation"
+                    aria-expanded="false"
+                    data-i18n-aria-label="nav.openMenu">
+                    <span class="site-header__burger-line"></span>
+                    <span class="site-header__burger-line"></span>
+                    <span class="site-header__burger-line"></span>
+                </button>
             </div>
-
-            <!-- аватар -->
-            <div class="header__avatar">
-                <img src="/images/avatar.png" alt="Моя фотография">
-            </div>
-            <div class="header__info">
-                <h2 class="header__info-title">Максим Парфеньев</h2>
-                <p class="header__info-text">Современные адаптивные сайты на
-                    HTML, CSS, JavaScript, Tilda.</p>
-                <p class="header__info-text">Чистый код внимание к
-                    деталям.</p>
-            </div>
-            <div class="header__info-mobile">
-                <h2 class="header__info-title-mobile">Максим Парфеньев</h2>
-                <p class="header__info-text-mobile">Современные адаптивные
-                    сайты</p>
-                <p class="header__info-text-mobile">на HTML, CSS, JavaScript,
-                    Tilda.</p>
-                <p class="header__info-text-mobile">Чистый код внимание к
-                    деталям.</p>
-            </div>
-
         </header>
 
-        <main class="main-content">
-            <section class="services" id="services">
-                <h2 class="services__title">Услуги</h2>
-                <p class="services__description">JS, HTML, CSS, Tilda, Figma,
-                    Photoshop, адаптивная вёрстка и дизайн.
-                </p>
-                <div class="services__items">
-                    <div class="services__item">
-                        <h3 class="services__item-title">Разработка адаптивных
-                            веб-страниц</h3>
-                        <p class="services__item-text">Создание удобных и
-                            функциональных веб-страниц, оптимизированных для
-                            любых устройств.</p>
+        <main>
+            <section id="hero" class="hero">
+                <div class="hero__background" aria-hidden="true"></div>
+                <div class="container hero__container">
+                    <div class="hero__content">
+                        <p class="hero__eyebrow" data-i18n="hero.eyebrow">React / TypeScript / Node.js</p>
+                        <h1 class="hero__title" data-i18n="hero.title">Fullstack Developer building React, TypeScript and Node.js products</h1>
+                        <p class="hero__subtitle" data-i18n="hero.subtitle">I build real-world web applications, internal systems, and product prototypes with practical product thinking.</p>
+                        <div class="hero__actions">
+                            <a class="button button--primary" href="#featured-projects" data-i18n="hero.ctaProjects">View Featured Projects</a>
+                            <a class="button button--secondary" href="#contact" data-i18n="hero.ctaContact">Contact Me</a>
+                            <a class="button button--ghost" href="https://github.com/MaxParf" target="_blank" rel="noopener noreferrer" data-i18n="hero.ctaGithub">GitHub</a>
+                        </div>
                     </div>
-                    <div class="services__item">
-                        <h3 class="services__item-title">Верстка HTML и CSS</h3>
-                        <p class="services__item-text">Создание структуры
-                            страниц с использованием HTML и визуальная
-                            стилизация с CSS.</p>
-                    </div>
-                    <div class="services__item">
-                        <h3 class="services__item-title">Программирование на
-                            JavaScript</h3>
-                        <p class="services__item-text">Разработка интерактивных
-                            элементов и функционала веб-страниц.</p>
-                    </div>
-                    <div class="services__item">
-                        <h3 class="services__item-title">Работа с Tilda</h3>
-                        <p class="services__item-text">Быстрое создание
-                            веб-сайтов с использованием конструктора Tilda.</p>
-                    </div>
-                    <div class="services__item">
-                        <h3 class="services__item-title">Графический дизайн в
-                            Photoshop</h3>
-                        <p class="services__item-text">Создание графических
-                            элементов и иллюстраций для веб-проектов.</p>
-                    </div>
-                    <div class="services__item">
-                        <h3 class="services__item-title">Дизайн и
-                            прототипирование в Figma</h3>
-                        <p class="services__item-text">Создание прототипов,
-                            дизайн-систем и интерфейсов веб-проектов.</p>
-                    </div>
-                    <div class="services__item">
-                        <h3 class="services__item-title">Поддержка и
-                            обновление</h3>
-                        <p class="services__item-text">Техническая поддержка и
-                            регулярное обновление проекта по договорённости.</p>
+                    <div class="hero__media">
+                        <img class="hero__avatar" src="/images/avatar.webp" alt="Maksim Parfeniev" width="200" height="200" data-i18n-alt="hero.avatarAlt">
                     </div>
                 </div>
             </section>
-            <section class="projects" id="projects">
-                <h2 class="projects__title">Проекты</h2>
 
-                <!-- Мебельный магазин -->
-                <div class="project project--item-1">
-                    <div class="project__content">
-                        <h3 class="project__title">Интернет-магазин мебели</h3>
-                        <p class="project__desc">Сайт выполнен с использованием
-                            CSS Grid, Flexbox и адаптивного дизайна.</p>
+            <section id="featured-projects" class="featured-projects section">
+                <div class="container">
+                    <div class="section__header">
+                        <h2 class="section__title" data-i18n="featured.title">Featured Projects</h2>
+                        <p class="section__subtitle" data-i18n="featured.subtitle">Real systems and product prototypes that best represent my current engineering focus.</p>
                     </div>
-                    <div class="project__image">
-                        <a
-                            href="http://www.maxpar.ru/furniture_store/index.html"
-                            target="_blank">
-                            <img src="/images/furniture_store.png"
-                                alt="Интернет-магазин мебели">
-                        </a>
-                    </div>
-                </div>
 
-                <!-- Кафе Зернышко -->
-                <div class="project project--item-2">
-                    <div class="project__content">
-                        <h3 class="project__title">Сайт кафе «Зернышко»</h3>
-                        <p class="project__desc">Адаптивная вёрстка, дизайн в
-                            Figma, кастомные анимации.</p>
-                    </div>
-                    <div class="project__image">
-                        <a href="http://www.maxpar.ru/cafe_grain/"
-                            target="_blank">
-                            <img src="/images/cafe_grain.png"
-                                alt="Сайт кафе «Зернышко»">
-                        </a>
-                    </div>
-                </div>
+                    <div class="featured-projects__grid">
+                        <article class="project-card project-card--featured">
+                            <div class="project-card__content">
+                                <div class="project-card__meta">
+                                    <span class="project-card__type" data-i18n="projects.construction.type">Internal company management system</span>
+                                    <span class="project-card__status" data-i18n="projects.construction.status">Production</span>
+                                </div>
+                                <h3 class="project-card__title" data-i18n="projects.construction.title">Construction Management Control Center</h3>
+                                <p class="project-card__role" data-i18n="projects.construction.role">Solo Fullstack Developer (end-to-end development)</p>
+                                <p class="project-card__description" data-i18n="projects.construction.description">A fullstack internal company management system for handling employees, departments, construction objects, tasks, permissions, task lifecycle, file exchange and Mattermost corporate messenger integration. Built independently from architecture and data modeling to frontend, backend, infrastructure and production deployment.</p>
+                                <ul class="project-card__features">
+                                    <li data-i18n="projects.construction.features.0">Employees and departments management</li>
+                                    <li data-i18n="projects.construction.features.1">Company structure</li>
+                                    <li data-i18n="projects.construction.features.2">Construction objects management</li>
+                                    <li data-i18n="projects.construction.features.3">Task creation and control</li>
+                                    <li data-i18n="projects.construction.features.4">Task lifecycle</li>
+                                    <li data-i18n="projects.construction.features.5">Role-based access control (RBAC)</li>
+                                    <li data-i18n="projects.construction.features.6">File exchange within the system</li>
+                                    <li data-i18n="projects.construction.features.7">Mattermost integration</li>
+                                    <li data-i18n="projects.construction.features.8">Production deployment (Docker, Nginx, VPS)</li>
+                                </ul>
+                                <ul class="badge-list" aria-label="Construction Management technology stack">
+                                    <li>React</li>
+                                    <li>TypeScript</li>
+                                    <li>NestJS</li>
+                                    <li>PostgreSQL</li>
+                                    <li>TypeORM</li>
+                                    <li>Docker</li>
+                                    <li>Nginx</li>
+                                    <li>VPS</li>
+                                    <li>Mattermost</li>
+                                </ul>
+                                <p class="project-card__note" data-i18n="projects.construction.demoNote">Demo access available on request.</p>
+                                <div class="project-card__links">
+                                    <a href="https://github.com/MaxParf" target="_blank" rel="noopener noreferrer" data-i18n="projects.construction.links.github">GitHub</a>
+                                    <a href="#contact" data-i18n="projects.construction.links.demo">Demo available on request</a>
+                                </div>
+                                <div class="project-card__gallery">
+                                    <img class="project-card__image" src="images/projects/cus/cus-dashboard.png" alt="Admin dashboard overview" loading="lazy" decoding="async" width="3022" height="1898" data-i18n-alt="projects.construction.screens.dashboard">
+                                    <img class="project-card__image" src="images/projects/cus/cus-file-exchange.png" alt="File exchange system interface" loading="lazy" decoding="async" width="3024" height="1896" data-i18n-alt="projects.construction.screens.files">
+                                </div>
+                            </div>
+                        </article>
 
-                <!-- Мини Игры -->
-                <div class="project project--item-3">
-                    <div class="project__content">
-                        <h3 class="project__title">Сайт мини игр</h3>
-                        <p class="project__desc">Интерактивные элементы на
-                            JavaScript, верстка под мобильные устройства.</p>
-                    </div>
-                    <div class="project__image">
-                        <a href="http://www.maxpar.ru/games/" target="_blank">
-                            <img src="/images/mini_games.png"
-                                alt="Сайт Мини Игр">
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Домашняя пекарня -->
-                <div class="project project--item-4">
-                    <div class="project__content">
-                        <h3 class="project__title">Домашняя пекарня</h3>
-                        <p class="project__desc">Адаптивный сайт с собственной
-                            разработкой дизайна и структуры. Реализованы
-                            интерактивные элементы на JavaScript и навигация.</p>
-                    </div>
-                    <div class="project__image">
-                        <a href="http://www.maxpar.ru/home_bakery/"
-                            target="_blank">
-                            <img src="/images/home_bakery.png"
-                                alt="Bakery Website">
-                        </a>
+                        <article class="project-card project-card--featured">
+                            <div class="project-card__content">
+                                <div class="project-card__meta">
+                                    <span class="project-card__type" data-i18n="projects.foodai.category">Grocery intelligence / meal planning product prototype</span>
+                                    <span class="project-card__status" data-i18n="projects.foodai.status">Prototype</span>
+                                </div>
+                                <h3 class="project-card__title" data-i18n="projects.foodai.title">FoodAI</h3>
+                                <p class="project-card__role" data-i18n="projects.foodai.role">Founder, Product Owner & Solo Fullstack Developer</p>
+                                <p class="project-card__description" data-i18n="projects.foodai.description">A grocery intelligence and meal planning product prototype focused on helping users compare food options, understand value through protein-per-dollar logic, and build smarter shopping habits. Built independently from idea and product concept to mobile app architecture, UI flows, backend integration direction and landing page.</p>
+                                <ul class="project-card__features">
+                                    <li data-i18n="projects.foodai.features.0">Product comparison and protein-per-dollar logic</li>
+                                    <li data-i18n="projects.foodai.features.1">Saved comparisons and onboarding flow</li>
+                                    <li data-i18n="projects.foodai.features.2">Meal planning and grocery list concepts</li>
+                                    <li data-i18n="projects.foodai.features.3">React Native / Expo, Supabase, and Zustand architecture</li>
+                                    <li data-i18n="projects.foodai.features.4">FoodAI website / landing page and AI/API integration direction</li>
+                                </ul>
+                                <ul class="badge-list" aria-label="FoodAI technology stack">
+                                    <li>Expo</li>
+                                    <li>React Native</li>
+                                    <li>Supabase</li>
+                                    <li>Zustand</li>
+                                    <li>React</li>
+                                    <li>Vite</li>
+                                </ul>
+                                <div class="project-card__links">
+                                    <a href="https://github.com/MaxParf" target="_blank" rel="noopener noreferrer" data-i18n="projects.foodai.links.github">GitHub</a>
+                                    <a href="https://foodai.pro/" target="_blank" rel="noopener noreferrer" data-i18n="projects.foodai.links.website">App Website</a>
+                                </div>
+                                <div class="project-card__gallery project-card__gallery--mobile-screens">
+                                    <img class="project-card__image project-card__image--mobile-screen" src="images/projects/foodai/foodai-meal-plan.png" alt="Weekly meal plan with budget and nutrition targets" loading="lazy" decoding="async" width="787" height="1622" data-i18n-alt="projects.foodai.screens.plan">
+                                    <img class="project-card__image project-card__image--mobile-screen" src="images/projects/foodai/foodai-grocery-split.png" alt="Grocery list split by store with price optimization" loading="lazy" decoding="async" width="787" height="1622" data-i18n-alt="projects.foodai.screens.groceries">
+                                </div>
+                            </div>
+                        </article>
                     </div>
                 </div>
             </section>
-            <section class="about" id="about">
-                <h2 class="about__title">Обо мне</h2>
-                <div class="about__desc">
-                    <p class="about__desc-text">Меня зовут Максим и я
-                        фронтенд-разработчик. Специализируюсь на HTML, CSS/
-                        SCSS, JavaScript и адаптивной вёрстке. Помогаю создавать
-                        современные сайты с нуля и работаю с макетами Figma. До
-                        IT я работал в туризме и видеопроизводстве, много
-                        путешествовал и руководил проектами — этот опыт помогает
-                        мне лучше понимать задачи клиентов и организовывать
-                        процесс работы.</p>
-                    <div class="about__avatar"></div>
+
+            <section id="skills" class="skills section">
+                <div class="container">
+                    <div class="section__header">
+                        <h2 class="section__title" data-i18n="skills.title">Tech Stack / Skills</h2>
+                        <p class="section__subtitle" data-i18n="skills.subtitle">A practical stack for building interfaces, APIs, internal systems, and product prototypes.</p>
+                    </div>
+
+                    <div class="skills__grid">
+                        <article class="skills__group">
+                            <h3 data-i18n="skills.frontend">Frontend</h3>
+                            <ul class="badge-list">
+                                <li>React</li>
+                                <li>TypeScript</li>
+                                <li>JavaScript</li>
+                                <li>HTML</li>
+                                <li>CSS / SCSS</li>
+                                <li>Zustand</li>
+                            </ul>
+                        </article>
+                        <article class="skills__group">
+                            <h3 data-i18n="skills.backend">Backend & API</h3>
+                            <ul class="badge-list">
+                                <li>Node.js</li>
+                                <li>NestJS</li>
+                                <li>REST API</li>
+                                <li>TypeORM</li>
+                            </ul>
+                        </article>
+                        <article class="skills__group">
+                            <h3 data-i18n="skills.database">Database & Infrastructure</h3>
+                            <ul class="badge-list">
+                                <li>PostgreSQL</li>
+                                <li>Supabase</li>
+                                <li>Docker</li>
+                                <li>Nginx</li>
+                                <li>VPS</li>
+                            </ul>
+                        </article>
+                        <article class="skills__group">
+                            <h3 data-i18n="skills.productAi">Product / AI / Integrations</h3>
+                            <ul class="badge-list">
+                                <li data-i18n="skills.items.productThinking">Product thinking</li>
+                                <li data-i18n="skills.items.aiApi">AI/API integrations</li>
+                                <li data-i18n="skills.items.pricingLogic">Pricing logic</li>
+                                <li data-i18n="skills.items.mealPlanning">Meal planning concepts</li>
+                            </ul>
+                        </article>
+                        <article class="skills__group">
+                            <h3 data-i18n="skills.tools">Tools</h3>
+                            <ul class="badge-list">
+                                <li>Git</li>
+                                <li>GitHub</li>
+                                <li>Figma</li>
+                                <li>Vite</li>
+                                <li>Expo</li>
+                            </ul>
+                        </article>
+                    </div>
                 </div>
             </section>
-            <section class="testimonials" id="testimonials">
-                <h2 class="testimonials__title">Отзывы</h2>
-                <p class="testimonials__desc">У меня пока нет отзывов, потому
-                    что я только начинаю путь во фронтенд-разработке. Но именно
-                    вы можете стать первым человеком, который доверит мне проект
-                    и оставит здесь свой отзыв. Я открыто отношусь к новым
-                    задачам, ответственно подхожу к работе и всегда стремлюсь
-                    сделать результат максимально качественным.</p>
-                <div class="testimonial-placeholder">
-                    <div class="testimonial-placeholder__image"></div>
-                    <div class="testimonial-placeholder__text">
-                        <p>Здесь могла бы быть ваша искренняя благодарность и
-                            улыбка.</p>
-                        <p>Может, это наш шанс?</p>
+
+            <section id="services" class="services section">
+                <div class="container">
+                    <div class="section__header">
+                        <h2 class="section__title" data-i18n="services.title">What I Can Help With</h2>
+                        <p class="section__subtitle" data-i18n="services.subtitle">Focused development services for practical products, internal tools, and maintainable web applications.</p>
                     </div>
+
+                    <div class="services__grid">
+                        <article class="service-card">
+                            <h3 data-i18n="services.fullstack.title">Fullstack Web Applications</h3>
+                            <p data-i18n="services.fullstack.text">Building application interfaces and backend APIs with a clear data model and maintainable structure.</p>
+                        </article>
+                        <article class="service-card">
+                            <h3 data-i18n="services.admin.title">Admin Panels / Internal Tools</h3>
+                            <p data-i18n="services.admin.text">Creating tools for teams, operations, workflows, roles, and business-specific processes.</p>
+                        </article>
+                        <article class="service-card">
+                            <h3 data-i18n="services.mvp.title">MVP & Product Prototypes</h3>
+                            <p data-i18n="services.mvp.text">Turning product ideas into testable prototypes with enough structure to learn from real usage.</p>
+                        </article>
+                        <article class="service-card">
+                            <h3 data-i18n="services.frontend.title">Frontend from Figma</h3>
+                            <p data-i18n="services.frontend.text">Implementing responsive interfaces from designs with attention to layout, states, and usability.</p>
+                        </article>
+                        <article class="service-card">
+                            <h3 data-i18n="services.integrations.title">API / AI Integrations</h3>
+                            <p data-i18n="services.integrations.text">Connecting products with external APIs and practical AI-assisted workflows where they add value.</p>
+                        </article>
+                        <article class="service-card">
+                            <h3 data-i18n="services.support.title">Technical Support & Scaling</h3>
+                            <p data-i18n="services.support.text">Improving existing projects, fixing issues, preparing deployment, and making the codebase easier to evolve.</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section id="about" class="about section">
+                <div class="container about__container">
+                    <div class="about__content">
+                        <h2 class="section__title" data-i18n="about.title">About</h2>
+                        <p data-i18n="about.p1">I am a fullstack developer focused on React, TypeScript, and Node.js, building practical systems rather than decorative demos.</p>
+                        <p data-i18n="about.p2">My current work includes Construction Management Control Center, an internal company management system for a construction business, and FoodAI, a product prototype around grocery intelligence and meal planning.</p>
+                        <p data-i18n="about.p3">Before development, I worked in project management, video production, and tourism. That background helps me understand business context, communicate clearly, and think in terms of product outcomes.</p>
+                        <ul class="about__highlights">
+                            <li data-i18n="about.highlights.0">React / TypeScript focused</li>
+                            <li data-i18n="about.highlights.1">Comfortable with fullstack product flows</li>
+                            <li data-i18n="about.highlights.2">Practical project management background</li>
+                        </ul>
+                    </div>
+                    <div class="about__media">
+                        <img src="/images/portrait.webp" alt="Maksim Parfeniev portrait" loading="lazy" width="420" height="560" data-i18n-alt="about.imageAlt">
+                    </div>
+                </div>
+            </section>
+
+            <section id="other-projects" class="other-projects section">
+                <div class="container">
+                    <div class="section__header">
+                        <h2 class="section__title" data-i18n="otherProjects.title">Other Projects</h2>
+                        <p class="section__subtitle" data-i18n="otherProjects.subtitle">Earlier frontend practice and client-style websites that show foundation and progress.</p>
+                    </div>
+
+                    <div class="other-projects__grid">
+                        <article class="project-card project-card--secondary">
+                            <a class="project-card__link" href="http://www.maxpar.ru/furniture_store/index.html" target="_blank" rel="noopener noreferrer">
+                                <img class="project-card__preview" src="/images/furniture_store.webp" alt="Furniture store website" loading="lazy" width="644" height="344" data-i18n-alt="otherProjects.items.furniture.alt">
+                                <div class="project-card__body">
+                                    <h3 class="project-card__secondary-title" data-i18n="otherProjects.items.furniture.title">Furniture Store</h3>
+                                    <p class="project-card__text" data-i18n="otherProjects.items.furniture.text">Responsive frontend practice with CSS Grid, Flexbox, and catalog-style layout.</p>
+                                </div>
+                                <div class="project-card__actions">
+                                    <span class="project-card__button" data-i18n="otherProjects.items.furniture.link">View project</span>
+                                </div>
+                            </a>
+                        </article>
+                        <article class="project-card project-card--secondary">
+                            <a class="project-card__link" href="http://www.maxpar.ru/cafe_grain/" target="_blank" rel="noopener noreferrer">
+                                <img class="project-card__preview" src="/images/cafe_grain.webp" alt="Cafe Grain website" loading="lazy" width="644" height="344" data-i18n-alt="otherProjects.items.cafe.alt">
+                                <div class="project-card__body">
+                                    <h3 class="project-card__secondary-title" data-i18n="otherProjects.items.cafe.title">Cafe Grain</h3>
+                                    <p class="project-card__text" data-i18n="otherProjects.items.cafe.text">Adaptive cafe website with Figma-based layout and custom animation practice.</p>
+                                </div>
+                                <div class="project-card__actions">
+                                    <span class="project-card__button" data-i18n="otherProjects.items.cafe.link">View project</span>
+                                </div>
+                            </a>
+                        </article>
+                        <article class="project-card project-card--secondary">
+                            <a class="project-card__link" href="http://www.maxpar.ru/home_bakery/" target="_blank" rel="noopener noreferrer">
+                                <img class="project-card__preview" src="/images/home_bakery.webp" alt="Home bakery website" loading="lazy" width="644" height="354" data-i18n-alt="otherProjects.items.bakery.alt">
+                                <div class="project-card__body">
+                                    <h3 class="project-card__secondary-title" data-i18n="otherProjects.items.bakery.title">Home Bakery</h3>
+                                    <p class="project-card__text" data-i18n="otherProjects.items.bakery.text">Responsive website with custom structure, design decisions, and navigation interactions.</p>
+                                </div>
+                                <div class="project-card__actions">
+                                    <span class="project-card__button" data-i18n="otherProjects.items.bakery.link">View project</span>
+                                </div>
+                            </a>
+                        </article>
+                        <article class="project-card project-card--secondary">
+                            <a class="project-card__link" href="http://www.maxpar.ru/moving_and_storage/" target="_blank" rel="noopener noreferrer">
+                                <img class="project-card__preview" src="/images/moving_and_storage.webp" alt="Moving and storage website" loading="lazy" width="644" height="352" data-i18n-alt="otherProjects.items.moving.alt">
+                                <div class="project-card__body">
+                                    <h3 class="project-card__secondary-title" data-i18n="otherProjects.items.moving.title">Moving & Storage</h3>
+                                    <p class="project-card__text" data-i18n="otherProjects.items.moving.text">Client-style responsive website focused on service presentation, navigation, and SEO basics.</p>
+                                </div>
+                                <div class="project-card__actions">
+                                    <span class="project-card__button" data-i18n="otherProjects.items.moving.link">View project</span>
+                                </div>
+                            </a>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section id="contact" class="contact section">
+                <div class="container contact__container">
+                    <div class="section__header">
+                        <h2 class="section__title" data-i18n="contact.title">Contact</h2>
+                        <p class="section__subtitle" data-i18n="contact.subtitle">Open to junior+/middle frontend or fullstack roles, product prototypes, and freelance MVP work.</p>
+                    </div>
+                    <ul class="contact__list">
+                        <li>
+                            <span data-i18n="contact.email">Email</span>
+                            <a href="mailto:maxpar.fed@gmail.com">maxpar.fed@gmail.com</a>
+                        </li>
+                        <li>
+                            <span data-i18n="contact.telegram">Telegram</span>
+                            <a href="https://t.me/ParMaxAlx" target="_blank" rel="noopener noreferrer">@ParMaxAlx</a>
+                        </li>
+                        <li>
+                            <span data-i18n="contact.github">GitHub</span>
+                            <a href="https://github.com/MaxParf" target="_blank" rel="noopener noreferrer">github.com/MaxParf</a>
+                        </li>
+                        <li>
+                            <span data-i18n="contact.linkedin">LinkedIn</span>
+                            <a href="https://www.linkedin.com/in/maksim-parfeniev-8a975b69/" target="_blank" rel="noopener noreferrer">linkedin.com/in/maksim-parfeniev</a>
+                        </li>
+                    </ul>
                 </div>
             </section>
         </main>
 
-        <footer class="footer">
-            <div class="footer__contacts" id="contacts">
-                <h2 class="footer__contacts-title">Контакты</h2>
-                <p class="footer__contacts-desc">Email: <a
-                        class="footer__contacts-link"
-                        href="mailto:maxpar.fed@gmail.com">maxpar.fed@gmail.com</a></p>
-                <p class="footer__contacts-desc">Telegram: <a
-                        class="footer__contacts-link"
-                        href="https://t.me/ParMaxAlx">@ParMaxAlx</a></p>
+        <footer class="site-footer">
+            <div class="container site-footer__container">
+                <p data-i18n="footer.copyright">© 2026 Maksim Parfeniev</p>
             </div>
-            <!-- <p>&copy; 2025 Максим Парфеньев</p> -->
         </footer>
-        <button class="scroll-to-top" id="scrollToTop" aria-label="Наверх"><i
-                class="fa-solid fa-chevron-up"></i></button>
 
-        <script src="script.js"></script>
+        <button class="scroll-to-top" id="scrollToTop" aria-label="Back to top" data-i18n-aria-label="common.backToTop">
+            <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
+        </button>
+
+        <script src="i18n.js" defer></script>
+        <script src="script.js" defer></script>
+        <script src="analytics.js" defer></script>
+
+        <noscript>
+            <div>
+                <img src="https://mc.yandex.ru/watch/104218170"
+                    style="position:absolute; left:-9999px;" alt="">
+            </div>
+        </noscript>
     </body>
 </html>
