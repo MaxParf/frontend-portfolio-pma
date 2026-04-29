@@ -50,4 +50,4 @@ Then open `http://localhost:8080/`.
 
 ## Notes
 
-The old separate English page `index-en.html` is deprecated. It now redirects to the main multilingual `index.html` page.
+The site uses a single multilingual `index.html` page. The old separate English page has been removed to avoid duplicate content.
