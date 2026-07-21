@@ -1,6 +1,6 @@
 # Frontend Portfolio - Maksim Parfeniev
 
-A multilingual personal portfolio website built with HTML, SCSS, vanilla JavaScript, and a lightweight i18n system.
+A multilingual personal portfolio website built with HTML, SCSS, vanilla JavaScript, ES modules, and a lightweight i18n system.
 
 The site presents Maksim Parfeniev as a fullstack developer focused on React, TypeScript, Node.js/NestJS, real-world internal systems, and product prototypes.
 
@@ -8,8 +8,8 @@ The site presents Maksim Parfeniev as a fullstack developer focused on React, Ty
 
 - Responsive portfolio layout
 - English/Russian language switcher
-- Lightweight i18n dictionary with localStorage persistence
-- Featured project case studies
+- Lightweight i18n dictionary with browser-language detection and manual localStorage override
+- Featured project case studies rendered from a static data layer
 - Real project screenshots
 - Accessible navigation and mobile menu
 - BEM-based CSS structure
@@ -27,15 +27,19 @@ The site presents Maksim Parfeniev as a fullstack developer focused on React, Ty
 
 - `index.html` - main multilingual portfolio page
 - `i18n.js` - EN/RU translation dictionary and language switching logic
-- `script.js` - navigation and UI behavior
+- `script.js` - ES module for navigation, dynamic project rendering, and lightbox behavior
+- `data/projects.js` - static project data model
+- `components/project-renderer.js` - DOM renderer for project cards
 - `style.scss` - SCSS source styles
 - `style.css` - compiled CSS used by the page
 - `_mobile.scss` - deprecated mobile partial kept as a note for the old structure
 - `images/projects/` - featured project screenshots
+- `docs/design-reference/maxpar-cms-v1/` - standalone visual reference for a future CMS
 
 ## Featured Projects
 
 - Construction Management Control Center / Центр управления строительством
+- Project Bradbury
 - FoodAI
 
 ## Local Usage
@@ -51,3 +55,11 @@ Then open `http://localhost:8080/`.
 ## Notes
 
 The site uses a single multilingual `index.html` page. The old separate English page has been removed to avoid duplicate content.
+
+`style.scss` is the source of truth for styles. Compile it to `style.css` with Dart Sass when changing styles:
+
+```bash
+sass --no-source-map style.scss style.css
+```
+
+The current baseline is static frontend only. No backend, CMS, API, database, or authentication layer is implemented.

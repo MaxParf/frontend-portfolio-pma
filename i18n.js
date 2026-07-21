@@ -20,7 +20,7 @@ const translations = {
       eyebrow: "React / TypeScript / Node.js",
       title: "Fullstack Developer building React, TypeScript and Node.js products",
       subtitle:
-        "I build real-world web applications, internal systems and product prototypes — from architecture and UI to deployment.",
+        "Fullstack developer building product-oriented web applications, internal business systems and independent digital products.",
       ctaProjects: "View Featured Projects",
       ctaContact: "Contact Me",
       ctaGithub: "GitHub",
@@ -30,60 +30,6 @@ const translations = {
       title: "Featured Projects",
       subtitle:
         "Real systems and product prototypes that best represent my current engineering focus.",
-    },
-    projects: {
-      construction: {
-        title: "Construction Management Control Center",
-        type: "Internal company management system",
-        category: "Internal company management system",
-        role: "Solo Fullstack Developer (end-to-end development)",
-        description:
-          "A fullstack internal company management system for handling employees, departments, construction objects, tasks, permissions, task lifecycle, file exchange and Mattermost corporate messenger integration. Built independently from architecture and data modeling to frontend, backend, infrastructure and production deployment.",
-        status: "Production",
-        demoNote: "Demo access available on request.",
-        screens: {
-          dashboard: "Admin dashboard overview",
-          files: "File exchange system interface",
-        },
-        features: [
-          "Employees and departments management",
-          "Company structure",
-          "Construction objects management",
-          "Task creation and control",
-          "Task lifecycle",
-          "Role-based access control (RBAC)",
-          "File exchange within the system",
-          "Mattermost integration",
-          "Production deployment (Docker, Nginx, VPS)",
-        ],
-        links: {
-          github: "GitHub",
-          demo: "Demo available on request",
-        },
-      },
-      foodai: {
-        title: "FoodAI",
-        category: "Grocery intelligence and meal planning product prototype",
-        role: "Founder, Product Owner & Solo Fullstack Developer",
-        description:
-          "A grocery intelligence and meal planning product prototype focused on helping users compare food options, understand value through protein-per-dollar logic, and build smarter shopping habits. Built independently from idea and product concept to mobile app architecture, UI flows, backend integration direction and landing page.",
-        status: "Prototype",
-        screens: {
-          plan: "Weekly meal plan with budget and nutrition targets",
-          groceries: "Grocery list split by store with price optimization",
-        },
-        features: [
-          "Product comparison and protein-per-dollar logic",
-          "Saved comparisons and onboarding flow",
-          "Meal planning and grocery list concepts",
-          "React Native / Expo, Supabase, and Zustand architecture",
-          "FoodAI website / landing page and AI/API integration direction",
-        ],
-        links: {
-          github: "GitHub",
-          website: "App Website",
-        },
-      },
     },
     skills: {
       title: "Tech Stack / Skills",
@@ -133,7 +79,7 @@ const translations = {
     about: {
       title: "About",
       p1: "My name is Maksim, and I am a fullstack developer focused on React, TypeScript and practical product development.",
-      p2: "I build systems with real business logic — from data architecture to user interface and deployment. My recent work includes Construction Management Control Center, an internal company management system for a construction business, and FoodAI, a grocery intelligence product prototype.",
+      p2: "My current work includes Project Bradbury, a hosted closed-alpha social platform focused on personal stories, privacy and a slower, more human online experience; Construction Management Control Center, an internal company management system for a construction business; and FoodAI, a grocery intelligence and meal planning product prototype.",
       p3: "My background in project management, video production and tourism helps me think beyond code: I focus on usability, communication, deadlines and business value.",
       highlights: [
         "React / TypeScript focused",
@@ -142,40 +88,10 @@ const translations = {
       ],
       imageAlt: "Maksim Parfeniev portrait",
     },
-    otherProjects: {
-      title: "Other Projects",
-      subtitle: "Earlier frontend practice and client-style websites.",
-      items: {
-        furniture: {
-          title: "Furniture Store",
-          text: "Responsive frontend practice with CSS Grid, Flexbox, and catalog-style layout.",
-          link: "View project",
-          alt: "Furniture store website",
-        },
-        cafe: {
-          title: "Cafe Grain",
-          text: "Adaptive cafe website with Figma-based layout and custom animation practice.",
-          link: "View project",
-          alt: "Cafe Grain website",
-        },
-        bakery: {
-          title: "Home Bakery",
-          text: "Responsive website with custom structure, design decisions, and navigation interactions.",
-          link: "View project",
-          alt: "Home bakery website",
-        },
-        moving: {
-          title: "Moving & Storage",
-          text: "Client-style responsive website focused on service presentation, navigation, and SEO basics.",
-          link: "View project",
-          alt: "Moving and storage website",
-        },
-      },
-    },
     contact: {
       title: "Contact",
       subtitle:
-        "Open to junior+/middle frontend or fullstack roles, product prototypes, and freelance MVP work.",
+        "Open to fullstack development opportunities, product engineering, and building complex web applications — from interfaces and business logic to backend services, databases, and deployment.",
       email: "Email",
       telegram: "Telegram",
       github: "GitHub",
@@ -186,6 +102,12 @@ const translations = {
     },
     common: {
       backToTop: "Back to top",
+      closeGallery: "Close screenshot viewer",
+      galleryDialog: "Project screenshot viewer",
+      next: "Next",
+      nextScreenshot: "Next screenshot",
+      previous: "Prev",
+      previousScreenshot: "Previous screenshot",
     },
   },
   ru: {
@@ -209,7 +131,7 @@ const translations = {
       eyebrow: "React / TypeScript / Node.js",
       title: "Fullstack-разработчик веб-приложений на React, TypeScript и Node.js",
       subtitle:
-        "Создаю прикладные веб-приложения, внутренние системы и продуктовые прототипы — от архитектуры и интерфейса до деплоя.",
+        "Fullstack-разработчик, создающий продуктовые веб-приложения, внутренние бизнес-системы и самостоятельные цифровые продукты.",
       ctaProjects: "Смотреть проекты",
       ctaContact: "Связаться",
       ctaGithub: "GitHub",
@@ -219,60 +141,6 @@ const translations = {
       title: "Главные проекты",
       subtitle:
         "Реальные системы и продуктовые прототипы, которые лучше всего показывают мой текущий инженерный фокус.",
-    },
-    projects: {
-      construction: {
-        title: "Центр управления строительством",
-        type: "Внутренняя система управления компанией",
-        category: "Внутренняя система управления компанией",
-        role: "Solo Fullstack Developer / самостоятельная разработка",
-        description:
-          "Fullstack-система для управления операционными процессами компании: сотрудники, отделы, строительные объекты, задачи, права доступа, жизненный цикл задач, файлообмен и интеграция с корпоративным мессенджером Mattermost. Проект разработан самостоятельно — от архитектуры и модели данных до frontend, backend, инфраструктуры и production-деплоя.",
-        status: "Production",
-        demoNote: "Демо-доступ предоставляется по запросу.",
-        screens: {
-          dashboard: "Управляющая консоль системы",
-          files: "Интерфейс файлообмена",
-        },
-        features: [
-          "Управление сотрудниками и отделами",
-          "Структура компании",
-          "Управление строительными объектами",
-          "Постановка и контроль задач",
-          "Жизненный цикл задач",
-          "Роли и права доступа (RBAC)",
-          "Файлообмен внутри системы",
-          "Интеграция с Mattermost",
-          "Production deployment (Docker, Nginx, VPS)",
-        ],
-        links: {
-          github: "GitHub",
-          demo: "Демо доступно по запросу",
-        },
-      },
-      foodai: {
-        title: "FoodAI",
-        category: "Grocery intelligence / meal planning startup product prototype",
-        role: "Founder, Product Owner & Solo Fullstack Developer / самостоятельная разработка",
-        description:
-          "Продуктовый прототип для анализа продуктовых покупок и планирования питания. Проект помогает сравнивать продукты, учитывать protein-per-dollar логику и формировать более осознанные сценарии покупок. Разработан самостоятельно — от идеи и продуктовой концепции до архитектуры мобильного приложения, UX-сценариев, backend-интеграции и landing page.",
-        status: "Prototype",
-        screens: {
-          plan: "Интерфейс плана питания на неделю",
-          groceries: "Список покупок с разбивкой по магазинам",
-        },
-        features: [
-          "Сравнение продуктов и protein-per-dollar логика",
-          "Сохранённые сравнения и onboarding-сценарий",
-          "Концепции meal planning и списка покупок",
-          "Архитектура на React Native / Expo, Supabase и Zustand",
-          "FoodAI website / landing page и направление AI/API-интеграций",
-        ],
-        links: {
-          github: "GitHub",
-          website: "Сайт приложения",
-        },
-      },
     },
     skills: {
       title: "Технологии / Навыки",
@@ -322,7 +190,7 @@ const translations = {
     about: {
       title: "Обо мне",
       p1: "Меня зовут Максим, я fullstack-разработчик с фокусом на React, TypeScript и практическую продуктовую разработку.",
-      p2: "Я создаю системы с реальной бизнес-логикой — от архитектуры данных до пользовательского интерфейса и деплоя. Среди моих последних проектов — Центр управления строительством, внутренняя система управления компанией для строительного бизнеса, и FoodAI, продуктовый прототип для анализа продуктовых покупок.",
+      p2: "Сейчас моя работа включает Project Bradbury — размещённую closed alpha социальную платформу, построенную вокруг личных историй, приватности и более медленного, человечного онлайн-опыта; Construction Management Control Center — внутреннюю систему управления для строительного бизнеса; и FoodAI — продуктовый прототип в области grocery intelligence и meal planning.",
       p3: "Бэкграунд в управлении проектами, видеопроизводстве и туризме помогает мне смотреть на разработку шире кода: я учитываю удобство пользователя, коммуникацию, сроки и бизнес-ценность.",
       highlights: [
         "Фокус на React / TypeScript",
@@ -331,40 +199,10 @@ const translations = {
       ],
       imageAlt: "Портрет Максима Парфеньева",
     },
-    otherProjects: {
-      title: "Другие проекты",
-      subtitle: "Ранние frontend-проекты и учебные сайты в формате клиентских лендингов.",
-      items: {
-        furniture: {
-          title: "Интернет-магазин мебели",
-          text: "Практика responsive frontend-разработки с CSS Grid, Flexbox и каталоговой структурой.",
-          link: "Смотреть проект",
-          alt: "Сайт интернет-магазина мебели",
-        },
-        cafe: {
-          title: "Кафе «Зернышко»",
-          text: "Адаптивный сайт кафе на основе Figma-макета и практики кастомных анимаций.",
-          link: "Смотреть проект",
-          alt: "Сайт кафе Зернышко",
-        },
-        bakery: {
-          title: "Домашняя пекарня",
-          text: "Адаптивный сайт с собственной структурой, дизайн-решениями и навигационными интеракциями.",
-          link: "Смотреть проект",
-          alt: "Сайт домашней пекарни",
-        },
-        moving: {
-          title: "Moving & Storage",
-          text: "Клиентский формат responsive-сайта с фокусом на презентацию услуг, навигацию и SEO-базу.",
-          link: "Смотреть проект",
-          alt: "Сайт компании Moving and Storage",
-        },
-      },
-    },
     contact: {
       title: "Контакты",
       subtitle:
-        "Открыт к junior+/middle frontend или fullstack позициям, продуктовым прототипам и freelance MVP-проектам.",
+        "Открыт к предложениям по fullstack-разработке, продуктовой инженерии и созданию сложных веб-приложений — от интерфейсов и бизнес-логики до backend-сервисов, баз данных и развёртывания.",
       email: "Email",
       telegram: "Telegram",
       github: "GitHub",
@@ -375,12 +213,19 @@ const translations = {
     },
     common: {
       backToTop: "Наверх",
+      closeGallery: "Закрыть просмотр скриншота",
+      galleryDialog: "Просмотр скриншотов проекта",
+      next: "Вперёд",
+      nextScreenshot: "Следующий скриншот",
+      previous: "Назад",
+      previousScreenshot: "Предыдущий скриншот",
     },
   },
 };
 
 const DEFAULT_LANGUAGE = "en";
 const SUPPORTED_LANGUAGES = Object.keys(translations);
+const MANUAL_LANGUAGE_STORAGE_KEY = "preferred-language";
 
 function getTranslation(obj, path) {
   return path.split(".").reduce((acc, part) => (acc ? acc[part] : undefined), obj);
@@ -393,20 +238,38 @@ function translate(path, lang) {
   return selectedValue ?? fallbackValue ?? path;
 }
 
+function isSupportedLanguage(lang) {
+  return SUPPORTED_LANGUAGES.includes(lang);
+}
+
 function getInitialLanguage() {
-  const savedLanguage = getSavedLanguage();
+  const manualLanguagePreference = readManualLanguagePreference();
 
-  if (SUPPORTED_LANGUAGES.includes(savedLanguage)) {
-    return savedLanguage;
+  if (manualLanguagePreference) {
+    return manualLanguagePreference;
   }
 
-  const browserLanguage = (navigator.language || navigator.userLanguage || "").toLowerCase();
+  return resolveBrowserLanguage();
+}
 
-  if (browserLanguage.startsWith("ru")) {
-    return "ru";
+function resolveBrowserLanguage() {
+  const browserLanguages =
+    Array.isArray(navigator.languages) && navigator.languages.length > 0 ? navigator.languages : [navigator.language];
+  const normalizedLanguages = browserLanguages
+    .filter((language) => typeof language === "string")
+    .map((language) => language.toLowerCase());
+
+  return normalizedLanguages.some((language) => language.startsWith("ru")) ? "ru" : DEFAULT_LANGUAGE;
+}
+
+function readManualLanguagePreference() {
+  try {
+    const savedLanguage = localStorage.getItem(MANUAL_LANGUAGE_STORAGE_KEY);
+
+    return isSupportedLanguage(savedLanguage) ? savedLanguage : null;
+  } catch (error) {
+    return null;
   }
-
-  return DEFAULT_LANGUAGE;
 }
 
 function updateMetadata(lang) {
@@ -455,39 +318,36 @@ function applyTranslations(lang) {
   });
 }
 
-function setLanguage(lang) {
-  const nextLanguage = SUPPORTED_LANGUAGES.includes(lang) ? lang : DEFAULT_LANGUAGE;
+function applyLanguage(lang, options = {}) {
+  const nextLanguage = isSupportedLanguage(lang) ? lang : DEFAULT_LANGUAGE;
 
-  saveLanguage(nextLanguage);
+  if (options.manual) {
+    saveManualLanguagePreference(nextLanguage);
+  }
+
   updateMetadata(nextLanguage);
   applyTranslations(nextLanguage);
   updateLanguageButtons(nextLanguage);
+  window.dispatchEvent(new CustomEvent("languagechange", { detail: { lang: nextLanguage } }));
 }
 
-function getSavedLanguage() {
+function saveManualLanguagePreference(lang) {
   try {
-    return localStorage.getItem("lang");
-  } catch (error) {
-    return null;
-  }
-}
-
-function saveLanguage(lang) {
-  try {
-    localStorage.setItem("lang", lang);
+    localStorage.setItem(MANUAL_LANGUAGE_STORAGE_KEY, lang);
   } catch (error) {
     // Language switching should still work when storage is unavailable.
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  setLanguage(getInitialLanguage());
+  applyLanguage(getInitialLanguage());
 
   document.querySelectorAll("[data-lang]").forEach((button) => {
     button.addEventListener("click", () => {
-      setLanguage(button.dataset.lang);
+      applyLanguage(button.dataset.lang, { manual: true });
     });
   });
 });
 
-window.setLanguage = setLanguage;
+window.getCurrentLanguage = () => document.documentElement.lang || DEFAULT_LANGUAGE;
+window.setLanguage = (lang) => applyLanguage(lang, { manual: true });
