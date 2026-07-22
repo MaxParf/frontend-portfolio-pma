@@ -17,6 +17,26 @@ const envSchema = z.object({
         .filter(Boolean),
     )
     .pipe(z.array(z.string().url()).min(1)),
+  CMS_ORIGINS: z
+    .string()
+    .min(1)
+    .transform((value) =>
+      value
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.string().url()).min(1)),
+  SESSION_COOKIE_NAME: z.string().min(1).default("maxpar_cms_session"),
+  SESSION_TTL_SECONDS: z.coerce.number().int().min(900).max(86_400).default(28_800),
+  SESSION_TOKEN_SECRET: z.string().min(32),
+  COOKIE_SECURE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  LOGIN_RATE_LIMIT: z.coerce.number().int().min(1).max(100).default(10),
+  MAX_FAILED_LOGIN_ATTEMPTS: z.coerce.number().int().min(3).max(20).default(5),
+  LOGIN_LOCK_SECONDS: z.coerce.number().int().min(60).max(86_400).default(900),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

@@ -7,3 +7,8 @@ backend/dist/
 backend/.env
 backend/.env.*
 !backend/.env.example
+cms/node_modules/
+cms/dist/
+cms/.env
+cms/.env.*
+!cms/.env.example

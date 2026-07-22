@@ -35,6 +35,16 @@ export function registerErrorHandler(app: FastifyInstance): void {
       });
     }
 
+    if ("statusCode" in error && error.statusCode === 429) {
+      return reply.status(429).send({
+        error: {
+          code: "RATE_LIMITED",
+          message: "Too many requests.",
+          requestId,
+        },
+      });
+    }
+
     request.log.error({ err: error, requestId }, "Unhandled request error");
     return reply.status(500).send({
       error: {

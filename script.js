@@ -1,6 +1,8 @@
 import { renderProjects } from "./components/project-renderer.js";
 import { projects } from "./data/projects.js";
 
+const CMS_LOGIN_URL = "http://127.0.0.1:5510/login";
+
 document.addEventListener("DOMContentLoaded", () => {
   const projectsRoot = document.querySelector("[data-projects-root]");
   const burger = document.querySelector(".site-header__burger");
@@ -232,6 +234,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("keydown", (event) => {
+    const activeElement = document.activeElement;
+    const isEditableTarget =
+      activeElement instanceof HTMLInputElement ||
+      activeElement instanceof HTMLTextAreaElement ||
+      activeElement instanceof HTMLSelectElement ||
+      activeElement?.getAttribute("contenteditable") === "true";
+
+    if (event.ctrlKey && event.shiftKey && event.key === "F12" && !isEditableTarget) {
+      window.open(CMS_LOGIN_URL, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     if (!lightbox?.classList.contains("is-open")) {
       return;
     }
