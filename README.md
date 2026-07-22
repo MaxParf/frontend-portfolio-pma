@@ -63,3 +63,7 @@ sass --no-source-map style.scss style.css
 ```
 
 The current baseline is static frontend only. No backend, CMS, API, database, or authentication layer is implemented.
+
+## Backend Foundation
+
+Phase 2A backend foundation lives in `backend/`. It provides a local Docker Compose PostgreSQL + TypeScript Fastify public read API for the portfolio project data, while the public frontend continues to use `data/projects.js`.

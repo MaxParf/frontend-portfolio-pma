@@ -1,0 +1,33 @@
+import { z } from "zod";
+import "dotenv/config";
+
+const envSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  HOST: z.string().min(1),
+  PORT: z.coerce.number().int().min(1).max(65535),
+  DATABASE_URL: z.string().url(),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+  CORS_ORIGINS: z
+    .string()
+    .min(1)
+    .transform((value) =>
+      value
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.string().url()).min(1)),
+});
+
+export type AppEnv = z.infer<typeof envSchema>;
+
+export function loadEnv(source: NodeJS.ProcessEnv = process.env): AppEnv {
+  const result = envSchema.safeParse(source);
+
+  if (!result.success) {
+    const issues = result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
+    throw new Error(`Invalid backend environment: ${issues}`);
+  }
+
+  return result.data;
+}

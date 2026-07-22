@@ -1,0 +1,72 @@
+name: maxpar-portfolio
+
+services:
+  portfolio-db:
+    image: postgres:17.6-bookworm
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - portfolio-postgres-data:/var/lib/postgresql/data
+    networks:
+      - portfolio-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+  portfolio-api:
+    image: maxpar-portfolio-api:0.1.0
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      HOST: 0.0.0.0
+    command:
+      [
+        "sh",
+        "-c",
+        "DATABASE_URL=postgres://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@portfolio-db:5432/$${POSTGRES_DB} node dist/src/server.js",
+      ]
+    ports:
+      - "127.0.0.1:${PORT:-3001}:${PORT:-3001}"
+    depends_on:
+      portfolio-db:
+        condition: service_healthy
+    networks:
+      - portfolio-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:' + (process.env.PORT || 3001) + '/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+networks:
+  portfolio-network:
+    name: maxpar-portfolio-network
+
+volumes:
+  portfolio-postgres-data:
+    name: maxpar-portfolio-postgres-data
