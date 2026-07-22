@@ -3,14 +3,14 @@ import { ApiError } from "../api/client";
 
 interface LoginScreenProps {
   apiBaseUrl: string;
-  onLogin: (email: string, password: string) => Promise<void>;
+  onLogin: (login: string, password: string) => Promise<void>;
 }
 
 export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
-  const emailId = useId();
+  const loginId = useId();
   const passwordId = useId();
   const errorId = useId();
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,14 +19,14 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
     event.preventDefault();
     setError(null);
 
-    if (!email || !password) {
-      setError("Email and password are required.");
+    if (!login || !password) {
+      setError("Login and password are required.");
       return;
     }
 
     setSubmitting(true);
     try {
-      await onLogin(email, password);
+      await onLogin(login, password);
     } catch (loginError) {
       setError(loginError instanceof ApiError ? loginError.message : "Unable to login.");
     } finally {
@@ -43,13 +43,13 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
         <p className="login-panel__copy">Server-side authentication is required before the CMS shell or admin API can be opened.</p>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
-          <label htmlFor={emailId}>Email</label>
+          <label htmlFor={loginId}>Login</label>
           <input
-            id={emailId}
-            type="email"
-            value={email}
+            id={loginId}
+            type="text"
+            value={login}
             autoComplete="username"
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => setLogin(event.target.value)}
             aria-describedby={error ? errorId : undefined}
           />
 

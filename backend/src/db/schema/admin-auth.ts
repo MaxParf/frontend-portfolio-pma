@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { boolean, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const adminRoleEnum = pgEnum("admin_role", ["owner"]);
@@ -14,7 +15,7 @@ export const adminUsers = pgTable(
   "admin_users",
   {
     id: uuid("id").primaryKey(),
-    email: text("email").notNull(),
+    login: text("login").notNull(),
     passwordHash: text("password_hash").notNull(),
     displayName: text("display_name").notNull(),
     role: adminRoleEnum("role").notNull().default("owner"),
@@ -25,7 +26,10 @@ export const adminUsers = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
-  (table) => [uniqueIndex("admin_users_email_uq").on(table.email)],
+  (table) => [
+    uniqueIndex("admin_users_login_uq").on(table.login),
+    uniqueIndex("admin_users_single_owner_uq").on(table.role).where(sql`${table.role} = 'owner'`),
+  ],
 );
 
 export const adminSessions = pgTable(
@@ -54,7 +58,7 @@ export const authEvents = pgTable(
   {
     id: uuid("id").primaryKey(),
     userId: uuid("user_id").references(() => adminUsers.id, { onDelete: "set null" }),
-    emailHash: text("email_hash"),
+    loginHash: text("login_hash"),
     eventType: authEventTypeEnum("event_type").notNull(),
     status: authEventStatusEnum("status").notNull(),
     requestId: text("request_id").notNull(),

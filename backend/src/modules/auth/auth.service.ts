@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { AppEnv } from "../../config/env.js";
 import { HttpError } from "../../middleware/error-handler.js";
-import { createSessionToken, hashEmail, hashRequestMetadata, hashSessionToken, normalizeEmail, verifyPassword } from "./auth.crypto.js";
+import { createSessionToken, hashLogin, hashRequestMetadata, hashSessionToken, normalizeLogin, verifyPassword } from "./auth.crypto.js";
 import type { AuthRepository } from "./auth.repository.js";
 import type { AdminUserDto } from "./auth.schemas.js";
 import type { AdminUserRow } from "../../db/schema/index.js";
@@ -15,6 +15,7 @@ export interface AuthContext {
 function toUserDto(user: AdminUserRow): AdminUserDto {
   return {
     id: user.id,
+    login: user.login,
     displayName: user.displayName,
     role: user.role,
   };
@@ -46,17 +47,17 @@ export class AuthService {
     };
   }
 
-  async login(input: { email: string; password: string; request: FastifyRequest; reply: FastifyReply }): Promise<AdminUserDto> {
+  async login(input: { login: string; password: string; request: FastifyRequest; reply: FastifyReply }): Promise<AdminUserDto> {
     const now = new Date();
-    const normalizedEmail = normalizeEmail(input.email);
-    const emailHash = hashEmail(normalizedEmail, this.env.SESSION_TOKEN_SECRET);
-    const user = await this.repository.findUserByEmail(normalizedEmail);
+    const normalizedLogin = normalizeLogin(input.login);
+    const loginHash = hashLogin(normalizedLogin, this.env.SESSION_TOKEN_SECRET);
+    const user = await this.repository.findUserByLogin(normalizedLogin);
 
     if (!user || !user.isActive) {
       await this.repository.createAuthEvent({
         id: randomUUID(),
         userId: null,
-        emailHash,
+        loginHash,
         eventType: "login_failure",
         status: "failure",
         requestId: input.request.id,
@@ -69,7 +70,7 @@ export class AuthService {
       await this.repository.createAuthEvent({
         id: randomUUID(),
         userId: user.id,
-        emailHash,
+        loginHash,
         eventType: "account_locked",
         status: "failure",
         requestId: input.request.id,
@@ -84,7 +85,7 @@ export class AuthService {
       await this.repository.createAuthEvent({
         id: randomUUID(),
         userId: user.id,
-        emailHash,
+        loginHash,
         eventType: updatedUser.lockedUntil && updatedUser.lockedUntil > now ? "account_locked" : "login_failure",
         status: "failure",
         requestId: input.request.id,
@@ -112,7 +113,7 @@ export class AuthService {
     await this.repository.createAuthEvent({
       id: randomUUID(),
       userId: user.id,
-      emailHash,
+      loginHash,
       eventType: "login_success",
       status: "success",
       requestId: input.request.id,
@@ -137,7 +138,7 @@ export class AuthService {
       await this.repository.createAuthEvent({
         id: randomUUID(),
         userId: null,
-        emailHash: null,
+        loginHash: null,
         eventType: "session_expired",
         status: "failure",
         requestId: request.id,
@@ -162,7 +163,7 @@ export class AuthService {
     await this.repository.createAuthEvent({
       id: randomUUID(),
       userId: null,
-      emailHash: null,
+      loginHash: null,
       eventType: "logout",
       status: "success",
       requestId: request.id,

@@ -47,7 +47,10 @@ export function CmsShell(props: CmsShellProps) {
                 RU
               </button>
             </div>
-            <span className="user-pill">{props.user.displayName}</span>
+            <span className="user-pill">
+              {props.user.login}
+              <span>Owner</span>
+            </span>
             <button className="logout-button" type="button" onClick={props.onLogout}>
               Logout
             </button>

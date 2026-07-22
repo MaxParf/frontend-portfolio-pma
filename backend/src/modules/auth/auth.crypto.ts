@@ -3,8 +3,10 @@ import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from
 
 const BCRYPT_COST = 12;
 
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
+export const DEFAULT_OWNER_LOGIN = "@maxpar.fed";
+
+export function normalizeLogin(login: string): string {
+  return login.trim().toLowerCase();
 }
 
 export function validatePasswordPolicy(password: string): void {
@@ -36,8 +38,8 @@ export function hashSessionToken(token: string, pepper: string): string {
   return hashSecret(`session:${token}`, pepper);
 }
 
-export function hashEmail(email: string, pepper: string): string {
-  return hashSecret(`email:${normalizeEmail(email)}`, pepper);
+export function hashLogin(login: string, pepper: string): string {
+  return hashSecret(`login:${normalizeLogin(login)}`, pepper);
 }
 
 export function hashRequestMetadata(value: string | undefined, pepper: string): string | null {

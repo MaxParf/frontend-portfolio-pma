@@ -6,6 +6,13 @@ Phase 3A private CMS frontend for the Maxpar portfolio.
 
 This is a closed owner CMS shell, not a demo CMS. It requires backend server-side session validation before loading project data.
 
+Owner model:
+
+- exactly one owner
+- login: `@maxpar.fed`
+- authentication: login + password
+- no registration, invitations, password reset, role selection, or additional users
+
 Implemented:
 
 - `/login` login screen
@@ -59,7 +66,16 @@ The dev server is pinned to `127.0.0.1:5510`.
 
 ## Authentication
 
-The CMS never receives or stores a session token in JavaScript. Login calls the backend, and the backend sets an HttpOnly cookie. The shell checks `/api/v1/admin/auth/me`; unauthenticated users are sent to `/login`.
+The login form contains only `Login`, `Password`, and `Sign in`. The CMS never receives or stores a session token in JavaScript. Login calls the backend, and the backend sets an HttpOnly cookie. The shell checks `/api/v1/admin/auth/me`; unauthenticated users are sent to `/login`.
+
+## Local Shortcut
+
+Open local CMS login from the public frontend:
+
+- Standard function keys: `Ctrl + Shift + F12`
+- MacBook media-key mode: `Fn + Ctrl + Shift + F12`
+
+This shortcut is only local UX. It is not a security feature.
 
 ## Desktop Requirement
 

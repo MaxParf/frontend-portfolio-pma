@@ -1,12 +1,13 @@
 import { z } from "zod";
 
 export const loginRequestSchema = z.object({
-  email: z.string().email().max(320),
+  login: z.string().trim().min(1).max(128),
   password: z.string().min(1).max(1024),
 });
 
 export interface AdminUserDto {
   id: string;
+  login: string;
   displayName: string;
   role: "owner";
 }

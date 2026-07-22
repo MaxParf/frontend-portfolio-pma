@@ -5,7 +5,7 @@ import pg from "pg";
 import { loadEnv } from "../src/config/env.js";
 import { createDatabase } from "../src/db/client.js";
 import { AuthRepository } from "../src/modules/auth/auth.repository.js";
-import { hashPassword, normalizeEmail } from "../src/modules/auth/auth.crypto.js";
+import { DEFAULT_OWNER_LOGIN, hashPassword, normalizeLogin } from "../src/modules/auth/auth.crypto.js";
 
 async function readPassword(): Promise<string> {
   if (process.env.ADMIN_PASSWORD) {
@@ -39,11 +39,11 @@ async function readPassword(): Promise<string> {
 
 async function main(): Promise<void> {
   const env = loadEnv();
-  const email = normalizeEmail(process.env.ADMIN_EMAIL ?? process.argv[2] ?? "");
+  const login = normalizeLogin(process.env.ADMIN_LOGIN ?? process.argv[2] ?? DEFAULT_OWNER_LOGIN);
   const displayName = process.env.ADMIN_DISPLAY_NAME ?? process.argv[3] ?? "Maksim";
 
-  if (!email) {
-    throw new Error("ADMIN_EMAIL or first CLI argument is required.");
+  if (!login) {
+    throw new Error("Owner login is required.");
   }
 
   const password = await readPassword();
@@ -52,14 +52,14 @@ async function main(): Promise<void> {
 
   try {
     const repository = new AuthRepository(createDatabase(pool));
-    await repository.bootstrapOwner({
+    const result = await repository.bootstrapOwner({
       id: randomUUID(),
-      email,
+      login,
       displayName,
       passwordHash,
       now: new Date(),
     });
-    console.info({ event: "admin_owner_bootstrapped", email: email.replace(/(^.).*(@.*$)/, "$1***$2"), displayName });
+    console.info({ event: "admin_owner_bootstrapped", login, displayName, result });
   } finally {
     await pool.end();
   }

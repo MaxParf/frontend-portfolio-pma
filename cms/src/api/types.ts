@@ -2,6 +2,7 @@ export type Locale = "en" | "ru";
 
 export interface AdminUser {
   id: string;
+  login: string;
   displayName: string;
   role: "owner";
 }

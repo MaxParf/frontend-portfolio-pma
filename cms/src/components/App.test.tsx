@@ -3,9 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { LoginScreen } from "./LoginScreen";
 import { CmsShell } from "./CmsShell";
+import { logout } from "../api/auth";
 import type { AdminProject } from "../api/types";
 
-const owner = { id: "owner-id", displayName: "Maksim", role: "owner" as const };
+const owner = { id: "owner-id", login: "@maxpar.fed", displayName: "Maksim", role: "owner" as const };
 
 const project: AdminProject = {
   id: "project-bradbury",
@@ -77,8 +78,23 @@ describe("LoginScreen", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect((await screen.findByRole("alert")).textContent).toContain("Email and password are required.");
+    expect((await screen.findByRole("alert")).textContent).toContain("Login and password are required.");
     expect(onLogin).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Login").getAttribute("autocomplete")).toBe("username");
+    expect(screen.getByLabelText("Password").getAttribute("autocomplete")).toBe("current-password");
+    expect(screen.queryByText(/create account|sign up|forgot password|register/i)).toBeNull();
+  });
+
+  it("submits owner login and shows a generic login error", async () => {
+    const onLogin = vi.fn().mockRejectedValue(new Error("Authentication failed."));
+    render(<LoginScreen apiBaseUrl="http://127.0.0.1:3001" onLogin={onLogin} />);
+
+    fireEvent.change(screen.getByLabelText("Login"), { target: { value: "@maxpar.fed" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "not-real-password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => expect(onLogin).toHaveBeenCalledWith("@maxpar.fed", "not-real-password"));
+    expect((await screen.findByRole("alert")).textContent).toContain("Unable to login.");
   });
 });
 
@@ -94,7 +110,7 @@ describe("App", () => {
     render(<App />);
 
     expect(await screen.findByRole("heading", { name: "Maxpar CMS" })).toBeTruthy();
-    expect(screen.getByLabelText("Email")).toBeTruthy();
+    expect(screen.getByLabelText("Login")).toBeTruthy();
   });
 
   it("loads authenticated shell and project list", async () => {
@@ -113,6 +129,7 @@ describe("App", () => {
     expect(await screen.findByTestId("cms-shell")).toBeTruthy();
     await waitFor(() => expect(screen.getAllByText("Project Bradbury").length).toBeGreaterThan(0));
     expect(screen.getByText("Published data preview")).toBeTruthy();
+    expect(screen.getByText("@maxpar.fed")).toBeTruthy();
   });
 });
 
@@ -144,6 +161,8 @@ describe("CmsShell", () => {
 
     fireEvent.click(screen.getAllByRole("button", { name: "Logout" })[1]);
     expect(onLogout).toHaveBeenCalled();
+    expect(screen.getByText("@maxpar.fed")).toBeTruthy();
+    expect(screen.getByText("Owner")).toBeTruthy();
   });
 
   it("renders desktop gate message", () => {
@@ -166,5 +185,23 @@ describe("CmsShell", () => {
     );
 
     expect(screen.getByText("Maxpar CMS is available on desktop screens with a minimum width of 1200 px.")).toBeTruthy();
+  });
+});
+
+describe("auth API client", () => {
+  it("does not send JSON content type for empty logout request", async () => {
+    const fetchSpy = vi.fn(() => json({ data: { loggedOut: true } }));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await logout();
+
+    const [, init] = fetchSpy.mock.calls[0] as unknown as [RequestInfo | URL, RequestInit | undefined];
+    expect(init).toBeDefined();
+    if (!init) {
+      throw new Error("logout request init was not captured");
+    }
+    expect(init.method).toBe("POST");
+    expect(init.body).toBeUndefined();
+    expect(new Headers(init.headers).has("content-type")).toBe(false);
   });
 });

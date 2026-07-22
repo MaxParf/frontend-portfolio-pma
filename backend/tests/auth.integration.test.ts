@@ -7,62 +7,85 @@ import { buildApp } from "../src/app.js";
 import { loadEnv } from "../src/config/env.js";
 import { createDatabase } from "../src/db/client.js";
 import { loadFrontendProjects, seedProjects } from "../scripts/seed-projects.js";
-import { hashPassword, hashSessionToken } from "../src/modules/auth/auth.crypto.js";
+import { DEFAULT_OWNER_LOGIN, hashLogin, hashPassword, hashSessionToken, normalizeLogin } from "../src/modules/auth/auth.crypto.js";
+import { loginRequestSchema } from "../src/modules/auth/auth.schemas.js";
+import { AuthRepository } from "../src/modules/auth/auth.repository.js";
 
 const origin = "http://127.0.0.1:5510";
-const email = `owner-${randomUUID()}@example.test`;
+const login = DEFAULT_OWNER_LOGIN;
 const password = `Owner${randomUUID().replaceAll("-", "")}123`;
+const newPassword = `Owner${randomUUID().replaceAll("-", "")}456`;
 const invalidPassword = `Invalid${randomUUID().replaceAll("-", "")}123`;
+const invalidLogin = `@unknown-${randomUUID()}.fed`;
 const env = loadEnv({ ...process.env, NODE_ENV: "test", LOGIN_RATE_LIMIT: "50" });
 const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
+const db = createDatabase(pool);
 const app = buildApp(env, pool);
+const repository = new AuthRepository(db);
 
-async function resetOwner(): Promise<void> {
+async function clearAuth(): Promise<void> {
   await pool.query("delete from auth_events");
   await pool.query("delete from admin_sessions");
-  await pool.query("delete from admin_users where email = $1", [email]);
-  await pool.query(
-    `
-      insert into admin_users (
-        id, email, password_hash, display_name, role, is_active,
-        failed_login_attempts, created_at, updated_at
-      )
-      values ($1, $2, $3, 'Maksim', 'owner', true, 0, now(), now())
-    `,
-    [randomUUID(), email, await hashPassword(password)],
-  );
+  await pool.query("delete from admin_users");
 }
 
-async function login(loginPassword = password) {
+async function resetOwner(ownerPassword = password): Promise<void> {
+  await clearAuth();
+  await repository.bootstrapOwner({
+    id: randomUUID(),
+    login,
+    displayName: "Maksim",
+    passwordHash: await hashPassword(ownerPassword),
+    now: new Date(),
+  });
+}
+
+async function loginRequest(loginInput = login, loginPassword = password) {
   return app.inject({
     method: "POST",
     url: "/api/v1/admin/auth/login",
     headers: { origin },
-    payload: { email, password: loginPassword },
+    payload: { login: loginInput, password: loginPassword },
   });
 }
 
 before(async () => {
-  await migrate(createDatabase(pool), { migrationsFolder: "./drizzle" });
+  await migrate(db, { migrationsFolder: "./drizzle" });
   await seedProjects(pool, await loadFrontendProjects());
   await resetOwner();
 });
 
 after(async () => {
-  await pool.query("delete from auth_events");
-  await pool.query("delete from admin_sessions");
-  await pool.query("delete from admin_users where email = $1", [email]);
+  await clearAuth();
   await app.close();
   await pool.end();
 });
 
-test("successful login sets HttpOnly session cookie and returns minimal user", async () => {
-  await resetOwner();
-  const response = await login();
+test("login schema accepts owner login and does not require email", () => {
+  const parsed = loginRequestSchema.parse({ login: " @MaxPar.Fed ", password });
+  assert.equal(parsed.login, "@MaxPar.Fed");
+  assert.equal("email" in parsed, false);
+});
+
+test("GET / returns API service status", async () => {
+  const response = await app.inject({ method: "GET", url: "/" });
   assert.equal(response.statusCode, 200);
+  assert.equal(response.json().status, "ok");
+});
+
+test("login normalization trims and lowercases without removing @", () => {
+  assert.equal(normalizeLogin("  @MaxPar.Fed  "), "@maxpar.fed");
+});
+
+test("successful login sets HttpOnly session cookie and returns minimal owner", async () => {
+  await resetOwner();
+  const response = await loginRequest("  @MaxPar.Fed  ");
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.json().data.login, login);
   assert.equal(response.json().data.displayName, "Maksim");
   assert.equal(response.json().data.role, "owner");
   assert.equal("passwordHash" in response.json().data, false);
+  assert.equal("tokenHash" in response.json().data, false);
 
   const setCookie = response.headers["set-cookie"];
   assert.match(String(setCookie), /maxpar_cms_session=/);
@@ -71,26 +94,23 @@ test("successful login sets HttpOnly session cookie and returns minimal user", a
   assert.doesNotMatch(response.body, /password/i);
 });
 
-test("invalid password and unknown email return generic authentication failure", async () => {
+test("invalid login and invalid password return the same generic authentication failure", async () => {
   await resetOwner();
-  const invalidPasswordResponse = await login(invalidPassword);
+  const invalidLoginResponse = await loginRequest(invalidLogin);
+  assert.equal(invalidLoginResponse.statusCode, 401);
+  assert.equal(invalidLoginResponse.json().error.code, "AUTHENTICATION_FAILED");
+  assert.equal(invalidLoginResponse.json().error.message, "Authentication failed.");
+
+  const invalidPasswordResponse = await loginRequest(login, invalidPassword);
   assert.equal(invalidPasswordResponse.statusCode, 401);
   assert.equal(invalidPasswordResponse.json().error.code, "AUTHENTICATION_FAILED");
-
-  const unknownEmail = await app.inject({
-    method: "POST",
-    url: "/api/v1/admin/auth/login",
-    headers: { origin },
-    payload: { email: "unknown@example.test", password },
-  });
-  assert.equal(unknownEmail.statusCode, 401);
-  assert.equal(unknownEmail.json().error.code, "AUTHENTICATION_FAILED");
+  assert.equal(invalidPasswordResponse.json().error.message, invalidLoginResponse.json().error.message);
 });
 
-test("inactive account cannot login", async () => {
+test("inactive owner cannot login", async () => {
   await resetOwner();
-  await pool.query("update admin_users set is_active = false where email = $1", [email]);
-  const response = await login();
+  await pool.query("update admin_users set is_active = false where login = $1", [login]);
+  const response = await loginRequest();
   assert.equal(response.statusCode, 401);
   assert.equal(response.json().error.code, "AUTHENTICATION_FAILED");
 });
@@ -98,23 +118,25 @@ test("inactive account cannot login", async () => {
 test("account lock/cooldown after repeated failures", async () => {
   await resetOwner();
   for (let index = 0; index < env.MAX_FAILED_LOGIN_ATTEMPTS; index += 1) {
-    const response = await login(invalidPassword);
+    const response = await loginRequest(login, invalidPassword);
     assert.equal(response.statusCode, 401);
   }
 
-  const lockedResponse = await login();
+  const lockedResponse = await loginRequest();
   assert.equal(lockedResponse.statusCode, 401);
   assert.equal(lockedResponse.json().error.code, "AUTHENTICATION_FAILED");
 });
 
-test("/me accepts valid session and rejects missing session", async () => {
+test("/me accepts valid session, returns login, and rejects missing session", async () => {
   await resetOwner();
-  const loginResponse = await login();
+  const loginResponse = await loginRequest();
   const cookie = String(loginResponse.headers["set-cookie"]).split(";")[0];
 
   const valid = await app.inject({ method: "GET", url: "/api/v1/admin/auth/me", headers: { cookie } });
   assert.equal(valid.statusCode, 200);
+  assert.equal(valid.json().data.login, login);
   assert.equal(valid.json().data.displayName, "Maksim");
+  assert.equal("passwordHash" in valid.json().data, false);
 
   const missing = await app.inject({ method: "GET", url: "/api/v1/admin/auth/me" });
   assert.equal(missing.statusCode, 401);
@@ -122,7 +144,7 @@ test("/me accepts valid session and rejects missing session", async () => {
 
 test("logout revokes session and clears cookie", async () => {
   await resetOwner();
-  const loginResponse = await login();
+  const loginResponse = await loginRequest();
   const cookie = String(loginResponse.headers["set-cookie"]).split(";")[0];
 
   const logout = await app.inject({ method: "POST", url: "/api/v1/admin/auth/logout", headers: { origin, cookie } });
@@ -135,7 +157,7 @@ test("logout revokes session and clears cookie", async () => {
 
 test("expired session is rejected", async () => {
   await resetOwner();
-  const user = await pool.query<{ id: string }>("select id from admin_users where email = $1", [email]);
+  const user = await pool.query<{ id: string }>("select id from admin_users where login = $1", [login]);
   const rawToken = "expired-token";
   await pool.query(
     `
@@ -158,7 +180,7 @@ test("protected project endpoint requires session and returns data with owner se
   const noSession = await app.inject({ method: "GET", url: "/api/v1/admin/projects" });
   assert.equal(noSession.statusCode, 401);
 
-  const loginResponse = await login();
+  const loginResponse = await loginRequest();
   const cookie = String(loginResponse.headers["set-cookie"]).split(";")[0];
   const withSession = await app.inject({ method: "GET", url: "/api/v1/admin/projects", headers: { cookie } });
   assert.equal(withSession.statusCode, 200);
@@ -166,17 +188,91 @@ test("protected project endpoint requires session and returns data with owner se
   assert.equal(withSession.json().data[0].translations.en.title, "Construction Management Control Center");
 });
 
-test("raw session token is not stored in DB and auth events are created", async () => {
+test("bootstrap creates one owner and repeat bootstrap updates without a second row", async () => {
+  await clearAuth();
+  const created = await repository.bootstrapOwner({
+    id: randomUUID(),
+    login,
+    displayName: "Maksim",
+    passwordHash: await hashPassword(password),
+    now: new Date(),
+  });
+  assert.equal(created, "created");
+
+  const updated = await repository.bootstrapOwner({
+    id: randomUUID(),
+    login: " @MaxPar.Fed ",
+    displayName: "Maksim",
+    passwordHash: await hashPassword(newPassword),
+    now: new Date(),
+  });
+  assert.equal(updated, "updated");
+
+  const owners = await pool.query<{ count: number; login: string }>("select count(*)::int as count, min(login) as login from admin_users where role = 'owner'");
+  assert.equal(owners.rows[0]?.count, 1);
+  assert.equal(owners.rows[0]?.login, login);
+});
+
+test("database blocks a second owner", async () => {
   await resetOwner();
-  const loginResponse = await login();
+  await assert.rejects(
+    pool.query(
+      `
+        insert into admin_users (
+          id, login, password_hash, display_name, role, is_active,
+          failed_login_attempts, created_at, updated_at
+        )
+        values ($1, $2, $3, 'Second', 'owner', true, 0, now(), now())
+      `,
+      [randomUUID(), "@second-owner.fed", await hashPassword(newPassword)],
+    ),
+  );
+});
+
+test("password update revokes active sessions and old password no longer works", async () => {
+  await resetOwner();
+  const loginResponse = await loginRequest();
+  const cookie = String(loginResponse.headers["set-cookie"]).split(";")[0];
+
+  const beforeBootstrap = await app.inject({ method: "GET", url: "/api/v1/admin/auth/me", headers: { cookie } });
+  assert.equal(beforeBootstrap.statusCode, 200);
+
+  await repository.bootstrapOwner({
+    id: randomUUID(),
+    login,
+    displayName: "Maksim",
+    passwordHash: await hashPassword(newPassword),
+    now: new Date(),
+  });
+
+  const afterBootstrap = await app.inject({ method: "GET", url: "/api/v1/admin/auth/me", headers: { cookie } });
+  assert.equal(afterBootstrap.statusCode, 401);
+
+  const oldPassword = await loginRequest(login, password);
+  assert.equal(oldPassword.statusCode, 401);
+
+  const updatedPassword = await loginRequest(login, newPassword);
+  assert.equal(updatedPassword.statusCode, 200);
+});
+
+test("raw password, raw session token, and raw login are not stored in auth events", async () => {
+  await resetOwner();
+  const loginResponse = await loginRequest();
   const rawToken = String(loginResponse.headers["set-cookie"]).match(/maxpar_cms_session=([^;]+)/)?.[1] ?? "";
   assert.ok(rawToken.length > 0);
 
   const storedRaw = await pool.query<{ count: number }>("select count(*)::int as count from admin_sessions where token_hash = $1", [rawToken]);
   assert.equal(storedRaw.rows[0]?.count, 0);
 
-  const events = await pool.query<{ event_type: string }>("select event_type from auth_events order by created_at desc limit 1");
-  assert.equal(events.rows[0]?.event_type, "login_success");
+  const storedPassword = await pool.query<{ count: number }>("select count(*)::int as count from admin_users where password_hash = $1", [password]);
+  assert.equal(storedPassword.rows[0]?.count, 0);
+
+  await loginRequest(invalidLogin);
+  const events = await pool.query<{ event_type: string; login_hash: string | null }>("select event_type, login_hash from auth_events order by created_at desc limit 1");
+  assert.equal(events.rows[0]?.event_type, "login_failure");
+  assert.equal(events.rows[0]?.login_hash, hashLogin(invalidLogin, env.SESSION_TOKEN_SECRET));
+  assert.notEqual(events.rows[0]?.login_hash, invalidLogin);
+  assert.notEqual(events.rows[0]?.login_hash, password);
 });
 
 test("admin unsafe methods reject missing origin", async () => {
@@ -184,7 +280,7 @@ test("admin unsafe methods reject missing origin", async () => {
   const response = await app.inject({
     method: "POST",
     url: "/api/v1/admin/auth/login",
-    payload: { email, password },
+    payload: { login, password },
   });
   assert.equal(response.statusCode, 403);
   assert.equal(response.json().error.code, "FORBIDDEN_ORIGIN");

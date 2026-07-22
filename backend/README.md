@@ -72,10 +72,10 @@ npm run admin:bootstrap
 Create or update the local owner without putting credentials in Git:
 
 ```bash
-ADMIN_EMAIL='owner@your-domain.example' ADMIN_DISPLAY_NAME='Maksim' ADMIN_PASSWORD='...' npm run admin:bootstrap
+ADMIN_LOGIN='@maxpar.fed' ADMIN_DISPLAY_NAME='Maksim' npm run admin:bootstrap
 ```
 
-The password is validated, hashed with bcrypt cost 12, and never printed. Bcrypt is used to avoid native runtime dependencies in the current Docker image while still using a reviewed password hashing library.
+The command prompts for the password without echo. `ADMIN_PASSWORD` is also supported for local automation, but do not put a real value in Git, docs, or committed env files. The CMS has exactly one owner. The default owner login is `@maxpar.fed`; `ADMIN_LOGIN` exists only for local recovery and should remain `@maxpar.fed` for the production policy. The password is validated, hashed with bcrypt cost 12, and never printed. Re-running bootstrap updates the single owner and revokes active owner sessions.
 
 ## Docker
 
@@ -142,6 +142,17 @@ Unknown published project slug returns `404 NOT_FOUND`.
 
 Login sets an HttpOnly, SameSite=Strict session cookie. `COOKIE_SECURE=true` is required for production HTTPS.
 
+Request body:
+
+```json
+{
+  "login": "@maxpar.fed",
+  "password": "..."
+}
+```
+
+There is no public registration, signup, password reset, invitation, role selection, or additional admin-user API.
+
 ### Admin Projects
 
 - `GET /api/v1/admin/projects`
@@ -179,7 +190,7 @@ Tables:
 - `auth_events`
 
 Media files remain in the static frontend. The database stores only read metadata and paths.
-Raw session tokens are never stored. The database stores only a peppered HMAC hash of the token. Auth events do not store passwords, raw tokens, cookies, full IP addresses, full user agents, or raw email for unknown users.
+Raw session tokens are never stored. The database stores only a peppered HMAC hash of the token. Auth events do not store passwords, raw tokens, cookies, full IP addresses, full user agents, or raw login values for unknown users.
 
 ## Selectel Readiness
 

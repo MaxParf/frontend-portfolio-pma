@@ -76,8 +76,8 @@ export function App() {
     }
   }, [auth.status]);
 
-  async function handleLogin(email: string, password: string) {
-    const response = await loginRequest(email, password);
+  async function handleLogin(login: string, password: string) {
+    const response = await loginRequest(login, password);
     setAuth({ status: "authenticated", user: response.data });
     addActivity("login successful");
   }

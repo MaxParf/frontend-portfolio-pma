@@ -78,7 +78,12 @@ Local addresses:
 - CMS: `http://127.0.0.1:5510/`
 - CMS login: `http://127.0.0.1:5510/login`
 
-The public frontend still uses `data/projects.js`. The only public frontend integration is the hidden `Ctrl + Shift + F12` shortcut, which opens the local CMS login screen in a new tab. It is a UX shortcut only, not an auth mechanism.
+The public frontend still uses `data/projects.js`. The only public frontend integration is the hidden CMS shortcut, which opens the local CMS login screen in a new tab. It is a UX shortcut only, not an auth mechanism.
+
+Open local CMS login:
+
+- Standard function keys: `Ctrl + Shift + F12`
+- MacBook media-key mode: `Fn + Ctrl + Shift + F12`
 
 Run the local stack:
 

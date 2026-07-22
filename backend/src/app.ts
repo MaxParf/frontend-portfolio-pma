@@ -45,6 +45,7 @@ export function buildApp(env: AppEnv, pool: pg.Pool) {
   });
 
   registerOriginProtection(app, env);
+  app.get("/", async () => ({ service: "maxpar-portfolio-api", status: "ok" }));
   registerHealthRoutes(app, pool);
   registerPublicRoutes(app, db);
   const authService = registerAuthRoutes(app, env, db);
