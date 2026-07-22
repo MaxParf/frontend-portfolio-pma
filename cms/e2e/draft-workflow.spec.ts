@@ -57,6 +57,10 @@ test("owner can save, publish, restore, and discard local project edits", async 
   await expect(dialog).toBeHidden();
   const afterPublish = await request.get("http://127.0.0.1:3001/api/v1/projects/project-bradbury?locale=en");
   expect((await afterPublish.json()).data.title).toBe(title);
+  const publicPage = await page.context().newPage();
+  await publicPage.goto("http://127.0.0.1:8080");
+  await expect.poll(() => publicPage.locator("html").getAttribute("data-projects-source")).toBe("api");
+  await expect(publicPage.locator(".project-card__title").nth(1)).toHaveText(title);
 
   await page.getByRole("tab", { name: "Content" }).click();
   await titleInput.fill(canonicalTitle);
@@ -67,6 +71,9 @@ test("owner can save, publish, restore, and discard local project edits", async 
   await expect.poll(async () => (await (await request.get("http://127.0.0.1:3001/api/v1/projects/project-bradbury?locale=en")).json()).data.title).toBe(canonicalTitle);
   const restored = await request.get("http://127.0.0.1:3001/api/v1/projects/project-bradbury?locale=en");
   expect((await restored.json()).data).toEqual({ ...baseline, title: canonicalTitle });
+  await publicPage.reload();
+  await expect(publicPage.locator(".project-card__title").nth(1)).toHaveText(canonicalTitle);
+  await publicPage.close();
 
   await page.getByRole("tab", { name: "Content" }).click(); await titleInput.fill(`${baseline.title} local`); await page.getByRole("button", { name: "Logout" }).click();
   await expect(page.getByRole("dialog")).toBeVisible(); await page.keyboard.press("Escape"); await expect(page.getByTestId("cms-shell")).toBeVisible();

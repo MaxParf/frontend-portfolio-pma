@@ -7,6 +7,7 @@
         <title>Fullstack Developer Portfolio | Maksim Parfeniev</title>
         <meta name="description"
             content="Portfolio of Maksim Parfeniev, a fullstack developer focused on React, TypeScript, Node.js, real-world systems, and product prototypes.">
+        <meta name="portfolio-api-base-url" content="http://127.0.0.1:3001/api/v1">
 
         <link rel="alternate" href="https://www.maxpar.ru/" hreflang="x-default">
         <link rel="alternate" href="https://www.maxpar.ru/" hreflang="en">
@@ -131,7 +132,8 @@
                         <p class="section__subtitle" data-i18n="featured.subtitle">Real systems and product prototypes that best represent my current engineering focus.</p>
                     </div>
 
-                    <div class="featured-projects__grid" data-projects-root></div>
+                    <p class="projects-load-status" data-projects-status role="status" aria-live="polite"></p>
+                    <div class="featured-projects__grid" data-projects-root aria-busy="true"></div>
                 </div>
             </section>
 

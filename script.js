@@ -1,10 +1,12 @@
 import { renderProjects } from "./components/project-renderer.js";
-import { projects } from "./data/projects.js";
+import { ProjectApiError } from "./services/projects-api.js";
+import { loadProjects } from "./services/projects-source.js";
 
 const CMS_LOGIN_URL = "http://127.0.0.1:5510/login";
 
 document.addEventListener("DOMContentLoaded", () => {
   const projectsRoot = document.querySelector("[data-projects-root]");
+  const projectsStatus = document.querySelector("[data-projects-status]");
   const burger = document.querySelector(".site-header__burger");
   const navigation = document.getElementById("site-navigation");
   const body = document.body;
@@ -19,17 +21,61 @@ document.addEventListener("DOMContentLoaded", () => {
   let activeGalleryName = null;
   let activeGalleryIndex = 0;
   let lastFocusedGalleryButton = null;
+  let projectRequestController = null;
+  let projectRequestSequence = 0;
 
   function getCurrentLocale() {
     return window.getCurrentLanguage?.() || document.documentElement.lang || "en";
   }
 
-  function renderProjectCards(locale = getCurrentLocale()) {
-    renderProjects({
+  function renderProjectCards(projects, locale) {
+    return renderProjects({
       root: projectsRoot,
       projects,
       locale,
     });
+  }
+
+  function setProjectsStatus(locale, loading) {
+    if (projectsRoot) {
+      projectsRoot.setAttribute("aria-busy", String(loading));
+    }
+
+    if (projectsStatus) {
+      projectsStatus.textContent = loading ? (locale === "ru" ? "Загрузка проектов…" : "Loading projects…") : (locale === "ru" ? "Проекты загружены." : "Projects loaded.");
+    }
+  }
+
+  async function loadAndRenderProjects(locale = getCurrentLocale()) {
+    projectRequestController?.abort();
+    const requestController = new AbortController();
+    const requestSequence = ++projectRequestSequence;
+    projectRequestController = requestController;
+    setProjectsStatus(locale, true);
+
+    try {
+      const result = await loadProjects({ locale, signal: requestController.signal });
+      if (requestSequence !== projectRequestSequence) {
+        return;
+      }
+
+      if (lightbox?.classList.contains("is-open")) {
+        closeLightbox();
+      }
+
+      const renderedProjects = renderProjectCards(result.projects, locale);
+      document.documentElement.dataset.projectsSource = result.source;
+      window.dispatchEvent(new CustomEvent("portfolio:projects-loaded", { detail: { source: result.source, count: renderedProjects.length, locale } }));
+      if (result.source === "fallback") {
+        console.warn("[portfolio] Project API unavailable; static fallback used.");
+      }
+      setProjectsStatus(locale, false);
+    } catch (error) {
+      if (!(error instanceof ProjectApiError) || error.kind !== "aborted") {
+        console.warn("[portfolio] Project loading did not complete.");
+        setProjectsStatus(locale, false);
+      }
+    }
   }
 
   function getGalleries() {
@@ -57,14 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return galleries;
   }
 
-  renderProjectCards();
+  void loadAndRenderProjects();
 
   window.addEventListener("languagechange", (event) => {
-    renderProjectCards(event.detail?.lang);
-
-    if (lightbox?.classList.contains("is-open")) {
-      renderLightboxImage();
-    }
+    void loadAndRenderProjects(event.detail?.lang || getCurrentLocale());
   });
 
   if (burger && navigation) {

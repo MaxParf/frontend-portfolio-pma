@@ -9,7 +9,7 @@ The site presents Maksim Parfeniev as a fullstack developer focused on React, Ty
 - Responsive portfolio layout
 - English/Russian language switcher
 - Lightweight i18n dictionary with browser-language detection and manual localStorage override
-- Featured project case studies rendered from a static data layer
+- Featured project case studies rendered from the published API with a static fallback
 - Real project screenshots
 - Accessible navigation and mobile menu
 - BEM-based CSS structure
@@ -28,7 +28,9 @@ The site presents Maksim Parfeniev as a fullstack developer focused on React, Ty
 - `index.html` - main multilingual portfolio page
 - `i18n.js` - EN/RU translation dictionary and language switching logic
 - `script.js` - ES module for navigation, dynamic project rendering, and lightbox behavior
-- `data/projects.js` - static project data model
+- `data/projects.js` - static fallback and presentation baseline for project cards
+- `services/projects-source.js` - API-first project source with controlled fallback
+- `mappers/project-api-mapper.js` - published API DTO adapter for the existing renderer
 - `components/project-renderer.js` - DOM renderer for project cards
 - `style.scss` - SCSS source styles
 - `style.css` - compiled CSS used by the page
@@ -44,13 +46,13 @@ The site presents Maksim Parfeniev as a fullstack developer focused on React, Ty
 
 ## Local Usage
 
-Open `index.html` directly in a browser or serve the folder with a local static server:
+Start the API/CMS stack first, then serve the public frontend over HTTP so browser fetch and CORS use a real origin:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Then open `http://localhost:8080/`.
+Then open `http://127.0.0.1:8080/`.
 
 ## Notes
 
@@ -62,7 +64,7 @@ The site uses a single multilingual `index.html` page. The old separate English 
 sass --no-source-map style.scss style.css
 ```
 
-The public frontend baseline remains static and continues to use `data/projects.js`. Backend API, PostgreSQL, owner authentication, and CMS shell code live in isolated local-only project areas.
+The public frontend reads published projects from `http://127.0.0.1:3001/api/v1` at runtime. `data/projects.js` remains an active fallback and presentation baseline, so a controlled API failure never leaves the project section empty. The non-visible `html[data-projects-source]` diagnostic is `api` or `fallback`.
 
 ## Backend Foundation
 
@@ -70,7 +72,7 @@ Phase 2A backend foundation lives in `backend/`. It provides a local Docker Comp
 
 ## CMS Shell
 
-Phase 3B adds project draft editing and explicit publishing to the private CMS. Draft saves never change the public API; publishing changes its normalized published read model atomically. The public static frontend still uses `data/projects.js`.
+Phase 3B adds project draft editing and explicit publishing to the private CMS. Draft saves never change the public API; publishing changes its normalized published read model atomically. After Phase 3C, a normal public page reload receives the new published API content.
 
 Create/delete, media upload, scheduling, rollback, and Selectel deployment are not part of this implementation.
 
@@ -80,7 +82,7 @@ Local addresses:
 - CMS: `http://127.0.0.1:5510/`
 - CMS login: `http://127.0.0.1:5510/login`
 
-The public frontend still uses `data/projects.js`. The only public frontend integration is the hidden CMS shortcut, which opens the local CMS login screen in a new tab. It is a UX shortcut only, not an auth mechanism.
+The static fallback remains available when the API cannot be reached. It is not a production cache: CMS changes require a normal public page reload, and production deployment must configure a reachable public API base URL in the `portfolio-api-base-url` meta tag.
 
 Open local CMS login:
 
@@ -91,4 +93,11 @@ Run the local stack:
 
 ```bash
 docker compose -f compose.portfolio.yml up -d
+```
+
+Run public checks with:
+
+```bash
+npm run check
+npm test
 ```

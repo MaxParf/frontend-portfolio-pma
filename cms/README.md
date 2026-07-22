@@ -67,7 +67,11 @@ npm run test:e2e
 
 The dev server is pinned to `127.0.0.1:5510`.
 
-`npm run test:e2e` uses local Google Chrome through Playwright. It requires `CMS_TEST_PASSWORD` in the environment and never has a password default. The browser scenario restores the published baseline and logs out. Browser reports, traces, and screenshots are ignored by Git.
+`npm run test:e2e` uses local Google Chrome through Playwright. The owner workflow requires `CMS_TEST_PASSWORD` in the environment and never has a password default. It restores the published baseline, verifies that a public frontend reload receives the published value, and logs out. Browser reports, traces, and screenshots are ignored by Git.
+
+## Public Frontend Integration
+
+After Phase 3C, Publish changes the public API read model and the public portfolio reads that API on its next reload. The public frontend intentionally keeps a static fallback, so API unavailability can be invisible to visitors while published content is temporarily unavailable. It has no live update channel; reload is required.
 
 ## Authentication
 

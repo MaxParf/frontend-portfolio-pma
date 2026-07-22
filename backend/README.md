@@ -28,7 +28,7 @@ This phase does not include project editing, CMS write APIs, media upload, sched
 
 `project_revisions` stores typed JSONB content snapshots. `projects.current_published_revision_id` is the published pointer and `current_draft_revision_id` is the active draft pointer. Save creates an immutable draft revision with optimistic revision-ID locking; publish validates the draft, creates a published revision, updates normalized public tables and pointers, and writes an audit event in one transaction.
 
-The public frontend still reads `../data/projects.js`; drafts are never returned by public endpoints.
+The public frontend reads published projects through these public endpoints and retains `../data/projects.js` only as a frontend fallback/presentation baseline. Drafts, revision IDs, audit records, owner data, and credentials are never returned by public endpoints.
 
 ## Environment
 
@@ -54,7 +54,7 @@ Required variables:
 - `MAX_FAILED_LOGIN_ATTEMPTS`
 - `LOGIN_LOCK_SECONDS`
 
-`CORS_ORIGINS` must be an explicit comma-separated allowlist. Do not use `*` as a production default.
+`CORS_ORIGINS` must be an explicit comma-separated allowlist and include the public frontend HTTP origin used locally (for example `http://127.0.0.1:8080`). Public GET callers do not need or send credentials. Do not use `*` as a production default.
 `CMS_ORIGINS` is also explicit and is used for credentialed CORS and unsafe-method Origin checks.
 
 ## Local Commands

@@ -339,6 +339,19 @@ ul {
   gap: 28px;
 }
 
+.featured-projects__grid[aria-busy=true] {
+  min-height: 480px;
+}
+
+.projects-load-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .project-card,
 .service-card,
 .skills__group {
