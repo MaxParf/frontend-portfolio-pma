@@ -4,11 +4,13 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import { buildApp } from "../src/app.js";
 import { loadEnv } from "../src/config/env.js";
+import { assertTestDatabase } from "../src/config/database-identity.js";
 import { createDatabase } from "../src/db/client.js";
 import { loadFrontendProjects, seedProjects } from "../scripts/seed-projects.js";
 import { verifySeed } from "../scripts/verify-seed.js";
 
 const env = loadEnv({ ...process.env, NODE_ENV: "test" });
+assertTestDatabase(env, "Projects integration test setup");
 const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
 const app = buildApp(env, pool);
 

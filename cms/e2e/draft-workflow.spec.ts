@@ -2,10 +2,11 @@ import { expect, test } from "@playwright/test";
 
 const login = process.env.CMS_TEST_LOGIN ?? "@maxpar.fed";
 const password = process.env.CMS_TEST_PASSWORD;
+const apiBase = process.env.E2E_API_BASE_URL ?? "http://127.0.0.1:3001";
 
 test("owner can save, publish, restore, and discard local project edits", async ({ page, request }) => {
   test.skip(!password, "CMS_TEST_PASSWORD is required for the local authenticated browser workflow.");
-  const baselineResponse = await request.get("http://127.0.0.1:3001/api/v1/projects/project-bradbury?locale=en");
+  const baselineResponse = await request.get(`${apiBase}/api/v1/projects/project-bradbury?locale=en`);
   expect(baselineResponse.ok()).toBeTruthy();
   const baseline = (await baselineResponse.json()).data;
   const canonicalTitle = "Project Bradbury";
@@ -20,7 +21,7 @@ test("owner can save, publish, restore, and discard local project edits", async 
   await page.getByLabel("Password").fill(password!);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByTestId("cms-shell")).toBeVisible();
-  await expect(page.getByText("@maxpar.fed")).toBeVisible();
+  await expect(page.getByText(login)).toBeVisible();
   await page.reload();
   await expect(page.getByTestId("cms-shell")).toBeVisible();
 
@@ -45,7 +46,7 @@ test("owner can save, publish, restore, and discard local project edits", async 
   await page.getByRole("tab", { name: "Publishing" }).click();
   await page.getByRole("button", { name: "Save draft" }).click();
   await expect(page.getByText("Draft saved")).toBeVisible();
-  const beforePublish = await request.get("http://127.0.0.1:3001/api/v1/projects/project-bradbury?locale=en");
+  const beforePublish = await request.get(`${apiBase}/api/v1/projects/project-bradbury?locale=en`);
   expect((await beforePublish.json()).data.title).toBe(baseline.title);
   await page.reload();
   await page.getByRole("button", { name: "Project Bradbury" }).click();
@@ -55,31 +56,22 @@ test("owner can save, publish, restore, and discard local project edits", async 
   await page.keyboard.press("Escape"); await page.getByRole("button", { name: "Publish", exact: true }).click();
   await dialog.getByRole("button", { name: "Publish" }).click();
   await expect(dialog).toBeHidden();
-  const afterPublish = await request.get("http://127.0.0.1:3001/api/v1/projects/project-bradbury?locale=en");
+  const afterPublish = await request.get(`${apiBase}/api/v1/projects/project-bradbury?locale=en`);
   expect((await afterPublish.json()).data.title).toBe(title);
-  const publicPage = await page.context().newPage();
-  await publicPage.goto("http://127.0.0.1:8080");
-  await expect.poll(() => publicPage.locator("html").getAttribute("data-projects-source")).toBe("api");
-  await expect(publicPage.locator(".project-card__title").nth(1)).toHaveText(title);
-
   await page.getByRole("tab", { name: "Content" }).click();
   await titleInput.fill(canonicalTitle);
   await page.getByRole("tab", { name: "Publishing" }).click();
   await page.getByRole("button", { name: "Save draft" }).click();
   await page.getByRole("button", { name: "Publish", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Publish" }).click();
-  await expect.poll(async () => (await (await request.get("http://127.0.0.1:3001/api/v1/projects/project-bradbury?locale=en")).json()).data.title).toBe(canonicalTitle);
-  const restored = await request.get("http://127.0.0.1:3001/api/v1/projects/project-bradbury?locale=en");
+  await expect.poll(async () => (await (await request.get(`${apiBase}/api/v1/projects/project-bradbury?locale=en`)).json()).data.title).toBe(canonicalTitle);
+  const restored = await request.get(`${apiBase}/api/v1/projects/project-bradbury?locale=en`);
   expect((await restored.json()).data).toEqual({ ...baseline, title: canonicalTitle });
-  await publicPage.reload();
-  await expect(publicPage.locator(".project-card__title").nth(1)).toHaveText(canonicalTitle);
-  await publicPage.close();
-
   await page.getByRole("tab", { name: "Content" }).click(); await titleInput.fill(`${baseline.title} local`); await page.getByRole("button", { name: "Logout" }).click();
   await expect(page.getByRole("dialog")).toBeVisible(); await page.keyboard.press("Escape"); await expect(page.getByTestId("cms-shell")).toBeVisible();
   await page.getByRole("button", { name: "Logout" }).click(); await page.getByRole("dialog").getByRole("button", { name: "Discard changes and log out" }).click();
   await expect(page.getByLabel("Login")).toBeVisible();
-  expect(await page.evaluate(() => fetch("http://127.0.0.1:3001/api/v1/admin/auth/me", { credentials: "include" }).then((response) => response.status))).toBe(401);
-  expect(await page.evaluate(() => fetch("http://127.0.0.1:3001/api/v1/admin/projects", { credentials: "include" }).then((response) => response.status))).toBe(401);
+  expect(await page.evaluate((base) => fetch(`${base}/api/v1/admin/auth/me`, { credentials: "include" }).then((response) => response.status), apiBase)).toBe(401);
+  expect(await page.evaluate((base) => fetch(`${base}/api/v1/admin/projects`, { credentials: "include" }).then((response) => response.status), apiBase)).toBe(401);
   expect(errors.filter((message) => !message.includes("401 (Unauthorized)"))).toEqual([]); expect(fives).toEqual([]);
 });

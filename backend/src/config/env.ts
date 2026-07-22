@@ -6,6 +6,9 @@ const envSchema = z.object({
   HOST: z.string().min(1),
   PORT: z.coerce.number().int().min(1).max(65535),
   DATABASE_URL: z.string().url(),
+  DATABASE_PURPOSE: z.enum(["development", "test", "production"]).optional(),
+  TEST_DATABASE_NAME: z.string().min(1).optional(),
+  ALLOW_TEST_OWNER_BOOTSTRAP: z.enum(["true", "false"]).optional().transform((value) => value === "true"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   CORS_ORIGINS: z
     .string()

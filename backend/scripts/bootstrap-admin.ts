@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { loadEnv } from "../src/config/env.js";
+import { createOwnerBootstrapPolicy } from "../src/config/database-identity.js";
 import { createDatabase } from "../src/db/client.js";
 import { AuthRepository } from "../src/modules/auth/auth.repository.js";
 import { DEFAULT_OWNER_LOGIN, hashPassword, normalizeLogin } from "../src/modules/auth/auth.crypto.js";
@@ -28,8 +29,8 @@ async function main(): Promise<void> {
       displayName,
       passwordHash,
       now: new Date(),
-    });
-    console.info({ event: "admin_owner_bootstrapped", login, displayName, result });
+    }, createOwnerBootstrapPolicy(env));
+    console.info({ event: "admin_owner_bootstrapped", ownerId: result.ownerId, result: result.result, databasePurpose: env.DATABASE_PURPOSE ?? "development", revokedSessionCount: result.revokedSessionCount });
   } finally {
     await pool.end();
   }

@@ -2,6 +2,7 @@ import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import type { PortfolioDatabase } from "../../db/client.js";
 import { adminSessions, adminUsers, authEvents, type AdminUserRow } from "../../db/schema/index.js";
 import { normalizeLogin } from "./auth.crypto.js";
+import { assertOwnerBootstrapPolicy, type OwnerBootstrapPolicy } from "../../config/database-identity.js";
 
 export type AuthEventType = "login_success" | "login_failure" | "logout" | "session_expired" | "account_locked";
 
@@ -91,7 +92,8 @@ export class AuthRepository {
     displayName: string;
     passwordHash: string;
     now: Date;
-  }): Promise<"created" | "updated"> {
+  }, policy: OwnerBootstrapPolicy): Promise<{ result: "created" | "updated"; ownerId: string; revokedSessionCount: number }> {
+    assertOwnerBootstrapPolicy(policy);
     const normalizedLogin = normalizeLogin(input.login);
 
     return this.db.transaction(async (tx) => {
@@ -115,8 +117,12 @@ export class AuthRepository {
             updatedAt: input.now,
           })
           .where(eq(adminUsers.id, existingOwner.id));
-        await tx.update(adminSessions).set({ revokedAt: input.now }).where(and(eq(adminSessions.userId, existingOwner.id), isNull(adminSessions.revokedAt)));
-        return "updated";
+        const revokedSessions = await tx
+          .update(adminSessions)
+          .set({ revokedAt: input.now })
+          .where(and(eq(adminSessions.userId, existingOwner.id), isNull(adminSessions.revokedAt)))
+          .returning({ id: adminSessions.id });
+        return { result: "updated", ownerId: existingOwner.id, revokedSessionCount: revokedSessions.length };
       }
 
       await tx.insert(adminUsers).values({
@@ -131,7 +137,7 @@ export class AuthRepository {
         createdAt: input.now,
         updatedAt: input.now,
       });
-      return "created";
+      return { result: "created", ownerId: input.id, revokedSessionCount: 0 };
     });
   }
 

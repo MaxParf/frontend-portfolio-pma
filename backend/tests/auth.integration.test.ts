@@ -6,6 +6,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import { buildApp } from "../src/app.js";
 import { loadEnv } from "../src/config/env.js";
+import { assertTestDatabase, createOwnerBootstrapPolicy } from "../src/config/database-identity.js";
 import { createDatabase } from "../src/db/client.js";
 import { loadFrontendProjects, seedProjects } from "../scripts/seed-projects.js";
 import { DEFAULT_OWNER_LOGIN, hashLogin, hashPassword, hashSessionToken, normalizeLogin } from "../src/modules/auth/auth.crypto.js";
@@ -20,6 +21,8 @@ const newPassword = `Owner${randomUUID().replaceAll("-", "")}456`;
 const invalidPassword = `Invalid${randomUUID().replaceAll("-", "")}123`;
 const invalidLogin = `@unknown-${randomUUID()}.fed`;
 const env = loadEnv({ ...process.env, NODE_ENV: "test", LOGIN_RATE_LIMIT: "50" });
+assertTestDatabase(env, "Auth integration test setup");
+const bootstrapPolicy = createOwnerBootstrapPolicy(env);
 const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
 const db = createDatabase(pool);
 const app = buildApp(env, pool);
@@ -39,7 +42,7 @@ async function resetOwner(ownerPassword = password): Promise<void> {
     displayName: "Maksim",
     passwordHash: await hashPassword(ownerPassword),
     now: new Date(),
-  });
+  }, bootstrapPolicy);
 }
 
 async function loginRequest(loginInput = login, loginPassword = password) {
@@ -198,8 +201,8 @@ test("bootstrap creates one owner and repeat bootstrap updates without a second 
     displayName: "Maksim",
     passwordHash: await hashPassword(password),
     now: new Date(),
-  });
-  assert.equal(created, "created");
+  }, bootstrapPolicy);
+  assert.equal(created.result, "created");
 
   const updated = await repository.bootstrapOwner({
     id: randomUUID(),
@@ -207,8 +210,8 @@ test("bootstrap creates one owner and repeat bootstrap updates without a second 
     displayName: "Maksim",
     passwordHash: await hashPassword(newPassword),
     now: new Date(),
-  });
-  assert.equal(updated, "updated");
+  }, bootstrapPolicy);
+  assert.equal(updated.result, "updated");
 
   const owners = await pool.query<{ count: number; login: string }>("select count(*)::int as count, min(login) as login from admin_users where role = 'owner'");
   assert.equal(owners.rows[0]?.count, 1);
@@ -247,7 +250,7 @@ test("password update revokes active sessions and old password no longer works",
     displayName: "Maksim",
     passwordHash: await hashPassword(newPassword),
     now: new Date(),
-  });
+  }, bootstrapPolicy);
 
   const afterBootstrap = await app.inject({ method: "GET", url: "/api/v1/admin/auth/me", headers: { cookie } });
   assert.equal(afterBootstrap.statusCode, 401);
