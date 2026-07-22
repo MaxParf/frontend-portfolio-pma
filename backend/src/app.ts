@@ -11,6 +11,7 @@ import { registerOriginProtection } from "./middleware/origin-protection.js";
 import { requestIdHeader } from "./middleware/request-id.js";
 import { registerAdminProjectRoutes } from "./modules/admin-projects/admin-project.routes.js";
 import { registerAuthRoutes } from "./modules/auth/auth.routes.js";
+import { registerMediaRoutes } from "./modules/media/media.routes.js";
 import { registerHealthRoutes } from "./routes/health.routes.js";
 import { registerPublicRoutes } from "./routes/public.routes.js";
 
@@ -50,6 +51,7 @@ export function buildApp(env: AppEnv, pool: pg.Pool) {
   registerHealthRoutes(app, pool);
   registerPublicRoutes(app, db);
   const authService = registerAuthRoutes(app, env, db);
+  registerMediaRoutes(app, pool, env, authService);
   registerAdminProjectRoutes(app, db, pool, authService);
   registerErrorHandler(app);
   registerNotFoundHandler(app);

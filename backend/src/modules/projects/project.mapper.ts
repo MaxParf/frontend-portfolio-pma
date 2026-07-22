@@ -28,8 +28,9 @@ export function mapProjectToPublicDto(project: ProjectReadModel): PublicProjectD
       secondary: linkDto(project.secondaryUrl, project.secondaryLinkType, project.secondaryActionLabel),
     },
     media: project.media.map((asset) => ({
-      id: asset.externalKey,
-      src: asset.path,
+      id: asset.sourceType === "managed" ? asset.id : asset.externalKey,
+      src: asset.sourceType === "managed" ? `/api/v1/media/${asset.id}/display` : asset.path!,
+      thumbnailSrc: asset.sourceType === "managed" ? `/api/v1/media/${asset.id}/thumbnail` : null,
       role: asset.role,
       sortOrder: asset.sortOrder,
       alt: asset.altText,

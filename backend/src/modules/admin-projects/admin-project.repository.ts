@@ -87,7 +87,7 @@ export class AdminProjectRepository {
         (acc, row) => {
           let asset = acc.find((item) => item.id === row.externalKey);
           if (!asset) {
-            asset = { id: row.externalKey, src: row.path, role: row.role, sortOrder: row.sortOrder, translations: {} };
+            asset = { id: row.externalKey, src: row.path ?? "", role: row.role, sortOrder: row.sortOrder, translations: {} };
             acc.push(asset);
           }
           asset.translations[row.locale] = { alt: row.altText, ariaLabel: row.ariaLabel };

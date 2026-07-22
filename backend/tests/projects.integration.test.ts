@@ -75,12 +75,12 @@ test("media counts and seed idempotency are correct", async () => {
   const counts = await pool.query<{ table_name: string; count: string }>(`
     select 'projects' as table_name, count(*) from projects
     union all select 'technologies', count(*) from technologies
-    union all select 'media_assets', count(*) from media_assets
+    union all select 'legacy_media_assets', count(*) from media_assets where source_type = 'legacy'
   `);
   assert.deepEqual(Object.fromEntries(counts.rows.map((row) => [row.table_name, Number(row.count)])), {
     projects: 3,
     technologies: 16,
-    media_assets: 12,
+    legacy_media_assets: 12,
   });
 });
 

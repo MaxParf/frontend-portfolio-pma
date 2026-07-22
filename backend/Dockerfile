@@ -17,10 +17,12 @@ FROM node:24-bookworm-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 RUN groupadd --system portfolio && useradd --system --gid portfolio --home-dir /app portfolio
+RUN mkdir -p /app/storage/project-media && chown -R portfolio:portfolio /app/storage
 COPY --from=build --chown=portfolio:portfolio /app/package.json ./package.json
 COPY --from=build --chown=portfolio:portfolio /app/node_modules ./node_modules
 COPY --from=build --chown=portfolio:portfolio /app/dist ./dist
 COPY --from=build --chown=portfolio:portfolio /app/drizzle ./drizzle
+VOLUME ["/app/storage/project-media"]
 USER portfolio
 EXPOSE 3001
 CMD ["node", "dist/src/server.js"]

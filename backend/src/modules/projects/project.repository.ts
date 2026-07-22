@@ -31,8 +31,10 @@ export interface ProjectReadModel {
   secondaryActionLabel: string | null;
   technologies: string[];
   media: Array<{
+    id: string;
     externalKey: string;
-    path: string;
+    path: string | null;
+    sourceType: "legacy" | "managed";
     role: string;
     sortOrder: number;
     altText: string;
@@ -63,7 +65,9 @@ export class ProjectRepository {
           this.db
             .select({
               externalKey: mediaAssets.externalKey,
+              id: mediaAssets.id,
               path: mediaAssets.path,
+              sourceType: mediaAssets.sourceType,
               role: mediaAssets.role,
               sortOrder: projectMedia.sortOrder,
               altText: mediaAssetTranslations.altText,

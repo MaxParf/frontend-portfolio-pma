@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import test, { after, before } from "node:test";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
@@ -342,6 +343,37 @@ test("admin unsafe methods reject missing origin", async () => {
   });
   assert.equal(response.statusCode, 403);
   assert.equal(response.json().error.code, "FORBIDDEN_ORIGIN");
+});
+
+test("owner upload stays private until publish, produces managed variants, and preserves legacy media", async () => {
+  await resetOwner();
+  const session = await loginRequest(); const cookie = String(session.headers["set-cookie"]).split(";")[0];
+  const boundary = `----media-${randomUUID()}`;
+  const image = await readFile("../images/projects/cus/cus-dashboard.png");
+  const payload = Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"sample.png\"\r\nContent-Type: image/png\r\n\r\n`), image, Buffer.from(`\r\n--${boundary}--\r\n`)]);
+  const response = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/media", headers: { cookie, origin, "content-type": `multipart/form-data; boundary=${boundary}` }, payload });
+  assert.equal(response.statusCode, 200);
+  const uploaded = response.json().data as { assetId: string };
+  assert.match(uploaded.assetId, /^[0-9a-f-]{36}$/);
+  assert.equal((await app.inject({ method: "GET", url: `/api/v1/media/${uploaded.assetId}/display` })).statusCode, 404);
+
+  const editor = (await app.inject({ method: "GET", url: "/api/v1/admin/projects/project-bradbury/editor", headers: { cookie } })).json().data;
+  const content = structuredClone(editor.published.content);
+  content.media.push({ id: randomUUID(), sourceType: "managed", assetId: uploaded.assetId, role: "gallery", sortOrder: 999, translations: { en: { alt: "Managed image", ariaLabel: "Open managed image" }, ru: { alt: "Управляемое изображение", ariaLabel: "Открыть управляемое изображение" } } });
+  const saved = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers: { cookie, origin }, payload: { baseRevisionId: editor.published.revisionId, expectedDraftRevisionId: editor.draft?.revisionId ?? null, content } });
+  assert.equal(saved.statusCode, 200);
+  const published = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/publish", headers: { cookie, origin }, payload: { expectedDraftRevisionId: saved.json().data.revisionId, confirmation: true } });
+  assert.equal(published.statusCode, 200);
+  const display = await app.inject({ method: "GET", url: `/api/v1/media/${uploaded.assetId}/display` });
+  assert.equal(display.statusCode, 200); assert.equal(display.headers["content-type"], "image/webp");
+  const publicProject = (await app.inject({ method: "GET", url: "/api/v1/projects/project-bradbury?locale=en" })).json().data;
+  assert.ok(publicProject.media.some((asset: { src: string }) => asset.src === `/api/v1/media/${uploaded.assetId}/display`));
+
+  const restoreEditor = (await app.inject({ method: "GET", url: "/api/v1/admin/projects/project-bradbury/editor", headers: { cookie } })).json().data;
+  const restore = structuredClone(restoreEditor.published.content); restore.media = restore.media.filter((asset: { sourceType: string }) => asset.sourceType === "legacy");
+  const restoreDraft = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers: { cookie, origin }, payload: { baseRevisionId: restoreEditor.published.revisionId, expectedDraftRevisionId: restoreEditor.draft?.revisionId ?? null, content: restore } });
+  assert.equal(restoreDraft.statusCode, 200);
+  assert.equal((await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/publish", headers: { cookie, origin }, payload: { expectedDraftRevisionId: restoreDraft.json().data.revisionId, confirmation: true } })).statusCode, 200);
 });
 
 test("draft and publish routes preserve public isolation, revisions, conflicts, and audit history", async () => {

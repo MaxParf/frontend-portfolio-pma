@@ -37,6 +37,10 @@ const envSchema = z.object({
   LOGIN_RATE_LIMIT: z.coerce.number().int().min(1).max(100).default(10),
   MAX_FAILED_LOGIN_ATTEMPTS: z.coerce.number().int().min(3).max(20).default(5),
   LOGIN_LOCK_SECONDS: z.coerce.number().int().min(60).max(86_400).default(900),
+  MEDIA_STORAGE_DRIVER: z.literal("local").default("local"),
+  MEDIA_STORAGE_ROOT: z.string().min(1).default("./storage/project-media"),
+  MEDIA_MAX_FILE_BYTES: z.coerce.number().int().min(1_024).max(32 * 1024 * 1024).default(8 * 1024 * 1024),
+  MEDIA_MAX_FILES_PER_REQUEST: z.coerce.number().int().min(1).max(20).default(10),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

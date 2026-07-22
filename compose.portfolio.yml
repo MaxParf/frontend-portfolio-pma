@@ -42,6 +42,8 @@ services:
       ]
     ports:
       - "127.0.0.1:${PORT:-3001}:${PORT:-3001}"
+    volumes:
+      - portfolio-media-data:/app/storage/project-media
     depends_on:
       portfolio-db:
         condition: service_healthy
@@ -97,3 +99,5 @@ networks:
 volumes:
   portfolio-postgres-data:
     name: maxpar-portfolio-postgres-data
+  portfolio-media-data:
+    name: maxpar-portfolio-media-data

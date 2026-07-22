@@ -77,6 +77,7 @@ export interface PublicProjectDto {
   media: Array<{
     id: string;
     src: string;
+    thumbnailSrc: string | null;
     role: string;
     sortOrder: number;
     alt: string;

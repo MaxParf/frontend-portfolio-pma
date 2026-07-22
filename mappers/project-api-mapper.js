@@ -104,6 +104,7 @@ function mapMedia(apiMedia, fallbackMedia, locale) {
       ...(presentation ?? {}),
       id: staticId,
       src: safeMediaSrc(media.src),
+      thumbnailSrc: media.thumbnailSrc ? safeMediaSrc(media.thumbnailSrc) : null,
       role: requiredString(media.role, "media.role"),
       sortOrder: Number.isFinite(media.sortOrder) ? media.sortOrder : 0,
       translations: {
@@ -130,9 +131,13 @@ function mapProject(apiProject, fallbackProject, locale) {
   const media = mapMedia(apiProject.media, fallbackProject.media, locale);
   const staticMediaIds = new Set(media.map((item) => item.id));
   const galleryGroups = fallbackProject.galleryGroups.filter((group) => group.mediaIds.every((id) => staticMediaIds.has(id)));
+  const groupedMediaIds = new Set(galleryGroups.flatMap((group) => group.mediaIds));
+  const managedMediaIds = media.map((item) => item.id).filter((id) => !groupedMediaIds.has(id));
 
   if (!galleryGroups.length && media.length) {
     galleryGroups.push({ id: "main", className: "project-card__gallery", mediaIds: media.map((item) => item.id) });
+  } else if (managedMediaIds.length) {
+    galleryGroups.push({ id: "managed", className: "project-card__gallery", mediaIds: managedMediaIds });
   }
 
   return {

@@ -38,8 +38,10 @@ test("project DTO mapper hides database fields and preserves public contract", (
     technologies: ["React", "TypeScript"],
     media: [
       {
+        id: "00000000-0000-4000-8000-000000000001",
         externalKey: "project-bradbury:mobile-home",
         path: "images/projects/bradbury/mobile_home_feed.webp",
+        sourceType: "legacy",
         role: "gallery",
         sortOrder: 10,
         altText: "Mobile feed",

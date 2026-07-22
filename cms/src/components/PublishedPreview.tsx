@@ -45,7 +45,7 @@ export function PublishedPreview({ content, locale }: PublishedPreviewProps) {
         </div>
         {media ? (
           <figure>
-            <img src={`/${media.src}`} alt={media.translations[locale]?.alt ?? ""} />
+            <img src={media.sourceType === "managed" ? `/api/v1/media/${media.assetId}/display` : `/${media.src}`} alt={media.translations[locale]?.alt ?? ""} />
             <figcaption>{media.translations[locale]?.ariaLabel}</figcaption>
           </figure>
         ) : null}

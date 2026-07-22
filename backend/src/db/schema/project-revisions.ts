@@ -31,7 +31,7 @@ export const auditEvents = pgTable(
     sessionId: uuid("session_id"),
     requestId: uuid("request_id"),
     traceId: uuid("trace_id"),
-    eventType: pgEnum("audit_event_type", ["project_draft_saved", "project_published", "project_draft_conflict", "project_publish_failed"])("event_type").notNull(),
+    eventType: pgEnum("audit_event_type", ["project_draft_saved", "project_published", "project_draft_conflict", "project_publish_failed", "media_upload_succeeded", "media_upload_rejected", "media_publish_activated", "media_cleanup_deleted"])("event_type").notNull(),
     entityType: pgEnum("audit_entity_type", ["project"])("entity_type").notNull().default("project"),
     entityId: uuid("entity_id").notNull(),
     status: pgEnum("audit_event_status", ["success", "failure"])("status").notNull(),
