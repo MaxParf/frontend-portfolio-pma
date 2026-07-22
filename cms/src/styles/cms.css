@@ -653,6 +653,68 @@ button {
   color: var(--text-muted);
 }
 
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(23, 25, 29, 0.48);
+}
+
+.publish-dialog {
+  width: min(460px, 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 0 14px 36px rgba(16, 24, 40, 0.24);
+  padding: 24px;
+}
+
+.publish-dialog h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.publish-dialog > p {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+}
+
+.dialog-actions,
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.dialog-actions button,
+.editor-actions button,
+.technology-list button,
+.editor-error button {
+  min-height: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.dialog-actions button:last-child,
+.editor-actions button:first-child {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.dialog-actions button:disabled,
+.editor-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 @media (max-width: 1399px) {
   :root {
     --tree-width: 286px;

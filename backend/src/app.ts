@@ -34,13 +34,14 @@ export function buildApp(env: AppEnv, pool: pg.Pool) {
 
   app.register(cors, {
     credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     origin: (origin, callback) => {
       const allowedOrigins = [...env.CORS_ORIGINS, ...env.CMS_ORIGINS];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
         return;
       }
-      callback(new Error("CORS origin is not allowed"), false);
+      callback(null, false);
     },
   });
 
@@ -49,7 +50,7 @@ export function buildApp(env: AppEnv, pool: pg.Pool) {
   registerHealthRoutes(app, pool);
   registerPublicRoutes(app, db);
   const authService = registerAuthRoutes(app, env, db);
-  registerAdminProjectRoutes(app, db, authService);
+  registerAdminProjectRoutes(app, db, pool, authService);
   registerErrorHandler(app);
   registerNotFoundHandler(app);
 

@@ -1,29 +1,29 @@
-import type { AdminProject, Locale } from "../api/types";
+import type { DraftContent, Locale } from "../api/types";
 
 interface PublishedPreviewProps {
-  project: AdminProject | null;
+  content: DraftContent | null;
   locale: Locale;
 }
 
-export function PublishedPreview({ project, locale }: PublishedPreviewProps) {
-  if (!project) {
+export function PublishedPreview({ content, locale }: PublishedPreviewProps) {
+  if (!content) {
     return (
       <section className="published-preview">
-        <h2>Published data preview</h2>
+        <h2>Draft preview</h2>
         <p>No project selected.</p>
       </section>
     );
   }
 
-  const translation = project.translations[locale];
-  const media = project.media[0];
+  const translation = content.translations[locale];
+  const media = content.media[0];
 
   return (
     <section className="published-preview" aria-labelledby="preview-title">
       <div className="preview-toolbar">
         <div>
-          <h2 id="preview-title">Published data preview</h2>
-          <p>Locale: {locale.toUpperCase()}</p>
+          <h2 id="preview-title">Draft preview</h2>
+          <p>Content preview - CMS representation</p>
         </div>
         <div className="viewport-switch" aria-label="Preview viewport controls">
           <button type="button" className="is-active">
@@ -39,8 +39,8 @@ export function PublishedPreview({ project, locale }: PublishedPreviewProps) {
         <h3>{translation.title}</h3>
         <p>{translation.description}</p>
         <div className="preview-card__tags">
-          {project.technologies.slice(0, 6).map((technology) => (
-            <span key={technology}>{technology}</span>
+          {content.technologies.slice(0, 6).map((technology) => (
+            <span key={technology.slug}>{technology.name}</span>
           ))}
         </div>
         {media ? (

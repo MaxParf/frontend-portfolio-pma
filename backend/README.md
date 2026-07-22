@@ -4,14 +4,14 @@ Production-oriented backend foundation for the Maxpar portfolio public read API 
 
 ## Scope
 
-Phase 2A implemented the public published-project read model. Phase 3A adds production-oriented owner authentication and protected read-only admin APIs for the CMS shell:
+Phase 2A implemented the public published-project read model. Phase 3B adds owner-authenticated project draft editing and explicit publishing:
 
 - TypeScript API on Fastify
 - PostgreSQL schema managed by Drizzle migrations
 - deterministic import from `../data/projects.js`
 - public read-only REST endpoints
 - protected owner auth endpoints
-- protected read-only admin project endpoints
+- protected admin editor, draft, publish, revision, and audit endpoints
 - local Docker Compose isolation for future Selectel deployment
 
 This phase does not include project editing, CMS write APIs, media upload, scheduling, draft live preview, workers, object storage, DNS, TLS, or production deployment.
@@ -26,7 +26,9 @@ This phase does not include project editing, CMS write APIs, media upload, sched
 - `scripts/seed-projects.ts` imports the current frontend project model and upserts it into PostgreSQL.
 - `scripts/verify-seed.ts` verifies the published read model and media counts.
 
-The public frontend still reads `../data/projects.js`; it is not switched to this API in Phase 3A.
+`project_revisions` stores typed JSONB content snapshots. `projects.current_published_revision_id` is the published pointer and `current_draft_revision_id` is the active draft pointer. Save creates an immutable draft revision with optimistic revision-ID locking; publish validates the draft, creates a published revision, updates normalized public tables and pointers, and writes an audit event in one transaction.
+
+The public frontend still reads `../data/projects.js`; drafts are never returned by public endpoints.
 
 ## Environment
 
@@ -170,7 +172,15 @@ There is no public registration, signup, password reset, invitation, role select
 - `GET /api/v1/admin/projects`
 - `GET /api/v1/admin/projects/:slug`
 
-These endpoints require an active owner session and return read-only PostgreSQL data for the CMS shell.
+These endpoints require an active owner session:
+
+- `GET /api/v1/admin/projects/:slug/editor`
+- `PUT /api/v1/admin/projects/:slug/draft`
+- `POST /api/v1/admin/projects/:slug/publish`
+- `GET /api/v1/admin/projects/:slug/revisions`
+- `GET /api/v1/admin/audit-events?slug=:slug`
+
+Unsafe operations require an allowed Origin. Stale draft writes return `409 DRAFT_CONFLICT`; stale publishes return `409 PUBLISH_CONFLICT`. `npm run db:migrate` applies the revision migration and backfills initial published revisions.
 
 ## Error Format
 

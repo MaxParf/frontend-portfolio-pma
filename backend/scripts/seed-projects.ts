@@ -3,6 +3,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 import { loadEnv } from "../src/config/env.js";
 import { frontendProjectsSchema, type FrontendProject } from "../src/modules/projects/project.schemas.js";
+import { ProjectDraftRepository } from "../src/modules/admin-projects/project-draft.repository.js";
 
 type Locale = "en" | "ru";
 
@@ -195,6 +196,7 @@ export async function seedProjects(pool: pg.Pool, sourceProjects: FrontendProjec
     }
 
     await client.query("commit");
+    await new ProjectDraftRepository(pool).backfill();
     return {
       projects: sourceProjects.length,
       technologies: uniqueTechnologies.length,

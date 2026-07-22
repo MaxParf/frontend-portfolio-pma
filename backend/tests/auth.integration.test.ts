@@ -343,3 +343,74 @@ test("admin unsafe methods reject missing origin", async () => {
   assert.equal(response.statusCode, 403);
   assert.equal(response.json().error.code, "FORBIDDEN_ORIGIN");
 });
+
+test("draft and publish routes preserve public isolation, revisions, conflicts, and audit history", async () => {
+  await resetOwner();
+  const unauthorized = await app.inject({ method: "GET", url: "/api/v1/admin/projects/project-bradbury/editor" });
+  assert.equal(unauthorized.statusCode, 401);
+
+  const session = await loginRequest();
+  const cookie = String(session.headers["set-cookie"]).split(";")[0];
+  const headers = { cookie, origin };
+  const editorResponse = await app.inject({ method: "GET", url: "/api/v1/admin/projects/project-bradbury/editor", headers: { cookie } });
+  assert.equal(editorResponse.statusCode, 200);
+  const initialEditor = editorResponse.json().data;
+  const baseline = structuredClone(initialEditor.published.content);
+  const publicBefore = await app.inject({ method: "GET", url: "/api/v1/projects/project-bradbury?locale=en" });
+  const baselinePublic = publicBefore.json().data;
+
+  try {
+    const invalidOrigin = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers: { cookie, origin: "http://invalid.local" }, payload: { baseRevisionId: initialEditor.published.revisionId, expectedDraftRevisionId: initialEditor.draft?.revisionId ?? null, content: baseline } });
+    assert.equal(invalidOrigin.statusCode, 403);
+
+    const invalidContent = structuredClone(baseline); invalidContent.slug = "invalid slug";
+    const invalidDraft = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers, payload: { baseRevisionId: initialEditor.published.revisionId, expectedDraftRevisionId: initialEditor.draft?.revisionId ?? null, content: invalidContent } });
+    assert.equal(invalidDraft.statusCode, 400);
+
+    const firstContent = structuredClone(baseline); firstContent.translations.en.title = `${baseline.translations.en.title} draft test`;
+    const firstDraft = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers, payload: { baseRevisionId: initialEditor.published.revisionId, expectedDraftRevisionId: initialEditor.draft?.revisionId ?? null, content: firstContent } });
+    assert.equal(firstDraft.statusCode, 200);
+    const firstRevisionId = firstDraft.json().data.revisionId;
+    assert.equal((await app.inject({ method: "GET", url: "/api/v1/projects/project-bradbury?locale=en" })).json().data.title, baselinePublic.title);
+
+    const staleSave = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers, payload: { baseRevisionId: initialEditor.published.revisionId, expectedDraftRevisionId: initialEditor.draft?.revisionId ?? null, content: firstContent } });
+    assert.equal(staleSave.statusCode, 409);
+    assert.equal(staleSave.json().error.code, "DRAFT_CONFLICT");
+
+    const secondContent = structuredClone(firstContent); secondContent.translations.en.title = `${baseline.translations.en.title} published test`;
+    const secondDraft = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers, payload: { baseRevisionId: initialEditor.published.revisionId, expectedDraftRevisionId: firstRevisionId, content: secondContent } });
+    assert.equal(secondDraft.statusCode, 200);
+    const secondRevisionId = secondDraft.json().data.revisionId;
+    const pointersBeforePublish = await pool.query<{ current_published_revision_id: string; current_draft_revision_id: string }>("select current_published_revision_id,current_draft_revision_id from projects where slug='project-bradbury'");
+    assert.equal(pointersBeforePublish.rows[0]?.current_published_revision_id, initialEditor.published.revisionId);
+    assert.equal(pointersBeforePublish.rows[0]?.current_draft_revision_id, secondRevisionId);
+
+    const stalePublish = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/publish", headers, payload: { expectedDraftRevisionId: firstRevisionId, confirmation: true } });
+    assert.equal(stalePublish.statusCode, 409);
+    assert.equal(stalePublish.json().error.code, "PUBLISH_CONFLICT");
+    const published = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/publish", headers, payload: { expectedDraftRevisionId: secondRevisionId, confirmation: true } });
+    assert.equal(published.statusCode, 200);
+    assert.equal((await app.inject({ method: "GET", url: "/api/v1/projects/project-bradbury?locale=en" })).json().data.title, secondContent.translations.en.title);
+    const pointersAfterPublish = await pool.query<{ current_published_revision_id: string; current_draft_revision_id: string | null }>("select current_published_revision_id,current_draft_revision_id from projects where slug='project-bradbury'");
+    assert.equal(pointersAfterPublish.rows[0]?.current_published_revision_id, published.json().data.revisionId);
+    assert.equal(pointersAfterPublish.rows[0]?.current_draft_revision_id, null);
+    const audit = await app.inject({ method: "GET", url: "/api/v1/admin/audit-events?slug=project-bradbury", headers: { cookie } });
+    assert.equal(audit.statusCode, 200);
+    assert.ok(audit.json().data.some((event: { eventType: string }) => event.eventType === "project_draft_saved"));
+    assert.ok(audit.json().data.some((event: { eventType: string }) => event.eventType === "project_published"));
+
+    const incomplete = structuredClone(secondContent); incomplete.translations.en.description = "";
+    const incompleteDraft = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers, payload: { baseRevisionId: published.json().data.revisionId, expectedDraftRevisionId: null, content: incomplete } });
+    assert.equal(incompleteDraft.statusCode, 200);
+    const rejectedPublish = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/publish", headers, payload: { expectedDraftRevisionId: incompleteDraft.json().data.revisionId, confirmation: true } });
+    assert.equal(rejectedPublish.statusCode, 400);
+    assert.equal((await app.inject({ method: "GET", url: "/api/v1/projects/project-bradbury?locale=en" })).json().data.title, secondContent.translations.en.title);
+  } finally {
+    const current = (await app.inject({ method: "GET", url: "/api/v1/admin/projects/project-bradbury/editor", headers: { cookie } })).json().data;
+    const restore = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers, payload: { baseRevisionId: current.published.revisionId, expectedDraftRevisionId: current.draft?.revisionId ?? null, content: baseline } });
+    assert.equal(restore.statusCode, 200);
+    const restored = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/publish", headers, payload: { expectedDraftRevisionId: restore.json().data.revisionId, confirmation: true } });
+    assert.equal(restored.statusCode, 200);
+    assert.deepEqual((await app.inject({ method: "GET", url: "/api/v1/projects/project-bradbury?locale=en" })).json().data, baselinePublic);
+  }
+});

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { LoginScreen } from "./LoginScreen";
 import { CmsShell } from "./CmsShell";
+import { AccessibleDialog } from "./AccessibleDialog";
 import { logout } from "../api/auth";
 import type { AdminProject } from "../api/types";
 
@@ -128,7 +129,7 @@ describe("App", () => {
 
     expect(await screen.findByTestId("cms-shell")).toBeTruthy();
     await waitFor(() => expect(screen.getAllByText("Project Bradbury").length).toBeGreaterThan(0));
-    expect(screen.getByText("Published data preview")).toBeTruthy();
+    expect(screen.getByText("Draft preview")).toBeTruthy();
     expect(screen.getByText("@maxpar.fed")).toBeTruthy();
   });
 });
@@ -185,6 +186,38 @@ describe("CmsShell", () => {
     );
 
     expect(screen.getByText("Maxpar CMS is available on desktop screens with a minimum width of 1200 px.")).toBeTruthy();
+  });
+});
+
+describe("AccessibleDialog", () => {
+  it("exposes modal semantics and traps tab navigation", () => {
+    const trigger = document.createElement("button");
+    document.body.append(trigger);
+    trigger.focus();
+    const onCancel = vi.fn();
+    const view = render(<AccessibleDialog title="Publish changes?" description="Public data will change." confirmLabel="Publish" onCancel={onCancel} onConfirm={vi.fn()} />);
+    const dialog = screen.getByRole("dialog");
+    const cancel = screen.getByRole("button", { name: "Cancel" });
+    const publish = screen.getByRole("button", { name: "Publish" });
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(document.activeElement).toBe(cancel);
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(publish);
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(document.activeElement).toBe(cancel);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    view.unmount();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
+  it("does not dismiss while a publish request is in progress", () => {
+    const onCancel = vi.fn();
+    render(<AccessibleDialog title="Publish changes?" description="Public data will change." confirmLabel="Publish" busy onCancel={onCancel} onConfirm={vi.fn()} />);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Working..." }).hasAttribute("disabled")).toBe(true);
   });
 });
 

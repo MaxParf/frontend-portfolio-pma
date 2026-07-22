@@ -38,7 +38,7 @@ services:
       [
         "sh",
         "-c",
-        "DATABASE_URL=postgres://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@portfolio-db:5432/$${POSTGRES_DB} node dist/src/server.js",
+        "DATABASE_URL=postgres://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@portfolio-db:5432/$${POSTGRES_DB} node dist/scripts/migrate.js && DATABASE_URL=postgres://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@portfolio-db:5432/$${POSTGRES_DB} node dist/src/server.js",
       ]
     ports:
       - "127.0.0.1:${PORT:-3001}:${PORT:-3001}"

@@ -1,6 +1,6 @@
 # Maxpar CMS Shell
 
-Phase 3A private CMS frontend for the Maxpar portfolio.
+Phase 3B private CMS frontend for the Maxpar portfolio.
 
 ## Scope
 
@@ -19,15 +19,17 @@ Implemented:
 - `/` protected CMS shell
 - desktop-only gate below 1200 px
 - top bar with environment, API status, user, logout
-- read-only tree and project inspector
-- published data preview with EN/RU switch
+- project editor with EN/RU content, links, technologies, and media metadata
+- local draft preview with EN/RU switch
+- explicit Save draft and Publish confirmation
+- dirty-state protection for project switching, logout, and browser reload/close
+- conflict reload action and read-only revision summary
 - local UI-only session activity panel
 
 Not implemented:
 
-- project editing
 - create/delete
-- publish/hide/archive
+- hide/archive
 - media upload
 - scheduling
 - draft live preview tokens
@@ -60,9 +62,12 @@ npm run typecheck
 npm test
 npm run build
 npm audit --omit=dev
+npm run test:e2e
 ```
 
 The dev server is pinned to `127.0.0.1:5510`.
+
+`npm run test:e2e` uses local Google Chrome through Playwright. It requires `CMS_TEST_PASSWORD` in the environment and never has a password default. The browser scenario restores the published baseline and logs out. Browser reports, traces, and screenshots are ignored by Git.
 
 ## Authentication
 

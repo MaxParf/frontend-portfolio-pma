@@ -1,5 +1,5 @@
 import type { ActivityEvent } from "./App";
-import type { AdminProject, AdminUser, Locale } from "../api/types";
+import type { AdminProject, AdminUser, DraftContent, Locale, ProjectEditor } from "../api/types";
 import { DesktopGate } from "./DesktopGate";
 import { ProjectTree } from "./ProjectTree";
 import { ProjectInspector } from "./ProjectInspector";
@@ -12,6 +12,9 @@ interface CmsShellProps {
   projectsStatus: "idle" | "loading" | "ready" | "error";
   projectsError: string | null;
   selectedProject: AdminProject | null;
+  editor?: ProjectEditor | null;
+  editorLoading?: boolean;
+  previewContent?: DraftContent | null;
   selectedProjectId: string | null;
   locale: Locale;
   activityEvents: ActivityEvent[];
@@ -20,6 +23,9 @@ interface CmsShellProps {
   onProjectSelected: (projectId: string) => void;
   onLocaleChanged: (locale: Locale) => void;
   onLogout: () => void;
+  onEditorSaved?: () => Promise<ProjectEditor | null>;
+  onPreviewChanged?: (content: DraftContent) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export function CmsShell(props: CmsShellProps) {
@@ -66,9 +72,9 @@ export function CmsShell(props: CmsShellProps) {
             onRetry={props.onRetryProjects}
             onProjectSelected={props.onProjectSelected}
           />
-          <ProjectInspector project={props.selectedProject} locale={props.locale} status={props.projectsStatus} />
-          <aside className="preview-panel" aria-label="Published preview">
-            <PublishedPreview project={props.selectedProject} locale={props.locale} />
+          <ProjectInspector editor={props.editor ?? null} locale={props.locale} loading={props.editorLoading ?? false} onSaved={props.onEditorSaved ?? (async () => null)} onPreview={props.onPreviewChanged ?? (() => undefined)} onDirtyChange={props.onDirtyChange ?? (() => undefined)} />
+          <aside className="preview-panel" aria-label="Draft preview">
+            <PublishedPreview content={props.previewContent ?? null} locale={props.locale} />
             <ActivityPanel events={props.activityEvents} />
           </aside>
         </main>

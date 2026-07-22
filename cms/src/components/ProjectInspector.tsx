@@ -1,98 +1,49 @@
-import type { AdminProject, Locale } from "../api/types";
+import { useEffect, useRef, useState } from "react";
+import { ApiError } from "../api/client";
+import { listRevisions, publishDraft, saveDraft } from "../api/projects";
+import type { DraftContent, Locale, ProjectEditor, ProjectRevision } from "../api/types";
+import { AccessibleDialog } from "./AccessibleDialog";
 
-interface ProjectInspectorProps {
-  project: AdminProject | null;
-  locale: Locale;
-  status: "idle" | "loading" | "ready" | "error";
+interface Props { editor: ProjectEditor | null; locale: Locale; loading: boolean; onSaved: () => Promise<ProjectEditor | null>; onPreview: (content: DraftContent) => void; onDirtyChange: (dirty: boolean) => void; }
+const clone = <T,>(value: T): T => structuredClone(value);
+const tabs = ["Content", "Media", "Publishing", "SEO", "History"] as const;
+
+export function ProjectInspector({ editor, locale, loading, onSaved, onPreview, onDirtyChange }: Props) {
+  const [tab, setTab] = useState<(typeof tabs)[number]>("Content");
+  const [form, setForm] = useState<DraftContent | null>(null); const [baseline, setBaseline] = useState<string>("");
+  const [saving, setSaving] = useState(false); const [publishing, setPublishing] = useState(false); const [error, setError] = useState<string | null>(null); const [confirming, setConfirming] = useState(false); const [confirmReload, setConfirmReload] = useState(false); const [history, setHistory] = useState<ProjectRevision[]>([]); const opener = useRef<HTMLButtonElement>(null);
+  const dirty = form !== null && JSON.stringify(form) !== baseline;
+  function applyEditor(nextEditor: ProjectEditor) { const content = clone(nextEditor.draft?.content ?? nextEditor.published.content); setForm(content); setBaseline(JSON.stringify(content)); setError(null); onPreview(content); }
+  useEffect(() => { if (editor) applyEditor(editor); }, [editor, onPreview]);
+  useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => { if (!dirty) return; const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; }; window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn); }, [dirty]);
+  if (loading) return <section className="editor editor-state">Loading editor...</section>;
+  if (!editor || !form) return <section className="editor editor-state">Select a project to edit.</section>;
+  const activeEditor = editor;
+  const update = (mutate: (next: DraftContent) => void) => { const next = clone(form); mutate(next); setForm(next); onPreview(next); };
+  const text = form.translations[locale];
+  async function save() { setSaving(true); setError(null); try { await saveDraft(activeEditor.project.slug, { baseRevisionId: activeEditor.published.revisionId, expectedDraftRevisionId: activeEditor.draft?.revisionId ?? null, content: form! }); const refreshed = await onSaved(); if (refreshed) applyEditor(refreshed); } catch (value) { const apiError = value instanceof ApiError ? value : null; setError(apiError?.code === "DRAFT_CONFLICT" ? "This draft changed in another session. Reload the latest draft before saving again." : apiError?.message ?? "Unable to save draft."); } finally { setSaving(false); } }
+  async function publish() { if (!activeEditor.draft) { setError("Save the draft before publishing."); return; } setPublishing(true); setError(null); try { await publishDraft(activeEditor.project.slug, activeEditor.draft.revisionId); setConfirming(false); const refreshed = await onSaved(); if (refreshed) applyEditor(refreshed); } catch (value) { setError(value instanceof ApiError ? value.message : "Unable to publish draft."); } finally { setPublishing(false); } }
+  async function reloadLatestDraft() { const refreshed = await onSaved(); if (refreshed) applyEditor(refreshed); setConfirmReload(false); }
+  async function loadHistory() { setTab("History"); setHistory((await listRevisions(activeEditor.project.slug)).data); }
+  return <section className="editor" aria-labelledby="editor-title">
+    <div className="editor__header"><div><h1 id="editor-title">{text.title}</h1><p>{editor.project.slug}</p></div><span className={dirty ? "draft-indicator" : "saved-indicator"}>{dirty ? "Unsaved changes" : editor.draft ? "Draft saved" : "Published"}</span></div>
+    <div className="tabs" role="tablist" aria-label="Project editor sections">{tabs.map((item) => <button key={item} type="button" role="tab" aria-selected={tab === item} className={tab === item ? "tabs__item tabs__item--active" : "tabs__item"} onClick={() => item === "History" ? void loadHistory() : setTab(item)}>{item}</button>)}</div>
+    {error ? <div className="editor-error" role="alert" tabIndex={-1}><p>{error}</p>{error.includes("another session") ? <button type="button" onClick={() => setConfirmReload(true)}>Reload latest draft</button> : null}</div> : null}
+    {tab === "Content" ? <div className="editor-form"><fieldset className="form-section"><legend>Core fields</legend><div className="form-grid">
+      <Field label="Slug" value={form.slug} onChange={(value) => update((next) => { next.slug = value; })}/><Field label="Sort order" type="number" value={String(form.sortOrder)} onChange={(value) => update((next) => { next.sortOrder = Number(value); })}/><Field label="Project type" value={form.projectType ?? ""} onChange={(value) => update((next) => { next.projectType = value || null; })}/>
+      <label className="field"><span>Ongoing</span><input type="checkbox" checked={form.dates.ongoing} onChange={(event) => update((next) => { next.dates.ongoing = event.target.checked; if (event.target.checked) next.dates.endedAt = null; })}/></label>
+      <Field label="Start date" type="date" value={form.dates.startedAt ?? ""} onChange={(value) => update((next) => { next.dates.startedAt = value || null; })}/><Field label="End date" type="date" value={form.dates.endedAt ?? ""} disabled={form.dates.ongoing} onChange={(value) => update((next) => { next.dates.endedAt = value || null; })}/>
+    </div></fieldset><fieldset className="form-section"><legend>{locale.toUpperCase()} content</legend>
+      {(["title", "subtitle", "role", "statusLabel", "primaryActionLabel", "secondaryActionLabel", "technologiesTitle"] as const).map((key) => <Field key={key} label={key} value={text[key] ?? ""} onChange={(value) => update((next) => { next.translations[locale][key] = value || null as never; })}/>) }
+      <label className="field"><span>Description</span><textarea value={text.description} rows={8} onChange={(event) => update((next) => { next.translations[locale].description = event.target.value; })}/></label>
+    </fieldset><fieldset className="form-section"><legend>Links</legend><div className="form-grid"><Field label="Primary URL" value={form.links.primary?.href ?? ""} onChange={(value) => update((next) => { next.links.primary = value ? { href: value, type: next.links.primary?.type ?? "website" } : null; })}/><Field label="Primary type" value={form.links.primary?.type ?? ""} onChange={(value) => update((next) => { if(next.links.primary) next.links.primary.type=value; })}/><Field label="Secondary URL" value={form.links.secondary?.href ?? ""} onChange={(value) => update((next) => { next.links.secondary = value ? { href: value, type: next.links.secondary?.type ?? "website" } : null; })}/><Field label="Secondary type" value={form.links.secondary?.type ?? ""} onChange={(value) => update((next) => { if(next.links.secondary) next.links.secondary.type=value; })}/></div></fieldset><fieldset className="form-section"><legend>Technologies</legend><div className="technology-list">{form.technologies.map((item, index) => <div key={item.slug}><span>{item.name}</span><button type="button" onClick={() => update((next) => { next.technologies.splice(index, 1); })} aria-label={`Remove ${item.name}`}>Remove</button></div>)}</div></fieldset></div> : null}
+    {tab === "Media" ? <div className="editor-form"><p>File upload is not available in this phase.</p>{form.media.map((asset, index) => <fieldset className="form-section" key={asset.id}><legend>{asset.id}</legend><p>{asset.src}</p><div className="form-grid"><Field label="Sort order" type="number" value={String(asset.sortOrder)} onChange={(value) => update((next) => { next.media[index].sortOrder = Number(value); })}/><Field label="Alt" value={asset.translations[locale].alt} onChange={(value) => update((next) => { next.media[index].translations[locale].alt = value; })}/><Field label="Aria label" value={asset.translations[locale].ariaLabel} onChange={(value) => update((next) => { next.media[index].translations[locale].ariaLabel = value; })}/></div></fieldset>)}</div> : null}
+    {tab === "Publishing" ? <div className="editor-form"><p>The public API will be updated after publishing. The current static portfolio frontend is not connected to the API yet.</p><p>Published revision: v{editor.published.revisionNumber}</p><p>Draft revision: {editor.draft ? `v${editor.draft.revisionNumber}` : "none"}</p><div className="editor-actions"><button type="button" onClick={() => void save()} disabled={saving || !dirty}>{saving ? "Saving..." : "Save draft"}</button><button type="button" ref={opener} onClick={() => setConfirming(true)} disabled={publishing || dirty || !editor.draft}>{publishing ? "Publishing..." : "Publish"}</button></div></div> : null}
+    {tab === "SEO" ? <div className="editor-form">Not available in this phase.</div> : null}
+    {tab === "History" ? <div className="editor-form">{history.map((item) => <p key={item.revisionId}>{item.revisionType === "published" ? "Published" : "Draft"} v{item.revisionNumber} - {item.updatedAt}</p>)}</div> : null}
+    {confirming ? <AccessibleDialog title={`Publish changes to “${form.translations[locale].title}”?`} description="This will replace the currently published project data in the public API. The static portfolio frontend is not connected to the API yet." confirmLabel="Publish" busy={publishing} error={error} onCancel={() => setConfirming(false)} onConfirm={() => void publish()}/> : null}
+    {confirmReload ? <AccessibleDialog title="Discard local changes and reload the latest draft?" description="The server draft from the other session will replace your local unsaved values." confirmLabel="Discard local changes and reload" cancelLabel="Stay and continue editing" onCancel={() => setConfirmReload(false)} onConfirm={() => void reloadLatestDraft()}/> : null}
+  </section>;
 }
-
-function readonlyField(label: string, value: string | number | null | undefined) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <input value={value ?? ""} readOnly aria-label={`${label} Read only`} />
-    </label>
-  );
-}
-
-export function ProjectInspector({ project, locale, status }: ProjectInspectorProps) {
-  if (status === "loading") {
-    return <section className="editor editor-state">Loading project data...</section>;
-  }
-
-  if (!project) {
-    return (
-      <section className="editor editor-state">
-        <h2>No project selected</h2>
-        <p>Select a published project from the tree.</p>
-      </section>
-    );
-  }
-
-  const translation = project.translations[locale];
-
-  return (
-    <section className="editor" aria-labelledby="editor-title">
-      <div className="editor__header">
-        <div>
-          <h1 id="editor-title">{translation.title}</h1>
-          <p>{project.slug}</p>
-        </div>
-        <span className="readonly-badge">Read only</span>
-      </div>
-
-      <div className="tabs" role="tablist" aria-label="Project editor sections">
-        {["Content", "Media", "Publishing", "SEO", "History"].map((tab, index) => (
-          <button key={tab} type="button" role="tab" aria-selected={index === 0} className={index === 0 ? "tabs__item tabs__item--active" : "tabs__item"}>
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      <div className="editor-form">
-        <fieldset className="form-section">
-          <legend>Project identity</legend>
-          <div className="form-grid">
-            {readonlyField("Title", translation.title)}
-            {readonlyField("Slug", project.slug)}
-            {readonlyField("Status", project.status)}
-            {readonlyField("Sort order", project.sortOrder)}
-            {readonlyField("Gallery ID", project.galleryId)}
-            {readonlyField("Type", project.type)}
-          </div>
-        </fieldset>
-
-        <fieldset className="form-section">
-          <legend>Localized content {locale.toUpperCase()}</legend>
-          <label className="field">
-            <span>Description Read only</span>
-            <textarea value={translation.description} readOnly rows={8} />
-          </label>
-          <label className="field">
-            <span>Role Read only</span>
-            <textarea value={translation.role} readOnly rows={3} />
-          </label>
-        </fieldset>
-
-        <fieldset className="form-section">
-          <legend>Relations</legend>
-          <div className="tags-input" aria-label="Technologies Read only">
-            {project.technologies.map((technology) => (
-              <span className="tag" key={technology}>
-                {technology}
-              </span>
-            ))}
-          </div>
-          <div className="form-grid">
-            {readonlyField("Primary link", project.links.primary?.href)}
-            {readonlyField("Secondary link", project.links.secondary?.href)}
-            {readonlyField("Media count", project.media.length)}
-            {readonlyField("Published at", project.publishedAt)}
-            {readonlyField("Created at", project.createdAt)}
-            {readonlyField("Updated at", project.updatedAt)}
-          </div>
-        </fieldset>
-      </div>
-    </section>
-  );
-}
+function Field({ label, value, onChange, type = "text", disabled = false }: { label: string; value: string; onChange: (value: string) => void; type?: string; disabled?: boolean }) { return <label className="field"><span>{label}</span><input type={type} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}/></label>; }

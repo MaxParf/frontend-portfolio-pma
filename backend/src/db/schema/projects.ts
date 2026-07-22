@@ -22,6 +22,8 @@ export const projects = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    currentPublishedRevisionId: uuid("current_published_revision_id"),
+    currentDraftRevisionId: uuid("current_draft_revision_id"),
   },
   (table) => [index("projects_status_sort_order_idx").on(table.status, table.sortOrder)],
 );

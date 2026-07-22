@@ -16,7 +16,7 @@ export function ProjectTree({ projects, status, error, selectedProjectId, onRetr
     <aside className="site-tree" aria-label="CMS content tree">
       <div className="panel-heading">
         <h1>Portfolio</h1>
-        <span className="phase-badge">Phase 3A</span>
+            <span className="phase-badge">Phase 3B</span>
       </div>
 
       <nav className="tree" aria-label="Portfolio structure">
@@ -48,7 +48,7 @@ export function ProjectTree({ projects, status, error, selectedProjectId, onRetr
               onClick={() => onProjectSelected(project.id)}
             >
               <span className="project-row__label">{project.translations.en.title}</span>
-              <span className="status status--published">Published</span>
+              <span className="status status--published">{project.status === "published" ? "Published" : project.status}</span>
             </button>
           ))}
         </div>

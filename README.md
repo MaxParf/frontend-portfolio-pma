@@ -70,7 +70,9 @@ Phase 2A backend foundation lives in `backend/`. It provides a local Docker Comp
 
 ## CMS Shell
 
-Phase 3A adds a private read-only CMS shell in `cms/` and owner authentication in `backend/`.
+Phase 3B adds project draft editing and explicit publishing to the private CMS. Draft saves never change the public API; publishing changes its normalized published read model atomically. The public static frontend still uses `data/projects.js`.
+
+Create/delete, media upload, scheduling, rollback, and Selectel deployment are not part of this implementation.
 
 Local addresses:
 

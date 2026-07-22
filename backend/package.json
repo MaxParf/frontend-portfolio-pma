@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx \"tests/**/*.test.ts\"",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed-projects.ts",
     "db:verify": "tsx scripts/verify-seed.ts",
     "admin:bootstrap": "tsx scripts/bootstrap-admin.ts"
