@@ -10,6 +10,7 @@ import { loadFrontendProjects, seedProjects } from "../scripts/seed-projects.js"
 import { DEFAULT_OWNER_LOGIN, hashLogin, hashPassword, hashSessionToken, normalizeLogin } from "../src/modules/auth/auth.crypto.js";
 import { loginRequestSchema } from "../src/modules/auth/auth.schemas.js";
 import { AuthRepository } from "../src/modules/auth/auth.repository.js";
+import { resolveOwnerPassword } from "../scripts/owner-password-source.js";
 
 const origin = "http://127.0.0.1:5510";
 const login = DEFAULT_OWNER_LOGIN;
@@ -233,9 +234,11 @@ test("password update revokes active sessions and old password no longer works",
   await resetOwner();
   const loginResponse = await loginRequest();
   const cookie = String(loginResponse.headers["set-cookie"]).split(";")[0];
+  const beforeHash = await pool.query<{ password_hash: string }>("select password_hash from admin_users where login = $1", [login]);
 
   const beforeBootstrap = await app.inject({ method: "GET", url: "/api/v1/admin/auth/me", headers: { cookie } });
   assert.equal(beforeBootstrap.statusCode, 200);
+  await pool.query("update admin_users set failed_login_attempts = 4, locked_until = now() + interval '15 minutes' where login = $1", [login]);
 
   await repository.bootstrapOwner({
     id: randomUUID(),
@@ -248,11 +251,66 @@ test("password update revokes active sessions and old password no longer works",
   const afterBootstrap = await app.inject({ method: "GET", url: "/api/v1/admin/auth/me", headers: { cookie } });
   assert.equal(afterBootstrap.statusCode, 401);
 
+  const afterOwner = await pool.query<{ password_hash: string; failed_login_attempts: number; locked_until: Date | null }>(
+    "select password_hash, failed_login_attempts, locked_until from admin_users where login = $1",
+    [login],
+  );
+  assert.notEqual(afterOwner.rows[0]?.password_hash, beforeHash.rows[0]?.password_hash);
+  assert.equal(afterOwner.rows[0]?.failed_login_attempts, 0);
+  assert.equal(afterOwner.rows[0]?.locked_until, null);
+
   const oldPassword = await loginRequest(login, password);
   assert.equal(oldPassword.statusCode, 401);
 
   const updatedPassword = await loginRequest(login, newPassword);
   assert.equal(updatedPassword.statusCode, 200);
+});
+
+test("password policy failure does not change owner hash or revoke sessions", async () => {
+  await resetOwner();
+  const loginResponse = await loginRequest();
+  const beforeHash = await pool.query<{ password_hash: string }>("select password_hash from admin_users where login = $1", [login]);
+  const activeBefore = await pool.query<{ count: number }>("select count(*)::int as count from admin_sessions where revoked_at is null");
+
+  await assert.rejects(hashPassword("short1"), /Password must be at least 12 characters/);
+
+  const afterHash = await pool.query<{ password_hash: string }>("select password_hash from admin_users where login = $1", [login]);
+  const activeAfter = await pool.query<{ count: number }>("select count(*)::int as count from admin_sessions where revoked_at is null");
+  assert.equal(afterHash.rows[0]?.password_hash, beforeHash.rows[0]?.password_hash);
+  assert.equal(activeBefore.rows[0]?.count, 1);
+  assert.equal(activeAfter.rows[0]?.count, 1);
+  assert.equal(loginResponse.statusCode, 200);
+});
+
+test("password confirmation mismatch happens before owner state changes", async () => {
+  await resetOwner();
+  const loginResponse = await loginRequest();
+  await pool.query("update admin_users set failed_login_attempts = 3, locked_until = now() + interval '15 minutes' where login = $1", [login]);
+  const before = await pool.query<{ password_hash: string; failed_login_attempts: number; locked_until: Date | null }>(
+    "select password_hash, failed_login_attempts, locked_until from admin_users where login = $1",
+    [login],
+  );
+
+  const responses = ["FirstPassword123", "SecondPassword123"];
+  await assert.rejects(
+    resolveOwnerPassword({
+      env: {},
+      input: { isTTY: true } as NodeJS.ReadStream,
+      promptPassword: async () => responses.shift() ?? "",
+    }),
+    /confirmation does not match/,
+  );
+
+  const after = await pool.query<{ password_hash: string; failed_login_attempts: number; locked_until: Date | null }>(
+    "select password_hash, failed_login_attempts, locked_until from admin_users where login = $1",
+    [login],
+  );
+  const activeAfter = await pool.query<{ count: number }>("select count(*)::int as count from admin_sessions where revoked_at is null");
+  assert.equal(after.rows[0]?.password_hash, before.rows[0]?.password_hash);
+  assert.equal(after.rows[0]?.failed_login_attempts, before.rows[0]?.failed_login_attempts);
+  assert.equal(after.rows[0]?.locked_until?.getTime(), before.rows[0]?.locked_until?.getTime());
+  assert.equal(activeAfter.rows[0]?.count, 1);
+  assert.equal(loginResponse.statusCode, 200);
 });
 
 test("raw password, raw session token, and raw login are not stored in auth events", async () => {

@@ -75,7 +75,19 @@ Create or update the local owner without putting credentials in Git:
 ADMIN_LOGIN='@maxpar.fed' ADMIN_DISPLAY_NAME='Maksim' npm run admin:bootstrap
 ```
 
-The command prompts for the password without echo. `ADMIN_PASSWORD` is also supported for local automation, but do not put a real value in Git, docs, or committed env files. The CMS has exactly one owner. The default owner login is `@maxpar.fed`; `ADMIN_LOGIN` exists only for local recovery and should remain `@maxpar.fed` for the production policy. The password is validated, hashed with bcrypt cost 12, and never printed. Re-running bootstrap updates the single owner and revokes active owner sessions.
+With no `ADMIN_PASSWORD`, the command uses an interactive hidden prompt and asks for confirmation. The password must be at least 12 characters and include letters and numbers. Do not pass the password as a command-line argument.
+
+Environment mode for one local bootstrap:
+
+```bash
+read -s ADMIN_PASSWORD
+echo
+export ADMIN_PASSWORD
+npm run admin:bootstrap
+unset ADMIN_PASSWORD
+```
+
+When `ADMIN_PASSWORD` is set, bootstrap uses it directly and does not show the interactive prompt. Keep `ADMIN_PASSWORD` empty in committed examples and remove it from long-running production service environments after the one-time bootstrap. The CMS has exactly one owner. The default owner login is `@maxpar.fed`; `ADMIN_LOGIN` exists only for local recovery and should remain `@maxpar.fed` for the production policy. The password is validated, hashed with bcrypt cost 12, and never printed. Re-running bootstrap updates the single owner and revokes active owner sessions.
 
 ## Docker
 
