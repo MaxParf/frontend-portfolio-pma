@@ -14,6 +14,6 @@ case "$backup" in "$PORTFOLIO_ROOT"/backups/portfolio-postgres-*.sql.gz) ;; *) p
 [ -s "$backup" ] || { printf 'Backup file is missing or empty.\n' >&2; exit 1; }
 
 compose up -d portfolio-db
-compose wait portfolio-db
+wait_for_healthy 120 portfolio-db
 gzip -cd "$backup" | compose exec -T portfolio-db sh -lc 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 printf 'Database restore completed. Restart application services and run smoke manually.\n'

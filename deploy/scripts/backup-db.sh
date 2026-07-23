@@ -16,7 +16,7 @@ target="$BACKUP_DIR/portfolio-postgres-$timestamp.sql.gz"
 temporary="$target.tmp"
 
 compose up -d portfolio-db
-compose wait portfolio-db
+wait_for_healthy 120 portfolio-db
 compose exec -T portfolio-db sh -lc 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --no-privileges' | gzip -c > "$temporary"
 [ -s "$temporary" ] || { rm -f "$temporary"; printf 'Backup is empty.\n' >&2; exit 1; }
 mv "$temporary" "$target"

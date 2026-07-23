@@ -7,6 +7,6 @@ require_portfolio_path
 require_files
 "$SCRIPT_DIR/validate-production-env.sh"
 compose up -d portfolio-db
-compose wait portfolio-db
+wait_for_healthy 120 portfolio-db
 compose run --rm portfolio-migrate
 printf 'Production migrations completed.\n'
