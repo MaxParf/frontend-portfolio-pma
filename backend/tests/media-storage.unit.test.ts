@@ -6,8 +6,9 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import test from "node:test";
 import sharp from "sharp";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { loadEnv } from "../src/config/env.js";
-import { LocalMediaStorage, MediaStorageRegistry, S3MediaStorage, buildMediaStorageKey, type MediaStorageProvider } from "../src/modules/media-storage/media-storage.js";
+import { LocalMediaStorage, MediaStorageRegistry, S3MediaStorage, buildMediaStorageKey, createS3Client, type MediaStorageProvider } from "../src/modules/media-storage/media-storage.js";
 import { MediaService } from "../src/modules/media/media.service.js";
 
 const baseEnv = {
@@ -34,6 +35,25 @@ test("env validates S3 requirements without leaking secret values", () => {
   assert.throws(() => loadEnv({ ...baseEnv, NODE_ENV: "production", STORAGE_PROVIDER: "s3", S3_ENDPOINT: "http://object.example", S3_REGION: "ru-1", S3_BUCKET: "bucket-name", S3_ACCESS_KEY_ID: "access", S3_SECRET_ACCESS_KEY: "secret" }), /S3_ENDPOINT must use HTTPS/);
   assert.throws(() => loadEnv({ ...baseEnv, NODE_ENV: "production", STORAGE_PROVIDER: "s3", S3_ENDPOINT: "https://object.example", S3_REGION: "ru-1", S3_BUCKET: "bad_bucket", S3_ACCESS_KEY_ID: "access", S3_SECRET_ACCESS_KEY: "secret" }), /S3_BUCKET/);
   assert.throws(() => loadEnv({ ...baseEnv, NODE_ENV: "production", STORAGE_PROVIDER: "s3", S3_ENDPOINT: "https://object.example", S3_REGION: "ru-1", S3_BUCKET: "bucket-name", S3_ACCESS_KEY_ID: "access", S3_SECRET_ACCESS_KEY: "secret", S3_SIGNED_URL_TTL_SECONDS: "99999" }), /S3_SIGNED_URL_TTL_SECONDS/);
+});
+
+test("S3 client factory creates a Node HTTP handler with bounded timeouts", async () => {
+  const client = createS3Client(loadEnv({
+    ...baseEnv,
+    NODE_ENV: "production",
+    STORAGE_PROVIDER: "s3",
+    S3_ENDPOINT: "https://object.example",
+    S3_REGION: "ru-1",
+    S3_BUCKET: "portfolio-media",
+    S3_ACCESS_KEY_ID: "test-access-key",
+    S3_SECRET_ACCESS_KEY: "test-secret-key",
+  }));
+  const handler = client.config.requestHandler;
+  assert.ok(handler instanceof NodeHttpHandler);
+  const options = await Reflect.get(handler, "configProvider");
+  assert.equal(options.connectionTimeout, 3_000);
+  assert.equal(options.requestTimeout, 7_500);
+  client.destroy();
 });
 
 test("local provider writes, reads, deletes idempotently, and rejects traversal", async () => {

@@ -13,12 +13,15 @@ set -a
 source "$ENV_FILE"
 set +a
 
-required=(NODE_ENV DATABASE_PURPOSE PRODUCTION_DATABASE_NAME POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD SESSION_TOKEN_SECRET COOKIE_SECURE CORS_ORIGINS CMS_ORIGINS CMS_API_BASE_URL PUBLIC_API_BASE_URL PUBLIC_CMS_LOGIN_URL ADMIN_LOGIN STORAGE_PROVIDER MEDIA_STORAGE_ROOT MEDIA_PROCESSING_TMP_DIR)
+required=(NODE_ENV HOST PORT DATABASE_PURPOSE PRODUCTION_DATABASE_NAME POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD SESSION_TOKEN_SECRET COOKIE_SECURE CORS_ORIGINS CMS_ORIGINS CMS_API_BASE_URL PUBLIC_API_BASE_URL PUBLIC_CMS_LOGIN_URL ADMIN_LOGIN STORAGE_PROVIDER MEDIA_STORAGE_ROOT MEDIA_PROCESSING_TMP_DIR)
 for name in "${required[@]}"; do
   [ -n "${!name:-}" ] || { printf 'Required production environment value is missing.\n' >&2; exit 1; }
 done
 
 [ "$NODE_ENV" = "production" ] || { printf 'NODE_ENV must be production.\n' >&2; exit 1; }
+[ "$HOST" = "0.0.0.0" ] || { printf 'HOST must be 0.0.0.0 in production.\n' >&2; exit 1; }
+case "$PORT" in *[!0-9]*|"") printf 'PORT must be a valid integer.\n' >&2; exit 1 ;; esac
+[ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ] || { printf 'PORT must be between 1 and 65535.\n' >&2; exit 1; }
 [ "$DATABASE_PURPOSE" = "production" ] || { printf 'DATABASE_PURPOSE must be production.\n' >&2; exit 1; }
 [ "$PRODUCTION_DATABASE_NAME" = "$POSTGRES_DB" ] || { printf 'Production database identity does not match POSTGRES_DB.\n' >&2; exit 1; }
 [ "$COOKIE_SECURE" = "true" ] || { printf 'COOKIE_SECURE must be true.\n' >&2; exit 1; }

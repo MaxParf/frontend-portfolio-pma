@@ -3,7 +3,8 @@ import { mkdir, rm, stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, NoSuchKey, PutObjectCommand, S3Client, type S3ClientConfig } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, NoSuchKey, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import type { AppEnv } from "../../config/env.js";
 
 export type StorageProviderName = "local" | "s3";
@@ -163,8 +164,8 @@ export function createMediaStorageRegistry(env: AppEnv): MediaStorageRegistry {
   throw Object.assign(new Error("Unsupported media storage provider."), { code: "MEDIA_STORAGE_UNAVAILABLE" });
 }
 
-function createS3Client(env: AppEnv): S3Client {
-  const requestHandler = { requestTimeout: 7_500, connectionTimeout: 3_000 } as S3ClientConfig["requestHandler"];
+export function createS3Client(env: AppEnv): S3Client {
+  const requestHandler = new NodeHttpHandler({ connectionTimeout: 3_000, requestTimeout: 7_500 });
   return new S3Client({
     endpoint: env.S3_ENDPOINT,
     region: env.S3_REGION,
