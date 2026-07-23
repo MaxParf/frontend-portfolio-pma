@@ -13,7 +13,7 @@ services:
     command: ["postgres", "-c", "timezone=UTC"]
     volumes:
       - portfolio-production-postgres-data:/var/lib/postgresql/data
-    networks: [portfolio-production-internal]
+    networks: [portfolio-production-private]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 5s
@@ -38,7 +38,7 @@ services:
     command: ["node", "dist/scripts/migrate-production.js"]
     depends_on:
       portfolio-db: { condition: service_healthy }
-    networks: [portfolio-production-internal]
+    networks: [portfolio-production-private]
     read_only: true
     tmpfs: [/tmp]
     security_opt: [no-new-privileges:true]
@@ -55,7 +55,7 @@ services:
     command: ["node", "dist/scripts/bootstrap-admin.js"]
     depends_on:
       portfolio-db: { condition: service_healthy }
-    networks: [portfolio-production-internal]
+    networks: [portfolio-production-private]
     read_only: true
     tmpfs: [/tmp]
     security_opt: [no-new-privileges:true]
@@ -78,7 +78,7 @@ services:
       - portfolio-production-media-data:/app/storage/project-media
     depends_on:
       portfolio-db: { condition: service_healthy }
-    networks: [portfolio-production-internal]
+    networks: [portfolio-production-private, portfolio-production-egress]
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3101/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 10s
@@ -104,7 +104,7 @@ services:
     ports: ["127.0.0.1:3102:80"]
     depends_on:
       portfolio-api: { condition: service_healthy }
-    networks: [portfolio-production-internal]
+    networks: [portfolio-production-private]
     healthcheck:
       test: ["CMD-SHELL", "test -f /usr/share/nginx/html/index.html"]
       interval: 10s
@@ -129,7 +129,7 @@ services:
     ports: ["127.0.0.1:3103:8080"]
     depends_on:
       portfolio-api: { condition: service_healthy }
-    networks: [portfolio-production-internal]
+    networks: [portfolio-production-private]
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/health | grep -qx ok"]
       interval: 10s
@@ -142,10 +142,25 @@ services:
       resources:
         limits: { cpus: "0.50", memory: 256M }
 
+  portfolio-s3-probe:
+    image: maxpar-portfolio-api:production
+    profiles: [operations]
+    restart: "no"
+    env_file:
+      - "${PORTFOLIO_ENV_FILE:?Set PORTFOLIO_ENV_FILE to the VPS production env file}"
+    command: ["node", "dist/scripts/verify-s3-storage.js"]
+    networks: [portfolio-production-egress]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
 networks:
-  portfolio-production-internal:
-    name: portfolio-production-internal
+  portfolio-production-private:
+    name: portfolio-production-private
     internal: true
+  portfolio-production-egress:
+    name: portfolio-production-egress
 
 volumes:
   portfolio-production-postgres-data:

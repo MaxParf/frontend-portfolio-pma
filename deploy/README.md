@@ -4,9 +4,11 @@ Phase 3E.1 prepares a deployment contour only. It does not connect to a VPS, edi
 
 ## Isolation
 
-On the VPS, place the checked-out release under `/opt/portfolio/app` and the real production environment file at `/opt/portfolio/env/portfolio.production.env` with owner `deploy:deploy` and mode `600`. The Compose project uses only `portfolio-production-*` containers, volumes, and an internal Docker network. It never references Project Bradbury resources.
+On the VPS, place the checked-out release under `/opt/portfolio/app` and the real production environment file at `/opt/portfolio/env/portfolio.production.env` with owner `deploy:deploy` and mode `600`. The Compose project uses only `portfolio-production-*` containers, volumes, and networks. It never references Project Bradbury resources.
 
 PostgreSQL has no host port. API, CMS, and public frontend bind only to `127.0.0.1:3101`, `127.0.0.1:3102`, and `127.0.0.1:3103`; Caddy is the only public TLS edge.
+
+The deployment uses two Docker networks. `portfolio-production-private` is `internal:true` and carries database traffic: DB, API, migration, owner bootstrap, CMS, and public frontend use it. `portfolio-production-egress` is a normal bridge network used only by the API and the one-shot S3 probe. An internal-only network intentionally blocks external DNS and Selectel S3 access, so the API needs the separate egress network while PostgreSQL remains private.
 
 ## Environment and Secrets
 
@@ -27,6 +29,14 @@ deploy/scripts/smoke-production.sh
 ```
 
 Migrations are never part of API startup. `deploy.sh` runs them through the explicit `portfolio-migrate` job after the database healthcheck. Owner bootstrap is a separate interactive operation and must not be repeated casually because updating the owner revokes active sessions.
+
+After a successful deployment and before relying on S3 uploads, run the manual connectivity check from `/opt/portfolio/app`:
+
+```bash
+deploy/scripts/verify-s3-storage.sh
+```
+
+It uses the isolated `portfolio-s3-probe` operation service, which has egress but no database network attachment. It creates, checks, and removes only its own UUID probe object.
 
 `restore-db.sh` requires `RESTORE_CONFIRM=RESTORE_PORTFOLIO_PRODUCTION` and accepts only a non-empty backup from `/opt/portfolio/backups`. It does not restart services automatically.
 
