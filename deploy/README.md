@@ -8,6 +8,8 @@ On the VPS, place the checked-out release under `/opt/portfolio/app` and the rea
 
 PostgreSQL has no host port. API, CMS, and public frontend bind only to `127.0.0.1:3101`, `127.0.0.1:3102`, and `127.0.0.1:3103`; Caddy is the only public TLS edge.
 
+The official PostgreSQL entrypoint starts as root only to set ownership and permissions on `PGDATA` and `/var/run/postgresql`, then changes to the `postgres` user. `portfolio-db` therefore retains `cap_drop: [ALL]` and adds only `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETGID`, and `SETUID`. These capabilities are limited to the database container; it remains on the private network only and has no host port.
+
 The deployment uses two Docker networks. `portfolio-production-private` is `internal:true` and carries database traffic: DB, API, migration, owner bootstrap, CMS, and public frontend use it. `portfolio-production-egress` is a normal bridge network used only by the API and the one-shot S3 probe. An internal-only network intentionally blocks external DNS and Selectel S3 access, so the API needs the separate egress network while PostgreSQL remains private.
 
 ## Environment and Secrets

@@ -24,6 +24,10 @@ test("production compose keeps DB private and grants S3 egress only to API and p
 
   assert.match(db, /networks: \[portfolio-production-private\]/);
   assert.doesNotMatch(db, /ports:/);
+  assert.match(db, /security_opt: \[no-new-privileges:true\]/);
+  assert.match(db, /cap_drop: \[ALL\]/);
+  assert.match(db, /cap_add: \[CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID\]/);
+  assert.doesNotMatch(db, /portfolio-production-egress/);
   assert.match(api, /networks: \[portfolio-production-private, portfolio-production-egress\]/);
   assert.match(probe, /networks: \[portfolio-production-egress\]/);
   assert.doesNotMatch(probe, /portfolio-production-private|depends_on:|DATABASE_URL/);
@@ -33,6 +37,9 @@ test("production compose keeps DB private and grants S3 egress only to API and p
   assert.match(publicSite, /networks: \[portfolio-production-private\]/);
   assert.doesNotMatch(cms, /env_file:|S3_/);
   assert.doesNotMatch(publicSite, /env_file:|S3_/);
+  for (const serviceDefinition of [api, migrate, ownerBootstrap, probe, cms, publicSite]) {
+    assert.doesNotMatch(serviceDefinition, /cap_add:/);
+  }
   assert.match(compose, /portfolio-production-private:\n    name: portfolio-production-private\n    internal: true/);
   assert.match(compose, /portfolio-production-egress:\n    name: portfolio-production-egress\n/);
   assert.doesNotMatch(compose.slice(compose.indexOf("portfolio-production-egress:")), /internal: true/);
