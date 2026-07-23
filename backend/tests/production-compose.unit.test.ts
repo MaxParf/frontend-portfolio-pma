@@ -50,7 +50,11 @@ test("production compose keeps DB private and grants S3 egress only to API and p
   assert.match(cms, /http:\/\/127\.0\.0\.1:8080\/health/);
   assert.match(publicSite, /http:\/\/127\.0\.0\.1:8080\/health/);
   assert.match(cmsDockerfile, /FROM nginxinc\/nginx-unprivileged:1\.29-bookworm AS runtime/);
+  assert.match(cmsDockerfile, /COPY --from=build --chown=101:101 \/app\/dist \/usr\/share\/nginx\/html/);
+  assert.match(cmsDockerfile, /COPY --chown=101:101 --chmod=0644 nginx\.conf \/etc\/nginx\/conf\.d\/default\.conf/);
+  assert.match(cmsDockerfile, /USER 101\s*$/m);
   assert.match(publicDockerfile, /FROM nginxinc\/nginx-unprivileged:1\.29-bookworm/);
+  assert.match(publicDockerfile, /COPY --chown=101:101 --chmod=0644 deploy\/nginx\/public\.conf \/etc\/nginx\/conf\.d\/default\.conf/);
   assert.match(publicDockerfile, /USER 101\s*$/m);
   assert.match(cmsNginxConfig, /listen 8080;/);
   assert.match(publicNginxConfig, /listen 8080;/);

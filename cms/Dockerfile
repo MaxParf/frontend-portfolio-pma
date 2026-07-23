@@ -8,6 +8,10 @@ RUN npm ci
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.29-bookworm AS runtime
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+USER root
+COPY --from=build --chown=101:101 /app/dist /usr/share/nginx/html
+COPY --chown=101:101 --chmod=0644 nginx.conf /etc/nginx/conf.d/default.conf
+RUN find /usr/share/nginx/html -type d -exec chmod 0755 {} + && \
+  find /usr/share/nginx/html -type f -exec chmod 0644 {} +
+USER 101
 EXPOSE 8080
