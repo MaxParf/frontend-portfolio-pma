@@ -26,7 +26,7 @@ test("production compose keeps DB private and grants S3 egress only to API and p
   assert.doesNotMatch(db, /ports:/);
   assert.match(api, /networks: \[portfolio-production-private, portfolio-production-egress\]/);
   assert.match(probe, /networks: \[portfolio-production-egress\]/);
-  assert.doesNotMatch(probe, /depends_on:|DATABASE_URL/);
+  assert.doesNotMatch(probe, /portfolio-production-private|depends_on:|DATABASE_URL/);
   assert.match(migrate, /networks: \[portfolio-production-private\]/);
   assert.match(ownerBootstrap, /networks: \[portfolio-production-private\]/);
   assert.match(cms, /networks: \[portfolio-production-private\]/);

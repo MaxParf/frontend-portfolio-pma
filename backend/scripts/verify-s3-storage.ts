@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
-import { loadEnv } from "../src/config/env.js";
+import { loadS3ProbeEnv } from "../src/config/env.js";
 import { createMediaStorageRegistry } from "../src/modules/media-storage/media-storage.js";
 
-const env = loadEnv();
-if (env.STORAGE_PROVIDER !== "s3") throw new Error("verify-s3-storage requires STORAGE_PROVIDER=s3.");
+const env = loadS3ProbeEnv();
 
 const storage = createMediaStorageRegistry(env).writeProvider;
 const key = `${env.S3_KEY_PREFIX.replace(/^\/+|\/+$/g, "")}/probes/${randomUUID()}.webp`;

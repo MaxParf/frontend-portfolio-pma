@@ -7,7 +7,7 @@ import { Readable } from "node:stream";
 import test from "node:test";
 import sharp from "sharp";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
-import { loadEnv } from "../src/config/env.js";
+import { loadEnv, loadS3ProbeEnv } from "../src/config/env.js";
 import { LocalMediaStorage, MediaStorageRegistry, S3MediaStorage, buildMediaStorageKey, createS3Client, type MediaStorageProvider } from "../src/modules/media-storage/media-storage.js";
 import { MediaService } from "../src/modules/media/media.service.js";
 
@@ -18,6 +18,16 @@ const baseEnv = {
   CORS_ORIGINS: "http://127.0.0.1:8080",
   CMS_ORIGINS: "http://127.0.0.1:5510",
   SESSION_TOKEN_SECRET: "x".repeat(40),
+};
+
+const s3ProbeEnv = {
+  NODE_ENV: "production",
+  STORAGE_PROVIDER: "s3",
+  S3_ENDPOINT: "https://object.example",
+  S3_REGION: "ru-1",
+  S3_BUCKET: "portfolio-media",
+  S3_ACCESS_KEY_ID: "test-access-key",
+  S3_SECRET_ACCESS_KEY: "test-secret-key",
 };
 
 test("env selects local outside production and rejects missing production provider", () => {
@@ -35,6 +45,22 @@ test("env validates S3 requirements without leaking secret values", () => {
   assert.throws(() => loadEnv({ ...baseEnv, NODE_ENV: "production", STORAGE_PROVIDER: "s3", S3_ENDPOINT: "http://object.example", S3_REGION: "ru-1", S3_BUCKET: "bucket-name", S3_ACCESS_KEY_ID: "access", S3_SECRET_ACCESS_KEY: "secret" }), /S3_ENDPOINT must use HTTPS/);
   assert.throws(() => loadEnv({ ...baseEnv, NODE_ENV: "production", STORAGE_PROVIDER: "s3", S3_ENDPOINT: "https://object.example", S3_REGION: "ru-1", S3_BUCKET: "bad_bucket", S3_ACCESS_KEY_ID: "access", S3_SECRET_ACCESS_KEY: "secret" }), /S3_BUCKET/);
   assert.throws(() => loadEnv({ ...baseEnv, NODE_ENV: "production", STORAGE_PROVIDER: "s3", S3_ENDPOINT: "https://object.example", S3_REGION: "ru-1", S3_BUCKET: "bucket-name", S3_ACCESS_KEY_ID: "access", S3_SECRET_ACCESS_KEY: "secret", S3_SIGNED_URL_TTL_SECONDS: "99999" }), /S3_SIGNED_URL_TTL_SECONDS/);
+});
+
+test("S3 probe environment is isolated from API database settings", () => {
+  assert.equal(loadS3ProbeEnv(s3ProbeEnv).STORAGE_PROVIDER, "s3");
+  const { DATABASE_URL: _databaseUrl, ...withoutDatabaseUrl } = baseEnv;
+  assert.throws(() => loadEnv({ ...withoutDatabaseUrl, ...s3ProbeEnv }), /DATABASE_URL/);
+});
+
+test("S3 probe environment fails closed for required S3 settings", () => {
+  for (const key of ["S3_ENDPOINT", "S3_REGION", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"] as const) {
+    const missing = { ...s3ProbeEnv };
+    delete missing[key];
+    assert.throws(() => loadS3ProbeEnv(missing), new RegExp(key));
+  }
+  assert.throws(() => loadS3ProbeEnv({ ...s3ProbeEnv, S3_ENDPOINT: "http://object.example" }), /S3_ENDPOINT must use HTTPS/);
+  assert.throws(() => loadS3ProbeEnv({ ...s3ProbeEnv, STORAGE_PROVIDER: "local" }), /STORAGE_PROVIDER must be s3/);
 });
 
 test("S3 client factory creates a Node HTTP handler with bounded timeouts", async () => {
