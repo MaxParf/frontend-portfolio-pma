@@ -16,7 +16,7 @@ function service(compose: string, name: string): string {
   return compose.slice(start, following === -1 ? undefined : start + 1 + following);
 }
 
-test("production compose keeps DB private and grants S3 egress only to API and probe", async () => {
+test("production compose separates private, edge, and S3 egress networks", async () => {
   const [compose, cmsDockerfile, cmsNginxConfig, publicDockerfile, publicNginxConfig] = await Promise.all([
     readFile(composePath, "utf8"),
     readFile(cmsDockerfilePath, "utf8"),
@@ -37,14 +37,16 @@ test("production compose keeps DB private and grants S3 egress only to API and p
   assert.match(db, /security_opt: \[no-new-privileges:true\]/);
   assert.match(db, /cap_drop: \[ALL\]/);
   assert.match(db, /cap_add: \[CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID\]/);
-  assert.doesNotMatch(db, /portfolio-production-egress/);
-  assert.match(api, /networks: \[portfolio-production-private, portfolio-production-egress\]/);
+  assert.doesNotMatch(db, /portfolio-production-edge|portfolio-production-egress/);
+  assert.match(api, /networks: \[portfolio-production-private, portfolio-production-edge, portfolio-production-egress\]/);
   assert.match(probe, /networks: \[portfolio-production-egress\]/);
-  assert.doesNotMatch(probe, /portfolio-production-private|depends_on:|DATABASE_URL/);
+  assert.doesNotMatch(probe, /portfolio-production-private|portfolio-production-edge|depends_on:|DATABASE_URL/);
   assert.match(migrate, /networks: \[portfolio-production-private\]/);
   assert.match(ownerBootstrap, /networks: \[portfolio-production-private\]/);
-  assert.match(cms, /networks: \[portfolio-production-private\]/);
-  assert.match(publicSite, /networks: \[portfolio-production-private\]/);
+  assert.match(cms, /networks: \[portfolio-production-private, portfolio-production-edge\]/);
+  assert.match(publicSite, /networks: \[portfolio-production-private, portfolio-production-edge\]/);
+  assert.doesNotMatch(cms, /portfolio-production-egress/);
+  assert.doesNotMatch(publicSite, /portfolio-production-egress/);
   assert.match(cms, /ports: \["127\.0\.0\.1:3102:8080"\]/);
   assert.match(publicSite, /ports: \["127\.0\.0\.1:3103:8080"\]/);
   assert.match(cms, /http:\/\/127\.0\.0\.1:8080\/health/);
@@ -64,6 +66,8 @@ test("production compose keeps DB private and grants S3 egress only to API and p
     assert.doesNotMatch(serviceDefinition, /cap_add:/);
   }
   assert.match(compose, /portfolio-production-private:\n    name: portfolio-production-private\n    internal: true/);
+  assert.match(compose, /portfolio-production-edge:\n    name: portfolio-production-edge\n/);
   assert.match(compose, /portfolio-production-egress:\n    name: portfolio-production-egress\n/);
+  assert.doesNotMatch(compose.slice(compose.indexOf("portfolio-production-edge:"), compose.indexOf("portfolio-production-egress:")), /internal: true/);
   assert.doesNotMatch(compose.slice(compose.indexOf("portfolio-production-egress:")), /internal: true/);
 });

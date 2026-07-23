@@ -79,7 +79,7 @@ services:
       - portfolio-production-media-data:/app/storage/project-media
     depends_on:
       portfolio-db: { condition: service_healthy }
-    networks: [portfolio-production-private, portfolio-production-egress]
+    networks: [portfolio-production-private, portfolio-production-edge, portfolio-production-egress]
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3101/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 10s
@@ -105,7 +105,7 @@ services:
     ports: ["127.0.0.1:3102:8080"]
     depends_on:
       portfolio-api: { condition: service_healthy }
-    networks: [portfolio-production-private]
+    networks: [portfolio-production-private, portfolio-production-edge]
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health | grep -qx ok"]
       interval: 10s
@@ -130,7 +130,7 @@ services:
     ports: ["127.0.0.1:3103:8080"]
     depends_on:
       portfolio-api: { condition: service_healthy }
-    networks: [portfolio-production-private]
+    networks: [portfolio-production-private, portfolio-production-edge]
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health | grep -qx ok"]
       interval: 10s
@@ -160,6 +160,8 @@ networks:
   portfolio-production-private:
     name: portfolio-production-private
     internal: true
+  portfolio-production-edge:
+    name: portfolio-production-edge
   portfolio-production-egress:
     name: portfolio-production-egress
 
