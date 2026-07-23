@@ -1,8 +1,10 @@
 import { loadEnv } from "./config/env.js";
+import { assertProductionDatabase } from "./config/database-identity.js";
 import { checkDatabase, createPool } from "./db/client.js";
 import { buildApp } from "./app.js";
 
 const env = loadEnv();
+if (env.NODE_ENV === "production") assertProductionDatabase(env, "Production API startup");
 const pool = createPool(env.DATABASE_URL);
 const app = buildApp(env, pool);
 

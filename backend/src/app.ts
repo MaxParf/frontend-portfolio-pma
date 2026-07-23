@@ -34,15 +34,14 @@ export function buildApp(env: AppEnv, pool: pg.Pool) {
   });
 
   app.register(cors, {
-    credentials: true,
-    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    origin: (origin, callback) => {
-      const allowedOrigins = [...env.CORS_ORIGINS, ...env.CMS_ORIGINS];
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(null, false);
+    delegator: (request, callback) => {
+      const origin = request.headers.origin;
+      const allowedOrigins = new Set([...env.CORS_ORIGINS, ...env.CMS_ORIGINS]);
+      callback(null, {
+        origin: typeof origin === "string" && allowedOrigins.has(origin) ? origin : false,
+        credentials: typeof origin === "string" && env.CMS_ORIGINS.includes(origin),
+        methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      });
     },
   });
 

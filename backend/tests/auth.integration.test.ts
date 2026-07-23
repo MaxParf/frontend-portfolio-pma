@@ -78,6 +78,18 @@ test("GET / returns API service status", async () => {
   assert.equal(response.json().status, "ok");
 });
 
+test("CORS permits credentials only for the configured CMS origin", async () => {
+  const cmsResponse = await app.inject({ method: "GET", url: "/health", headers: { origin } });
+  assert.equal(cmsResponse.headers["access-control-allow-origin"], origin);
+  assert.equal(cmsResponse.headers["access-control-allow-credentials"], "true");
+
+  const publicOrigin = env.CORS_ORIGINS.find((candidate) => !env.CMS_ORIGINS.includes(candidate));
+  assert.ok(publicOrigin);
+  const publicResponse = await app.inject({ method: "GET", url: "/health", headers: { origin: publicOrigin } });
+  assert.equal(publicResponse.headers["access-control-allow-origin"], publicOrigin);
+  assert.equal(publicResponse.headers["access-control-allow-credentials"], undefined);
+});
+
 test("login normalization trims and lowercases without removing @", () => {
   assert.equal(normalizeLogin("  @MaxPar.Fed  "), "@maxpar.fed");
 });

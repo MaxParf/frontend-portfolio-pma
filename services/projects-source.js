@@ -4,8 +4,9 @@ import { mapApiProjectsResponse, ProjectContractError } from "../mappers/project
 import { fetchPublishedProjects, ProjectApiError } from "./projects-api.js";
 
 export async function loadProjects({ locale, signal, apiBaseUrl, fetchImpl, timeoutMs } = {}) {
+  const configuredApiBaseUrl = apiBaseUrl ?? getProjectsApiBaseUrl();
   try {
-    const payload = await fetchPublishedProjects({ apiBaseUrl: apiBaseUrl ?? getProjectsApiBaseUrl(), locale, signal, fetchImpl, timeoutMs });
+    const payload = await fetchPublishedProjects({ apiBaseUrl: configuredApiBaseUrl, locale, signal, fetchImpl, timeoutMs });
     return { projects: mapApiProjectsResponse(payload, { locale, fallbackProjects }), source: "api" };
   } catch (error) {
     if (error instanceof ProjectApiError && error.kind === "aborted") {

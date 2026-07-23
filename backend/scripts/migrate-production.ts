@@ -1,18 +1,17 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { assertProductionDatabase } from "../src/config/database-identity.js";
 import { loadEnv } from "../src/config/env.js";
 import { createDatabase, createPool } from "../src/db/client.js";
 import { ProjectDraftRepository } from "../src/modules/admin-projects/project-draft.repository.js";
 
 const env = loadEnv();
-if (env.NODE_ENV === "production") {
-  throw new Error("Use db:migrate:production for production migrations.");
-}
+assertProductionDatabase(env, "Production migrations");
 const pool = createPool(env.DATABASE_URL);
 
 try {
   await migrate(createDatabase(pool), { migrationsFolder: "./drizzle" });
   await new ProjectDraftRepository(pool).backfill();
-  console.info({ event: "database_migrations_complete" });
+  console.info({ event: "production_database_migrations_complete" });
 } finally {
   await pool.end();
 }

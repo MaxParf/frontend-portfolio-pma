@@ -4,6 +4,7 @@ import { projects as fallbackProjects } from "../data/projects.js";
 import { mapApiProjectsResponse, ProjectContractError } from "../mappers/project-api-mapper.js";
 import { ProjectApiError } from "../services/projects-api.js";
 import { loadProjects } from "../services/projects-source.js";
+import { getProjectsApiBaseUrl } from "../config/projects-config.js";
 
 const locale = "en";
 const apiProject = {
@@ -52,6 +53,10 @@ test("API success selects API source without credentials", async () => {
   assert.equal(result.source, "api");
   assert.match(request.url, /projects\?locale=en/);
   assert.equal(request.init.credentials, "omit");
+});
+
+test("missing API configuration is not hidden by the static fallback", () => {
+  assert.throws(() => getProjectsApiBaseUrl({ querySelector: () => null }), /not configured/);
 });
 
 test("network, HTTP, parse, and contract failures select static fallback", async () => {

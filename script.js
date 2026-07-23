@@ -2,7 +2,7 @@ import { renderProjects } from "./components/project-renderer.js";
 import { ProjectApiError } from "./services/projects-api.js";
 import { loadProjects } from "./services/projects-source.js";
 
-const CMS_LOGIN_URL = "http://127.0.0.1:5510/login";
+const CMS_LOGIN_URL = globalThis.__PORTFOLIO_CONFIG__?.cmsLoginUrl;
 
 document.addEventListener("DOMContentLoaded", () => {
   const projectsRoot = document.querySelector("[data-projects-root]");
@@ -284,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
       activeElement?.getAttribute("contenteditable") === "true";
 
     if (event.ctrlKey && event.shiftKey && event.key === "F12" && !isEditableTarget) {
-      window.open(CMS_LOGIN_URL, "_blank", "noopener,noreferrer");
+      if (CMS_LOGIN_URL) window.open(CMS_LOGIN_URL, "_blank", "noopener,noreferrer");
       return;
     }
 

@@ -5,12 +5,12 @@ import type pg from "pg";
 import type { AppEnv } from "../../config/env.js";
 import { HttpError } from "../../middleware/error-handler.js";
 import type { AuthService } from "../auth/auth.service.js";
-import { LocalMediaStorage } from "../media-storage/media-storage.js";
+import { createMediaStorageRegistry } from "../media-storage/media-storage.js";
 import { MediaService, MediaValidationError } from "./media.service.js";
 
 export function registerMediaRoutes(app: FastifyInstance, pool: pg.Pool, env: AppEnv, auth: AuthService): void {
-  const storage = new LocalMediaStorage(env.MEDIA_STORAGE_ROOT);
-  const service = new MediaService(pool, storage, env.MEDIA_MAX_FILE_BYTES);
+  const storage = createMediaStorageRegistry(env);
+  const service = new MediaService(pool, storage, env.MEDIA_MAX_FILE_BYTES, env.MEDIA_PROCESSING_TMP_DIR, env.STORAGE_PROVIDER === "s3" ? env.S3_KEY_PREFIX : undefined, app.log);
   app.register(multipart, { limits: { files: env.MEDIA_MAX_FILES_PER_REQUEST, fileSize: env.MEDIA_MAX_FILE_BYTES }, throwFileSizeLimit: true });
 
   app.post("/api/v1/admin/projects/:slug/media", async (request) => {
@@ -38,6 +38,7 @@ function mediaError(error: unknown): HttpError | unknown {
   if (error instanceof MediaValidationError) return new HttpError(error.message.startsWith("Only ") ? 415 : 400, error.code, error.message);
   const code = (error as { code?: string }).code;
   if (code === "PROJECT_NOT_FOUND") return new HttpError(404, code, "Project not found.");
+  if (code === "MEDIA_STORAGE_UNAVAILABLE") return new HttpError(503, code, "Media storage is unavailable.");
   if (code === "FST_REQ_FILE_TOO_LARGE") return new HttpError(413, "MEDIA_TOO_LARGE", "Image exceeds the 8 MB limit.");
   return error;
 }

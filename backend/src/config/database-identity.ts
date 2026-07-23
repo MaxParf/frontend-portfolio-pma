@@ -41,3 +41,18 @@ export function assertOwnerBootstrapPolicy(policy: OwnerBootstrapPolicy): void {
     throw new Error("Test owner bootstrap requires an explicit isolated test database policy.");
   }
 }
+
+export function assertProductionDatabase(env: AppEnv, action: string): void {
+  const actualName = databaseName(env.DATABASE_URL);
+  if (
+    env.NODE_ENV !== "production" ||
+    env.DATABASE_PURPOSE !== "production" ||
+    !env.PRODUCTION_DATABASE_NAME ||
+    actualName !== env.PRODUCTION_DATABASE_NAME ||
+    env.TEST_DATABASE_NAME ||
+    env.ALLOW_TEST_OWNER_BOOTSTRAP
+  ) {
+    throw new Error(`${action} requires an explicit production database identity.`);
+  }
+  if (!env.COOKIE_SECURE) throw new Error(`${action} requires COOKIE_SECURE=true.`);
+}

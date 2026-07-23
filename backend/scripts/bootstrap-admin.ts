@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { loadEnv } from "../src/config/env.js";
-import { createOwnerBootstrapPolicy } from "../src/config/database-identity.js";
+import { assertProductionDatabase, createOwnerBootstrapPolicy } from "../src/config/database-identity.js";
 import { createDatabase } from "../src/db/client.js";
 import { AuthRepository } from "../src/modules/auth/auth.repository.js";
 import { DEFAULT_OWNER_LOGIN, hashPassword, normalizeLogin } from "../src/modules/auth/auth.crypto.js";
@@ -11,6 +11,7 @@ async function main(): Promise<void> {
   assertNoPasswordCliArgument(process.argv.slice(2));
   const password = await resolveOwnerPassword();
   const env = loadEnv();
+  if (env.NODE_ENV === "production") assertProductionDatabase(env, "Production owner bootstrap");
   const login = normalizeLogin(process.env.ADMIN_LOGIN ?? process.argv[2] ?? DEFAULT_OWNER_LOGIN);
   const displayName = process.env.ADMIN_DISPLAY_NAME ?? process.argv[3] ?? "Maksim";
 

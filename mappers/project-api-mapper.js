@@ -40,8 +40,7 @@ function safeHref(value) {
     throw new ProjectContractError("link.href must be a valid URL.");
   }
 
-  const isLocalHttp = url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname);
-  if (url.protocol !== "https:" && !isLocalHttp) {
+  if (url.protocol !== "https:") {
     throw new ProjectContractError("link.href uses an unsafe protocol.");
   }
 
@@ -61,8 +60,7 @@ function safeMediaSrc(value) {
     throw new ProjectContractError("media.src must be a valid path or URL.");
   }
 
-  const isLocalHttp = url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname);
-  if (url.protocol !== "https:" && !isLocalHttp) {
+  if (url.protocol !== "https:") {
     throw new ProjectContractError("media.src uses an unsafe protocol.");
   }
 

@@ -15,12 +15,15 @@
     "test:e2e:server": "tsx scripts/start-isolated-e2e-server.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
+    "db:migrate:production": "tsx scripts/migrate-production.ts",
     "db:seed": "tsx scripts/seed-projects.ts",
     "db:verify": "tsx scripts/verify-seed.ts",
     "admin:bootstrap": "tsx scripts/bootstrap-admin.ts",
-    "media:cleanup": "tsx scripts/cleanup-media.ts"
+    "media:cleanup": "tsx scripts/cleanup-media.ts",
+    "media:s3:verify": "tsx scripts/verify-s3-storage.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1093.0",
     "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.3.0",
     "@fastify/multipart": "^9.4.0",

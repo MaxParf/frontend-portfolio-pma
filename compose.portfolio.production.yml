@@ -1,0 +1,154 @@
+name: portfolio-production
+
+services:
+  portfolio-db:
+    image: postgres:17.6-bookworm
+    restart: unless-stopped
+    environment:
+      TZ: UTC
+      PGTZ: UTC
+      POSTGRES_DB: "${POSTGRES_DB:?Set POSTGRES_DB in the production env file}"
+      POSTGRES_USER: "${POSTGRES_USER:?Set POSTGRES_USER in the production env file}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the production env file}"
+    command: ["postgres", "-c", "timezone=UTC"]
+    volumes:
+      - portfolio-production-postgres-data:/var/lib/postgresql/data
+    networks: [portfolio-production-internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 1G }
+
+  portfolio-migrate:
+    image: maxpar-portfolio-api:production
+    build: { context: ./backend, dockerfile: Dockerfile }
+    profiles: [operations]
+    restart: "no"
+    env_file:
+      - "${PORTFOLIO_ENV_FILE:?Set PORTFOLIO_ENV_FILE to the VPS production env file}"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@portfolio-db:5432/${POSTGRES_DB}
+    command: ["node", "dist/scripts/migrate-production.js"]
+    depends_on:
+      portfolio-db: { condition: service_healthy }
+    networks: [portfolio-production-internal]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+  portfolio-owner-bootstrap:
+    image: maxpar-portfolio-api:production
+    profiles: [operations]
+    restart: "no"
+    env_file:
+      - "${PORTFOLIO_ENV_FILE:?Set PORTFOLIO_ENV_FILE to the VPS production env file}"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@portfolio-db:5432/${POSTGRES_DB}
+    command: ["node", "dist/scripts/bootstrap-admin.js"]
+    depends_on:
+      portfolio-db: { condition: service_healthy }
+    networks: [portfolio-production-internal]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+  portfolio-api:
+    image: maxpar-portfolio-api:production
+    build: { context: ./backend, dockerfile: Dockerfile }
+    restart: unless-stopped
+    env_file:
+      - "${PORTFOLIO_ENV_FILE:?Set PORTFOLIO_ENV_FILE to the VPS production env file}"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3101
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@portfolio-db:5432/${POSTGRES_DB}
+    ports: ["127.0.0.1:3101:3101"]
+    volumes:
+      # Kept mounted as a benign compatibility/migration aid for existing local managed media.
+      # New production uploads use S3 when STORAGE_PROVIDER=s3; there is no runtime fallback.
+      - portfolio-production-media-data:/app/storage/project-media
+    depends_on:
+      portfolio-db: { condition: service_healthy }
+    networks: [portfolio-production-internal]
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3101/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 1G }
+
+  portfolio-cms:
+    image: maxpar-portfolio-cms:production
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: "${CMS_API_BASE_URL:?Set CMS_API_BASE_URL in the production env file}"
+    restart: unless-stopped
+    ports: ["127.0.0.1:3102:80"]
+    depends_on:
+      portfolio-api: { condition: service_healthy }
+    networks: [portfolio-production-internal]
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /usr/share/nginx/html/index.html"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+
+  portfolio-public:
+    image: maxpar-portfolio-public:production
+    build:
+      context: .
+      dockerfile: Dockerfile.public
+      args:
+        PUBLIC_API_BASE_URL: "${PUBLIC_API_BASE_URL:?Set PUBLIC_API_BASE_URL in the production env file}"
+        PUBLIC_CMS_LOGIN_URL: "${PUBLIC_CMS_LOGIN_URL:?Set PUBLIC_CMS_LOGIN_URL in the production env file}"
+    restart: unless-stopped
+    ports: ["127.0.0.1:3103:8080"]
+    depends_on:
+      portfolio-api: { condition: service_healthy }
+    networks: [portfolio-production-internal]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/health | grep -qx ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+
+networks:
+  portfolio-production-internal:
+    name: portfolio-production-internal
+    internal: true
+
+volumes:
+  portfolio-production-postgres-data:
+    name: portfolio-production-postgres-data
+  portfolio-production-media-data:
+    name: portfolio-production-media-data

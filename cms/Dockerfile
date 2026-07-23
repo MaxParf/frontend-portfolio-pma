@@ -1,4 +1,4 @@
-FROM node:25-bookworm-slim AS build
+FROM node:24-bookworm-slim AS build
 WORKDIR /app
 ARG VITE_API_BASE_URL=http://127.0.0.1:3001
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
