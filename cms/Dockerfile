@@ -7,7 +7,7 @@ COPY src ./src
 RUN npm ci
 RUN npm run build
 
-FROM nginx:1.29-bookworm AS runtime
+FROM nginxinc/nginx-unprivileged:1.29-bookworm AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

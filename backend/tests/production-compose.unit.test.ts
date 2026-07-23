@@ -4,6 +4,10 @@ import { resolve } from "node:path";
 import test from "node:test";
 
 const composePath = resolve(import.meta.dirname, "../../compose.portfolio.production.yml");
+const cmsDockerfilePath = resolve(import.meta.dirname, "../../cms/Dockerfile");
+const cmsNginxConfigPath = resolve(import.meta.dirname, "../../cms/nginx.conf");
+const publicDockerfilePath = resolve(import.meta.dirname, "../../Dockerfile.public");
+const publicNginxConfigPath = resolve(import.meta.dirname, "../../deploy/nginx/public.conf");
 
 function service(compose: string, name: string): string {
   const start = compose.indexOf(`  ${name}:\n`);
@@ -13,7 +17,13 @@ function service(compose: string, name: string): string {
 }
 
 test("production compose keeps DB private and grants S3 egress only to API and probe", async () => {
-  const compose = await readFile(composePath, "utf8");
+  const [compose, cmsDockerfile, cmsNginxConfig, publicDockerfile, publicNginxConfig] = await Promise.all([
+    readFile(composePath, "utf8"),
+    readFile(cmsDockerfilePath, "utf8"),
+    readFile(cmsNginxConfigPath, "utf8"),
+    readFile(publicDockerfilePath, "utf8"),
+    readFile(publicNginxConfigPath, "utf8"),
+  ]);
   const db = service(compose, "portfolio-db");
   const api = service(compose, "portfolio-api");
   const migrate = service(compose, "portfolio-migrate");
@@ -35,6 +45,15 @@ test("production compose keeps DB private and grants S3 egress only to API and p
   assert.match(ownerBootstrap, /networks: \[portfolio-production-private\]/);
   assert.match(cms, /networks: \[portfolio-production-private\]/);
   assert.match(publicSite, /networks: \[portfolio-production-private\]/);
+  assert.match(cms, /ports: \["127\.0\.0\.1:3102:8080"\]/);
+  assert.match(publicSite, /ports: \["127\.0\.0\.1:3103:8080"\]/);
+  assert.match(cms, /http:\/\/127\.0\.0\.1:8080\/health/);
+  assert.match(publicSite, /http:\/\/127\.0\.0\.1:8080\/health/);
+  assert.match(cmsDockerfile, /FROM nginxinc\/nginx-unprivileged:1\.29-bookworm AS runtime/);
+  assert.match(publicDockerfile, /FROM nginxinc\/nginx-unprivileged:1\.29-bookworm/);
+  assert.match(publicDockerfile, /USER 101\s*$/m);
+  assert.match(cmsNginxConfig, /listen 8080;/);
+  assert.match(publicNginxConfig, /listen 8080;/);
   assert.doesNotMatch(cms, /env_file:|S3_/);
   assert.doesNotMatch(publicSite, /env_file:|S3_/);
   for (const serviceDefinition of [api, migrate, ownerBootstrap, probe, cms, publicSite]) {

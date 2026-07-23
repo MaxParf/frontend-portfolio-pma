@@ -102,12 +102,12 @@ services:
       args:
         VITE_API_BASE_URL: "${CMS_API_BASE_URL:?Set CMS_API_BASE_URL in the production env file}"
     restart: unless-stopped
-    ports: ["127.0.0.1:3102:80"]
+    ports: ["127.0.0.1:3102:8080"]
     depends_on:
       portfolio-api: { condition: service_healthy }
     networks: [portfolio-production-private]
     healthcheck:
-      test: ["CMD-SHELL", "test -f /usr/share/nginx/html/index.html"]
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health | grep -qx ok"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -132,7 +132,7 @@ services:
       portfolio-api: { condition: service_healthy }
     networks: [portfolio-production-private]
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/health | grep -qx ok"]
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health | grep -qx ok"]
       interval: 10s
       timeout: 5s
       retries: 5
