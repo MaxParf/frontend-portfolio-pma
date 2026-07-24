@@ -16,7 +16,7 @@ The deployment uses two Docker networks. `portfolio-production-private` is `inte
 
 Copy `.env.production.example` to the VPS environment directory and replace placeholders there only. Do not store `ADMIN_PASSWORD` in the file. The manual owner bootstrap command opens its own hidden terminal prompt.
 
-`COOKIE_SECURE=true`, `DATABASE_PURPOSE=production`, the exact production origins, and a matching `PRODUCTION_DATABASE_NAME` are mandatory. The production validator rejects test markers, placeholder values, and development loopback URLs.
+`COOKIE_SECURE=true`, `DATABASE_PURPOSE=production`, the exact production origins, and a matching `PRODUCTION_DATABASE_NAME` are mandatory. `CORS_ORIGINS` must list `https://maxpar.ru`, `https://www.maxpar.ru`, and `https://cms.maxpar.ru`; `CMS_ORIGINS=https://cms.maxpar.ru` remains a separate credentialed-CORS and unsafe-method Origin allowlist. The CMS origin is deliberately present in both variables. The production validator rejects test markers, placeholder values, and development loopback URLs.
 
 ## Operational Commands
 

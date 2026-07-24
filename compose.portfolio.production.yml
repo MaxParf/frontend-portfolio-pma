@@ -72,6 +72,7 @@ services:
       HOST: 0.0.0.0
       PORT: 3101
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@portfolio-db:5432/${POSTGRES_DB}
+    command: ["node", "dist/src/server.js"]
     ports: ["127.0.0.1:3101:3101"]
     volumes:
       # Kept mounted as a benign compatibility/migration aid for existing local managed media.

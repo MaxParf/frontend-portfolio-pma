@@ -7,6 +7,7 @@ import { loadProjects } from "../services/projects-source.js";
 import { getProjectsApiBaseUrl } from "../config/projects-config.js";
 
 const locale = "en";
+const productionApiBaseUrl = "https://api.maxpar.ru/api/v1";
 const apiProject = {
   id: "project-bradbury",
   slug: "project-bradbury",
@@ -29,7 +30,7 @@ function response(body, status = 200) {
 }
 
 test("API DTO maps published content into the existing frontend model", () => {
-  const [project] = mapApiProjectsResponse({ data: [apiProject], meta: { locale, count: 1 } }, { locale, fallbackProjects });
+  const [project] = mapApiProjectsResponse({ data: [apiProject], meta: { locale, count: 1 } }, { locale, fallbackProjects, apiBaseUrl: productionApiBaseUrl });
   assert.equal(project.translations.en.title, apiProject.title);
   assert.equal(project.translations.en.description, apiProject.description);
   assert.deepEqual(project.technologies, apiProject.technologies);
@@ -41,10 +42,29 @@ test("API DTO maps published content into the existing frontend model", () => {
 
 test("mapper preserves deterministic API sort order and rejects unsafe links", () => {
   const earlier = { ...apiProject, id: "foodai", slug: "foodai", galleryId: "foodai", sortOrder: 10, title: "FoodAI", media: [{ ...apiProject.media[0], id: "foodai:meal-plan", src: "images/projects/foodai/foodai-meal-plan.png" }] };
-  const mapped = mapApiProjectsResponse({ data: [apiProject, earlier], meta: { locale } }, { locale, fallbackProjects });
+  const mapped = mapApiProjectsResponse({ data: [apiProject, earlier], meta: { locale } }, { locale, fallbackProjects, apiBaseUrl: productionApiBaseUrl });
   assert.deepEqual(mapped.map((project) => project.slug), ["foodai", "project-bradbury"]);
-  assert.throws(() => mapApiProjectsResponse({ data: [{ ...apiProject, links: { primary: { ...apiProject.links.primary, href: "javascript:alert(1)" } } }], meta: { locale } }, { locale, fallbackProjects }), ProjectContractError);
-  assert.throws(() => mapApiProjectsResponse({ data: [{ ...apiProject, media: [{ ...apiProject.media[0], src: "data:text/html,unsafe" }] }], meta: { locale } }, { locale, fallbackProjects }), ProjectContractError);
+  assert.throws(() => mapApiProjectsResponse({ data: [{ ...apiProject, links: { primary: { ...apiProject.links.primary, href: "javascript:alert(1)" } } }], meta: { locale } }, { locale, fallbackProjects, apiBaseUrl: productionApiBaseUrl }), ProjectContractError);
+  assert.throws(() => mapApiProjectsResponse({ data: [{ ...apiProject, media: [{ ...apiProject.media[0], src: "data:text/html,unsafe" }] }], meta: { locale } }, { locale, fallbackProjects, apiBaseUrl: productionApiBaseUrl }), ProjectContractError);
+});
+
+test("mapper resolves managed media through the configured API base and preserves safe static sources", () => {
+  const managedMedia = [
+    { ...apiProject.media[0], src: "/api/v1/media/example/display", thumbnailSrc: "/api/v1/media/example/thumbnail" },
+    { ...apiProject.media[0], id: "project-bradbury:mobile-detail", src: "./images/projects/bradbury/mobile_detail.webp", thumbnailSrc: "https://cdn.example.test/detail.webp" },
+  ];
+  const [project] = mapApiProjectsResponse({ data: [{ ...apiProject, media: managedMedia }], meta: { locale } }, { locale, fallbackProjects, apiBaseUrl: productionApiBaseUrl });
+  assert.equal(project.media[0].src, "https://api.maxpar.ru/api/v1/media/example/display");
+  assert.equal(project.media[0].thumbnailSrc, "https://api.maxpar.ru/api/v1/media/example/thumbnail");
+  assert.equal(project.media[1].src, "./images/projects/bradbury/mobile_detail.webp");
+  assert.equal(project.media[1].thumbnailSrc, "https://cdn.example.test/detail.webp");
+});
+
+test("mapper rejects unsafe or malformed media URLs and managed media without an API base URL", () => {
+  for (const src of ["javascript:alert(1)", "https://["]) {
+    assert.throws(() => mapApiProjectsResponse({ data: [{ ...apiProject, media: [{ ...apiProject.media[0], src }] }], meta: { locale } }, { locale, fallbackProjects, apiBaseUrl: productionApiBaseUrl }), ProjectContractError);
+  }
+  assert.throws(() => mapApiProjectsResponse({ data: [{ ...apiProject, media: [{ ...apiProject.media[0], src: "/api/v1/media/example/display" }] }], meta: { locale } }, { locale, fallbackProjects }), ProjectContractError);
 });
 
 test("API success selects API source without credentials", async () => {
