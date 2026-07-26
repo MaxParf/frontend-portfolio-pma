@@ -21,6 +21,8 @@ const frontendMediaSchema = z.object({
   src: z.string().min(1),
   role: z.string().min(1),
   sortOrder: z.number().int(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
   translations: z.object({
     en: z.object({ alt: z.string().min(1), ariaLabel: z.string().min(1) }),
     ru: z.object({ alt: z.string().min(1), ariaLabel: z.string().min(1) }),

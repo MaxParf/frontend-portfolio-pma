@@ -374,9 +374,9 @@ test("owner upload stays private until publish, produces managed variants, and p
 
   const editor = (await app.inject({ method: "GET", url: "/api/v1/admin/projects/project-bradbury/editor", headers: { cookie } })).json().data;
   const content = structuredClone(editor.published.content);
-  content.media.push({ id: randomUUID(), sourceType: "managed", assetId: uploaded.assetId, role: "gallery", sortOrder: 999, translations: { en: { alt: "Managed image", ariaLabel: "Open managed image" }, ru: { alt: "Управляемое изображение", ariaLabel: "Открыть управляемое изображение" } } });
+  content.media.push({ id: randomUUID(), sourceType: "managed", assetId: uploaded.assetId, role: "gallery", orientation: "horizontal", sortOrder: 999, translations: { en: { alt: "Managed image", ariaLabel: "Open managed image" }, ru: { alt: "Управляемое изображение", ariaLabel: "Открыть управляемое изображение" } } });
   const saved = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers: { cookie, origin }, payload: { baseRevisionId: editor.published.revisionId, expectedDraftRevisionId: editor.draft?.revisionId ?? null, content } });
-  assert.equal(saved.statusCode, 200);
+  assert.equal(saved.statusCode, 200, saved.body);
   const published = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/publish", headers: { cookie, origin }, payload: { expectedDraftRevisionId: saved.json().data.revisionId, confirmation: true } });
   assert.equal(published.statusCode, 200);
   const display = await app.inject({ method: "GET", url: `/api/v1/media/${uploaded.assetId}/display` });
@@ -455,7 +455,7 @@ test("draft and publish routes preserve public isolation, revisions, conflicts, 
   } finally {
     const current = (await app.inject({ method: "GET", url: "/api/v1/admin/projects/project-bradbury/editor", headers: { cookie } })).json().data;
     const restore = await app.inject({ method: "PUT", url: "/api/v1/admin/projects/project-bradbury/draft", headers, payload: { baseRevisionId: current.published.revisionId, expectedDraftRevisionId: current.draft?.revisionId ?? null, content: baseline } });
-    assert.equal(restore.statusCode, 200);
+    assert.equal(restore.statusCode, 200, restore.body);
     const restored = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/publish", headers, payload: { expectedDraftRevisionId: restore.json().data.revisionId, confirmation: true } });
     assert.equal(restored.statusCode, 200);
     assert.deepEqual((await app.inject({ method: "GET", url: "/api/v1/projects/project-bradbury?locale=en" })).json().data, baselinePublic);

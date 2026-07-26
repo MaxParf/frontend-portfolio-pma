@@ -18,6 +18,7 @@
     "db:migrate:production": "tsx scripts/migrate-production.ts",
     "db:seed": "tsx scripts/seed-projects.ts",
     "db:verify": "tsx scripts/verify-seed.ts",
+    "db:verify:media-orientation": "tsx scripts/verify-media-orientation.ts",
     "admin:bootstrap": "tsx scripts/bootstrap-admin.ts",
     "media:cleanup": "tsx scripts/cleanup-media.ts",
     "media:s3:verify": "tsx scripts/verify-s3-storage.ts"

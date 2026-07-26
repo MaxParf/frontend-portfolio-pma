@@ -72,6 +72,7 @@ function draftError(error: unknown): HttpError {
   if (code === "PROJECT_NOT_FOUND") return new HttpError(404, code, "Project not found.");
   if (code === "DRAFT_NOT_FOUND") return new HttpError(409, code, "Project draft not found.");
   if (code === "DRAFT_CONFLICT" || code === "PUBLISH_CONFLICT") return new HttpError(409, code, "The project draft was changed in another session.");
+  if (code === "ORIENTATION_UNRESOLVED") return new HttpError(409, code, value.message ?? "Project media orientation is unresolved.");
   if (code === "VALIDATION_ERROR") return new HttpError(400, code, value.message ?? "Invalid project draft.");
   if (value.message?.startsWith("Missing")) return new HttpError(400, "PUBLISH_VALIDATION_FAILED", value.message);
   throw error;

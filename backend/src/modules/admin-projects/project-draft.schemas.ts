@@ -1,8 +1,16 @@
 import { z } from "zod";
+import { MEDIA_ORIENTATIONS } from "../media/media-orientation.js";
 
 const text = z.string().trim().max(20_000);
 const requiredText = text.min(1);
 const nullableText = text.nullable();
+const mediaOrientation = z.enum(MEDIA_ORIENTATIONS);
+const mediaReferenceBase = z.object({
+  role: requiredText.max(80),
+  orientation: mediaOrientation,
+  sortOrder: z.number().int().min(0),
+  translations: z.object({ en: z.object({ alt: text, ariaLabel: text }), ru: z.object({ alt: text, ariaLabel: text }) }),
+});
 const locale = z.object({
   title: requiredText,
   subtitle: nullableText,
@@ -40,15 +48,17 @@ export const projectDraftContentSchema = z
       secondary: z.object({ href: safeUrl, type: requiredText.max(80) }).nullable(),
     }),
     media: z.array(z.discriminatedUnion("sourceType", [
-      z.object({ id: z.string().trim().min(1).max(240), sourceType: z.literal("legacy"), src: z.string().trim().min(1).max(1024), role: requiredText.max(80), sortOrder: z.number().int().min(0), translations: z.object({ en: z.object({ alt: text, ariaLabel: text }), ru: z.object({ alt: text, ariaLabel: text }) }) }),
-      z.object({ id: z.string().uuid(), sourceType: z.literal("managed"), assetId: z.string().uuid(), role: requiredText.max(80), sortOrder: z.number().int().min(0), translations: z.object({ en: z.object({ alt: text, ariaLabel: text }), ru: z.object({ alt: text, ariaLabel: text }) }) }),
+      mediaReferenceBase.extend({ id: z.string().trim().min(1).max(240), sourceType: z.literal("legacy"), src: z.string().trim().min(1).max(1024) }),
+      mediaReferenceBase.extend({ id: z.string().uuid(), sourceType: z.literal("managed"), assetId: z.string().uuid() }),
     ])).max(50),
   })
   .superRefine((content, ctx) => {
     const technologySlugs = content.technologies.map((item) => item.slug);
     const mediaIds = content.media.map((item) => item.id);
+    const mediaOrders = content.media.map((item) => `${item.orientation}:${item.sortOrder}`);
     if (new Set(technologySlugs).size !== technologySlugs.length) ctx.addIssue({ code: "custom", message: "technologies cannot contain duplicates." });
     if (new Set(mediaIds).size !== mediaIds.length) ctx.addIssue({ code: "custom", message: "media cannot contain duplicates." });
+    if (new Set(mediaOrders).size !== mediaOrders.length) ctx.addIssue({ code: "custom", message: "media sortOrder must be unique within orientation." });
   });
 
 export type ProjectDraftContent = z.infer<typeof projectDraftContentSchema>;
