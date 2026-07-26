@@ -365,7 +365,7 @@ test("owner upload stays private until publish, produces managed variants, and p
   const session = await loginRequest(); const cookie = String(session.headers["set-cookie"]).split(";")[0];
   const boundary = `----media-${randomUUID()}`;
   const image = await readFile("../images/projects/cus/cus-dashboard.png");
-  const payload = Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"sample.png\"\r\nContent-Type: image/png\r\n\r\n`), image, Buffer.from(`\r\n--${boundary}--\r\n`)]);
+  const payload = Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name=\"orientation\"\r\n\r\nhorizontal\r\n--${boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"sample.png\"\r\nContent-Type: image/png\r\n\r\n`), image, Buffer.from(`\r\n--${boundary}--\r\n`)]);
   const response = await app.inject({ method: "POST", url: "/api/v1/admin/projects/project-bradbury/media", headers: { cookie, origin, "content-type": `multipart/form-data; boundary=${boundary}` }, payload });
   assert.equal(response.statusCode, 200);
   const uploaded = response.json().data as { assetId: string };

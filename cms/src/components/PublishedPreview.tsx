@@ -16,7 +16,8 @@ export function PublishedPreview({ content, locale }: PublishedPreviewProps) {
   }
 
   const translation = content.translations[locale];
-  const media = content.media[0];
+  const vertical = content.media.filter((item) => item.orientation === "vertical").sort((a, b) => a.sortOrder - b.sortOrder);
+  const horizontal = content.media.filter((item) => item.orientation === "horizontal").sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <section className="published-preview" aria-labelledby="preview-title">
@@ -43,12 +44,7 @@ export function PublishedPreview({ content, locale }: PublishedPreviewProps) {
             <span key={technology.slug}>{technology.name}</span>
           ))}
         </div>
-        {media ? (
-          <figure>
-            <img src={media.sourceType === "managed" ? `/api/v1/media/${media.assetId}/display` : `/${media.src}`} alt={media.translations[locale]?.alt ?? ""} />
-            <figcaption>{media.translations[locale]?.ariaLabel}</figcaption>
-          </figure>
-        ) : null}
+        {([ ["Vertical images", vertical], ["Horizontal images", horizontal] ] as const).map(([heading, media]) => media.length ? <section className="preview-media-group" key={heading}><h4>{heading}</h4><div className="preview-media-grid">{media.map((item) => <figure key={item.id}><img src={item.sourceType === "managed" ? `/api/v1/media/${item.assetId}/thumbnail` : `/${item.src}`} alt={item.translations[locale]?.alt ?? ""} /><figcaption>{item.translations[locale]?.ariaLabel}</figcaption></figure>)}</div></section> : null)}
       </article>
     </section>
   );

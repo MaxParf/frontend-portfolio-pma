@@ -81,7 +81,10 @@ export interface PublicProjectDto {
     src: string;
     thumbnailSrc: string | null;
     role: string;
+    orientation: "vertical" | "horizontal";
     sortOrder: number;
+    width: number | null;
+    height: number | null;
     alt: string;
     ariaLabel: string;
   }>;

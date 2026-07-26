@@ -36,7 +36,10 @@ export interface ProjectReadModel {
     path: string | null;
     sourceType: "legacy" | "managed";
     role: string;
+    orientation: "vertical" | "horizontal";
     sortOrder: number;
+    width: number | null;
+    height: number | null;
     altText: string;
     ariaLabel: string;
   }>;
@@ -69,7 +72,10 @@ export class ProjectRepository {
               path: mediaAssets.path,
               sourceType: mediaAssets.sourceType,
               role: mediaAssets.role,
+              orientation: projectMedia.orientation,
               sortOrder: projectMedia.sortOrder,
+              width: mediaAssets.width,
+              height: mediaAssets.height,
               altText: mediaAssetTranslations.altText,
               ariaLabel: mediaAssetTranslations.ariaLabel,
             })
@@ -102,7 +108,10 @@ export class ProjectRepository {
           secondaryLinkType: row.projects.secondaryLinkType,
           secondaryActionLabel: row.project_translations.secondaryActionLabel,
           technologies: technologyRows.map((technology) => technology.name),
-          media: mediaRows,
+          media: mediaRows.map((media) => {
+            if (!media.orientation) throw new Error("Published project media orientation is missing.");
+            return { ...media, orientation: media.orientation };
+          }),
         };
       }),
     );
