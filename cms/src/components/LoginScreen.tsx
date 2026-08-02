@@ -20,7 +20,7 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
     setError(null);
 
     if (!login || !password) {
-      setError("Login and password are required.");
+      setError("Введите логин и пароль.");
       return;
     }
 
@@ -28,7 +28,7 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
     try {
       await onLogin(login, password);
     } catch (loginError) {
-      setError(loginError instanceof ApiError ? loginError.message : "Unable to login.");
+      setError(loginError instanceof ApiError ? loginError.message : "Не удалось выполнить вход.");
     } finally {
       setSubmitting(false);
     }
@@ -37,13 +37,11 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
   return (
     <main className="login-page">
       <section className="login-panel" aria-labelledby="login-title">
-        <div className="login-panel__mark">M</div>
-        <p className="login-panel__eyebrow">Owner access</p>
-        <h1 id="login-title">Maxpar CMS</h1>
-        <p className="login-panel__copy">Server-side authentication is required before the CMS shell or admin API can be opened.</p>
+        <h1 id="login-title" className="visually-hidden">Вход в CMS</h1>
+        <p className="login-panel__eyebrow">Доступ владельца</p>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
-          <label htmlFor={loginId}>Login</label>
+          <label htmlFor={loginId}>Логин</label>
           <input
             id={loginId}
             type="text"
@@ -53,7 +51,7 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
             aria-describedby={error ? errorId : undefined}
           />
 
-          <label htmlFor={passwordId}>Password</label>
+          <label htmlFor={passwordId}>Пароль</label>
           <input
             id={passwordId}
             type="password"
@@ -70,11 +68,10 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
           ) : null}
 
           <button type="submit" disabled={submitting}>
-            {submitting ? "Signing in..." : "Sign in"}
+            {submitting ? "Выполняется вход..." : "Войти"}
           </button>
         </form>
 
-        <p className="login-panel__meta">API: {apiBaseUrl}</p>
       </section>
     </main>
   );

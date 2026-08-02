@@ -4,5 +4,8 @@ export * from "./technologies.js";
 export * from "./project-technologies.js";
 export * from "./media-assets.js";
 export * from "./project-media.js";
+export * from "./project-content-items.js";
+export * from "./project-links.js";
 export * from "./project-revisions.js";
+export * from "./project-locale-publications.js";
 export * from "./admin-auth.js";

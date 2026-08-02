@@ -1,4 +1,7 @@
 const LOCALES = new Set(["en", "ru"]);
+const MEDIA_PRESENTATIONS = new Set(["cover", "contain"]);
+const PROJECT_GALLERY_KINDS = new Set(["mobile", "desktop"]);
+const ALLOWED_PROJECT_ANCHORS = new Set(["#hero", "#featured-projects", "#skills", "#services", "#about", "#contact"]);
 
 export class ProjectContractError extends Error {
   constructor(message) {
@@ -29,7 +32,8 @@ function safeHref(value) {
   }
 
   const href = requiredString(value, "link.href").trim();
-  if (href.startsWith("#")) {
+  // Keep this allowlist synchronized with CMS and backend; no shared runtime package spans all three builds.
+  if (ALLOWED_PROJECT_ANCHORS.has(href)) {
     return href;
   }
 
@@ -96,22 +100,43 @@ function safeMediaSrc(value, apiBaseUrl) {
   return url.toString();
 }
 
-function mapLink(link, id) {
-  if (link === null || link === undefined) {
-    return null;
+function safeMediaPresentation(value) {
+  if (value === null || value === undefined) {
+    return "cover";
   }
 
-  if (typeof link !== "object") {
-    throw new ProjectContractError("link must be an object or null.");
+  if (!MEDIA_PRESENTATIONS.has(value)) {
+    throw new ProjectContractError("media.presentation must be cover or contain.");
   }
 
-  const href = safeHref(link.href);
-  const label = optionalString(link.label, "link.label");
-  if (!href || !label) {
-    throw new ProjectContractError("link must include href and label.");
+  return value;
+}
+
+function safeGalleryKind(value) {
+  if (!PROJECT_GALLERY_KINDS.has(value)) {
+    throw new ProjectContractError("media.galleryKind must be mobile or desktop.");
+  }
+  return value;
+}
+
+function mapApiLinks(value) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new ProjectContractError("project.links must be a non-empty array.");
   }
 
-  return { id, href, type: requiredString(link.type, "link.type"), external: !href.startsWith("#"), label };
+  return value.map((link) => {
+    if (!link || typeof link !== "object") {
+      throw new ProjectContractError("link must be an object.");
+    }
+
+    const id = requiredString(link.id, "link.id");
+    const href = safeHref(link.url);
+    const label = requiredString(link.label, "link.label");
+    if (!href) {
+      throw new ProjectContractError("link.url must be a non-empty string.");
+    }
+    return { id, href, external: !href.startsWith("#"), label };
+  });
 }
 
 function mapMedia(apiMedia, fallbackMedia, locale, apiBaseUrl) {
@@ -127,11 +152,21 @@ function mapMedia(apiMedia, fallbackMedia, locale, apiBaseUrl) {
     const apiId = requiredString(media.id, "media.id");
     const staticId = apiId.includes(":") ? apiId.split(":").at(-1) : apiId;
     const presentation = fallbackMedia.find((item) => item.id === staticId);
+    const presentationMode = safeMediaPresentation(media.presentation);
+    const galleryKind = safeGalleryKind(media.galleryKind);
+    const sourceType = media.sourceType ?? "legacy";
+    if (sourceType !== "legacy" && sourceType !== "managed") {
+      throw new ProjectContractError("media.sourceType must be legacy or managed.");
+    }
     return {
       ...(presentation ?? {}),
       id: staticId,
       src: safeMediaSrc(media.src, apiBaseUrl),
       thumbnailSrc: media.thumbnailSrc ? safeMediaSrc(media.thumbnailSrc, apiBaseUrl) : null,
+      sourceType,
+      presentation: presentationMode,
+      galleryKind,
+      imageClassName: presentationMode === "contain" ? "project-card__image project-card__image--contain" : presentation?.imageClassName ?? "project-card__image",
       role: requiredString(media.role, "media.role"),
       sortOrder: Number.isFinite(media.sortOrder) ? media.sortOrder : 0,
       translations: {
@@ -154,18 +189,19 @@ function mapProject(apiProject, fallbackProject, locale, apiBaseUrl) {
     throw new ProjectContractError(`No presentation fallback exists for ${apiProject.slug ?? "an unknown project"}.`);
   }
 
-  const links = [mapLink(apiProject.links?.primary, "primary"), mapLink(apiProject.links?.secondary, "secondary")].filter(Boolean);
+  const links = mapApiLinks(apiProject.links);
   const media = mapMedia(apiProject.media, fallbackProject.media, locale, apiBaseUrl);
-  const staticMediaIds = new Set(media.map((item) => item.id));
-  const galleryGroups = fallbackProject.galleryGroups.filter((group) => group.mediaIds.every((id) => staticMediaIds.has(id)));
-  const groupedMediaIds = new Set(galleryGroups.flatMap((group) => group.mediaIds));
-  const managedMediaIds = media.map((item) => item.id).filter((id) => !groupedMediaIds.has(id));
-
-  if (!galleryGroups.length && media.length) {
-    galleryGroups.push({ id: "main", className: "project-card__gallery", mediaIds: media.map((item) => item.id) });
-  } else if (managedMediaIds.length) {
-    galleryGroups.push({ id: "managed", className: "project-card__gallery", mediaIds: managedMediaIds });
-  }
+  const contentStrings = (value, field) => {
+    if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) throw new ProjectContractError(`${field} must be a string array.`);
+    return value;
+  };
+  const displayType = requiredString(apiProject.displayType, "project.displayType");
+  const features = contentStrings(apiProject.features, "project.features");
+  const notes = contentStrings(apiProject.notes, "project.notes");
+  const galleryGroups = [
+    { id: "mobile", className: "project-card__gallery project-card__gallery--mobile", mediaIds: media.filter((item) => item.galleryKind === "mobile").sort((a, b) => a.sortOrder - b.sortOrder).map((item) => item.id) },
+    { id: "desktop", className: "project-card__gallery project-card__gallery--desktop", mediaIds: media.filter((item) => item.galleryKind === "desktop").sort((a, b) => a.sortOrder - b.sortOrder).map((item) => item.id) },
+  ].filter((group) => group.mediaIds.length);
 
   return {
     ...structuredClone(fallbackProject),
@@ -188,6 +224,9 @@ function mapProject(apiProject, fallbackProject, locale, apiBaseUrl) {
         description: requiredString(apiProject.description, "project.description"),
         role: requiredString(apiProject.role, "project.role"),
         statusLabel: requiredString(apiProject.statusLabel, "project.statusLabel"),
+        type: displayType,
+        features,
+        notes,
         links: Object.fromEntries(links.map((link) => [link.id, link.label])),
       },
     },

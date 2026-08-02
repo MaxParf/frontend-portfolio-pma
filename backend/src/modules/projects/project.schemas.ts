@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { localeSchema as sharedLocaleSchema, publicProjectDtoSchema, type Locale, type PublicProjectDto } from "../../../../contracts/project-contracts.js";
 
-export const localeSchema = z.enum(["en", "ru"]);
-export type Locale = z.infer<typeof localeSchema>;
+export const localeSchema = sharedLocaleSchema;
+export type { Locale, PublicProjectDto };
 
 export const projectStatusSchema = z.enum(["draft", "published", "hidden", "archived", "soft_deleted"]);
 
@@ -29,6 +30,12 @@ const frontendMediaSchema = z.object({
   }),
 });
 
+const frontendGalleryGroupSchema = z.object({
+  id: z.string().min(1),
+  className: z.string().min(1),
+  mediaIds: z.array(z.string().min(1)),
+});
+
 const frontendLinkSchema = z.object({
   id: z.string().min(1),
   href: z.string().min(1),
@@ -53,39 +60,11 @@ export const frontendProjectSchema = z.object({
   }),
   technologies: z.array(z.string().min(1)).min(1),
   links: z.array(frontendLinkSchema).default([]),
+  galleryGroups: z.array(frontendGalleryGroupSchema).default([]),
   media: z.array(frontendMediaSchema),
 });
 
 export const frontendProjectsSchema = z.array(frontendProjectSchema).min(1);
 export type FrontendProject = z.infer<typeof frontendProjectSchema>;
 
-export interface PublicProjectDto {
-  id: string;
-  slug: string;
-  galleryId: string;
-  status: "published";
-  sortOrder: number;
-  type: string | null;
-  title: string;
-  subtitle: string | null;
-  description: string;
-  role: string;
-  statusLabel: string;
-  technologies: string[];
-  links: {
-    primary: { href: string; type: string; label: string | null } | null;
-    secondary: { href: string; type: string; label: string | null } | null;
-  };
-  media: Array<{
-    id: string;
-    src: string;
-    thumbnailSrc: string | null;
-    role: string;
-    orientation: "vertical" | "horizontal";
-    sortOrder: number;
-    width: number | null;
-    height: number | null;
-    alt: string;
-    ariaLabel: string;
-  }>;
-}
+export { publicProjectDtoSchema };

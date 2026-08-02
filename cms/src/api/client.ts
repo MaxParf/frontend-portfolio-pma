@@ -21,6 +21,14 @@ export class ApiError extends Error {
   }
 }
 
+/** A malformed success payload is a deploy/contract error, never a UI crash. */
+export class ApiContractError extends Error {
+  constructor(public readonly code = "INVALID_CMS_API_RESPONSE") {
+    super("Сервер вернул данные в неподдерживаемом формате. Обновите страницу или обратитесь к администратору.");
+    this.name = "ApiContractError";
+  }
+}
+
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body && !(init.body instanceof FormData) && !headers.has("content-type")) {
@@ -43,6 +51,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     throw new ApiError(response.status, body.error?.code ?? "API_ERROR", body.error?.message ?? "Request failed.", body.error?.requestId, body.error?.details);
   }
 
+  if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
 

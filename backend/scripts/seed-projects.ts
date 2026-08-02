@@ -13,6 +13,8 @@ export interface SeedResult {
   technologies: number;
   media: number;
 }
+export type SeedMode = "current" | "legacy-bootstrap";
+export interface SeedOptions { mode?: SeedMode; }
 
 function deterministicUuid(key: string): string {
   const hash = createHash("sha1").update(`maxpar-portfolio:${key}`).digest("hex");
@@ -34,13 +36,27 @@ function firstLink(project: FrontendProject, index: number) {
   return project.links[index] ?? null;
 }
 
+function galleryKindByMediaId(project: FrontendProject): Map<string, "mobile" | "desktop"> {
+  const kinds = new Map<string, "mobile" | "desktop">();
+  for (const group of project.galleryGroups) {
+    const kind = group.id === "mobile" ? "mobile" : group.id === "desktop" || group.id === "main" ? "desktop" : null;
+    if (!kind) throw new Error(`Seed project ${project.id} has an unmapped gallery group ${group.id}.`);
+    for (const mediaId of group.mediaIds) {
+      if (kinds.has(mediaId)) throw new Error(`Seed media ${project.id}:${mediaId} belongs to multiple galleries.`);
+      kinds.set(mediaId, kind);
+    }
+  }
+  if (kinds.size !== project.media.length || project.media.some((asset) => !kinds.has(asset.id))) throw new Error(`Seed project ${project.id} has media without an explicit gallery group.`);
+  return kinds;
+}
+
 export async function loadFrontendProjects(): Promise<FrontendProject[]> {
   const projectsModuleUrl = pathToFileURL(fileURLToPath(new URL("../../data/projects.js", import.meta.url))).href;
   const module = (await import(projectsModuleUrl)) as { projects?: unknown };
   return frontendProjectsSchema.parse(module.projects);
 }
 
-export async function seedProjects(pool: pg.Pool, sourceProjects: FrontendProject[]): Promise<SeedResult> {
+export async function seedProjects(pool: pg.Pool, sourceProjects: FrontendProject[], options: SeedOptions = {}): Promise<SeedResult> {
   const client = await pool.connect();
 
   try {
@@ -70,6 +86,7 @@ export async function seedProjects(pool: pg.Pool, sourceProjects: FrontendProjec
       const projectId = deterministicUuid(`project:${project.id}`);
       const primary = firstLink(project, 0);
       const secondary = firstLink(project, 1);
+      const galleryKinds = galleryKindByMediaId(project);
 
       await client.query(
         `
@@ -192,17 +209,18 @@ export async function seedProjects(pool: pg.Pool, sourceProjects: FrontendProjec
           );
         }
 
-        await client.query("insert into project_media (project_id, media_asset_id, orientation, sort_order) values ($1, $2, $3::media_orientation, $4)", [
+        await client.query("insert into project_media (project_id, media_asset_id, orientation, gallery_kind, sort_order) values ($1, $2, $3::media_orientation, $4::project_gallery_kind, $5)", [
           projectId,
           mediaId,
           orientation,
+          galleryKinds.get(asset.id),
           asset.sortOrder,
         ]);
       }
     }
 
     await client.query("commit");
-    await new ProjectDraftRepository(pool).backfill();
+    if ((options.mode ?? "current") === "current") await new ProjectDraftRepository(pool).backfill();
     return {
       projects: sourceProjects.length,
       technologies: uniqueTechnologies.length,
