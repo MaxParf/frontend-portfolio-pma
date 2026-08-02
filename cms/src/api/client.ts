@@ -5,6 +5,7 @@ interface ApiErrorBody {
     code?: string;
     message?: string;
     requestId?: string;
+    details?: unknown;
   };
 }
 
@@ -14,6 +15,7 @@ export class ApiError extends Error {
     public readonly code: string,
     message: string,
     public readonly requestId?: string,
+    public readonly details?: unknown,
   ) {
     super(message);
   }
@@ -38,7 +40,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     } catch {
       body = {};
     }
-    throw new ApiError(response.status, body.error?.code ?? "API_ERROR", body.error?.message ?? "Request failed.", body.error?.requestId);
+    throw new ApiError(response.status, body.error?.code ?? "API_ERROR", body.error?.message ?? "Request failed.", body.error?.requestId, body.error?.details);
   }
 
   return (await response.json()) as T;

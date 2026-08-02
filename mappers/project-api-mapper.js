@@ -47,8 +47,37 @@ function safeHref(value) {
   return url.toString();
 }
 
-function safeMediaSrc(value) {
+function safeApiBaseUrl(value) {
+  const apiBaseUrl = requiredString(value, "apiBaseUrl").trim();
+  let url;
+  try {
+    url = new URL(apiBaseUrl);
+  } catch {
+    throw new ProjectContractError("apiBaseUrl must be a valid URL.");
+  }
+
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new ProjectContractError("apiBaseUrl must use HTTP(S).");
+  }
+
+  return url.toString().replace(/\/$/, "");
+}
+
+function resolveManagedMediaSrc(src, apiBaseUrl) {
+  const normalizedApiBaseUrl = safeApiBaseUrl(apiBaseUrl);
+  const apiBasePath = new URL(normalizedApiBaseUrl).pathname.replace(/\/$/, "");
+  const relativePath = apiBasePath && (src === apiBasePath || src.startsWith(`${apiBasePath}/`))
+    ? src.slice(apiBasePath.length).replace(/^\//, "")
+    : src.replace(/^\//, "");
+  return new URL(relativePath, `${normalizedApiBaseUrl}/`).toString();
+}
+
+function safeMediaSrc(value, apiBaseUrl) {
   const src = requiredString(value, "media.src").trim();
+  if (src.startsWith("/api/")) {
+    return resolveManagedMediaSrc(src, apiBaseUrl);
+  }
+
   if (src.startsWith("/") || src.startsWith("./") || src.startsWith("../") || !src.includes(":")) {
     return src;
   }
@@ -85,7 +114,7 @@ function mapLink(link, id) {
   return { id, href, type: requiredString(link.type, "link.type"), external: !href.startsWith("#"), label };
 }
 
-function mapMedia(apiMedia, fallbackMedia, locale) {
+function mapMedia(apiMedia, fallbackMedia, locale, apiBaseUrl) {
   if (!Array.isArray(apiMedia)) {
     throw new ProjectContractError("media must be an array.");
   }
@@ -101,8 +130,8 @@ function mapMedia(apiMedia, fallbackMedia, locale) {
     return {
       ...(presentation ?? {}),
       id: staticId,
-      src: safeMediaSrc(media.src),
-      thumbnailSrc: media.thumbnailSrc ? safeMediaSrc(media.thumbnailSrc) : null,
+      src: safeMediaSrc(media.src, apiBaseUrl),
+      thumbnailSrc: media.thumbnailSrc ? safeMediaSrc(media.thumbnailSrc, apiBaseUrl) : null,
       role: requiredString(media.role, "media.role"),
       sortOrder: Number.isFinite(media.sortOrder) ? media.sortOrder : 0,
       translations: {
@@ -116,7 +145,7 @@ function mapMedia(apiMedia, fallbackMedia, locale) {
   });
 }
 
-function mapProject(apiProject, fallbackProject, locale) {
+function mapProject(apiProject, fallbackProject, locale, apiBaseUrl) {
   if (!apiProject || typeof apiProject !== "object") {
     throw new ProjectContractError("project must be an object.");
   }
@@ -126,7 +155,7 @@ function mapProject(apiProject, fallbackProject, locale) {
   }
 
   const links = [mapLink(apiProject.links?.primary, "primary"), mapLink(apiProject.links?.secondary, "secondary")].filter(Boolean);
-  const media = mapMedia(apiProject.media, fallbackProject.media, locale);
+  const media = mapMedia(apiProject.media, fallbackProject.media, locale, apiBaseUrl);
   const staticMediaIds = new Set(media.map((item) => item.id));
   const galleryGroups = fallbackProject.galleryGroups.filter((group) => group.mediaIds.every((id) => staticMediaIds.has(id)));
   const groupedMediaIds = new Set(galleryGroups.flatMap((group) => group.mediaIds));
@@ -165,7 +194,7 @@ function mapProject(apiProject, fallbackProject, locale) {
   };
 }
 
-export function mapApiProjectsResponse(payload, { locale, fallbackProjects }) {
+export function mapApiProjectsResponse(payload, { locale, fallbackProjects, apiBaseUrl }) {
   if (!LOCALES.has(locale)) {
     throw new ProjectContractError("Unsupported locale.");
   }
@@ -179,7 +208,7 @@ export function mapApiProjectsResponse(payload, { locale, fallbackProjects }) {
   }
 
   const fallbackBySlug = new Map(fallbackProjects.map((project) => [project.slug, project]));
-  const mapped = payload.data.map((project) => mapProject(project, fallbackBySlug.get(project.slug), locale));
+  const mapped = payload.data.map((project) => mapProject(project, fallbackBySlug.get(project.slug), locale, apiBaseUrl));
   if (new Set(mapped.map((project) => project.slug)).size !== mapped.length) {
     throw new ProjectContractError("Project API response contains duplicate slugs.");
   }

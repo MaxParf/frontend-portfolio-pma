@@ -4,6 +4,8 @@ import { mapProjectToPublicDto } from "../src/modules/projects/project.mapper.js
 import { ProjectService } from "../src/modules/projects/project.service.js";
 import { frontendProjectSchema } from "../src/modules/projects/project.schemas.js";
 import { loadFrontendProjects } from "../scripts/seed-projects.js";
+import { mediaOrientationFromDimensions, MEDIA_ORIENTATIONS } from "../src/modules/media/media-orientation.js";
+import { projectDraftContentSchema } from "../src/modules/admin-projects/project-draft.schemas.js";
 
 test("locale validation accepts en and ru with en default", () => {
   const service = new ProjectService({
@@ -43,7 +45,10 @@ test("project DTO mapper hides database fields and preserves public contract", (
         path: "images/projects/bradbury/mobile_home_feed.webp",
         sourceType: "legacy",
         role: "gallery",
+        orientation: "vertical",
         sortOrder: 10,
+        width: 1206,
+        height: 2622,
         altText: "Mobile feed",
         ariaLabel: "Open screenshot",
       },
@@ -70,6 +75,29 @@ test("project DTO mapper hides database fields and preserves public contract", (
   assert.equal(dto.links.primary?.label, "Live platform");
   assert.equal(dto.links.secondary, null);
   assert.equal(dto.media[0]?.src, "images/projects/bradbury/mobile_home_feed.webp");
+});
+
+test("media orientation domain accepts only vertical and horizontal and classifies square as horizontal", () => {
+  assert.deepEqual(MEDIA_ORIENTATIONS, ["vertical", "horizontal"]);
+  assert.equal(mediaOrientationFromDimensions(600, 1200), "vertical");
+  assert.equal(mediaOrientationFromDimensions(1200, 600), "horizontal");
+  assert.equal(mediaOrientationFromDimensions(800, 800), "horizontal");
+  assert.equal(mediaOrientationFromDimensions(0, 800), null);
+});
+
+test("draft media requires a valid orientation and unique order within it", () => {
+  const base = {
+    slug: "orientation-test", galleryId: "orientation-test", sortOrder: 10, projectType: null,
+    dates: { startedAt: null, endedAt: null, ongoing: false },
+    translations: { en: { title: "Test", subtitle: null, description: "Test", role: "Test", statusLabel: "Test", primaryActionLabel: null, secondaryActionLabel: null, technologiesTitle: null }, ru: { title: "Тест", subtitle: null, description: "Тест", role: "Тест", statusLabel: "Тест", primaryActionLabel: null, secondaryActionLabel: null, technologiesTitle: null } },
+    technologies: [], links: { primary: null, secondary: null },
+    media: [{ id: "legacy-image", sourceType: "legacy", src: "images/test.webp", role: "gallery", orientation: "vertical", sortOrder: 10, translations: { en: { alt: "Test", ariaLabel: "Open" }, ru: { alt: "Тест", ariaLabel: "Открыть" } } }],
+  };
+  assert.equal(projectDraftContentSchema.parse(base).media[0]?.orientation, "vertical");
+  assert.throws(() => projectDraftContentSchema.parse({ ...base, media: [{ ...base.media[0], orientation: "square" }] }));
+  assert.throws(() => projectDraftContentSchema.parse({ ...base, media: [{ ...base.media[0], orientation: undefined }] }));
+  assert.doesNotThrow(() => projectDraftContentSchema.parse({ ...base, media: [...base.media, { ...base.media[0], id: "second", orientation: "horizontal" }] }));
+  assert.throws(() => projectDraftContentSchema.parse({ ...base, media: [...base.media, { ...base.media[0], id: "second" }] }));
 });
 
 test("seed adapter validates current frontend project model", async () => {

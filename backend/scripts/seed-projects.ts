@@ -4,6 +4,7 @@ import pg from "pg";
 import { loadEnv } from "../src/config/env.js";
 import { frontendProjectsSchema, type FrontendProject } from "../src/modules/projects/project.schemas.js";
 import { ProjectDraftRepository } from "../src/modules/admin-projects/project-draft.repository.js";
+import { mediaOrientationFromDimensions } from "../src/modules/media/media-orientation.js";
 
 type Locale = "en" | "ru";
 
@@ -158,19 +159,23 @@ export async function seedProjects(pool: pg.Pool, sourceProjects: FrontendProjec
 
       await client.query("delete from project_media where project_id = $1", [projectId]);
       for (const asset of project.media) {
+        const orientation = mediaOrientationFromDimensions(asset.width ?? 0, asset.height ?? 0);
+        if (!orientation) throw new Error(`Seed media ${project.id}:${asset.id} has no usable dimensions for orientation.`);
         const mediaExternalKey = `${project.id}:${asset.id}`;
         const mediaId = deterministicUuid(`media:${mediaExternalKey}`);
         await client.query(
           `
-            insert into media_assets (id, external_key, path, role, sort_order, created_at, updated_at)
-            values ($1, $2, $3, $4, $5, now(), now())
+            insert into media_assets (id, external_key, path, role, sort_order, width, height, created_at, updated_at)
+            values ($1, $2, $3, $4, $5, $6, $7, now(), now())
             on conflict (external_key) do update set
               path = excluded.path,
               role = excluded.role,
               sort_order = excluded.sort_order,
+              width = excluded.width,
+              height = excluded.height,
               updated_at = now()
           `,
-          [mediaId, mediaExternalKey, asset.src, asset.role, asset.sortOrder],
+          [mediaId, mediaExternalKey, asset.src, asset.role, asset.sortOrder, asset.width, asset.height],
         );
 
         for (const locale of ["en", "ru"] satisfies Locale[]) {
@@ -187,9 +192,10 @@ export async function seedProjects(pool: pg.Pool, sourceProjects: FrontendProjec
           );
         }
 
-        await client.query("insert into project_media (project_id, media_asset_id, sort_order) values ($1, $2, $3)", [
+        await client.query("insert into project_media (project_id, media_asset_id, orientation, sort_order) values ($1, $2, $3::media_orientation, $4)", [
           projectId,
           mediaId,
+          orientation,
           asset.sortOrder,
         ]);
       }

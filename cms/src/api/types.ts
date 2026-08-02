@@ -1,4 +1,6 @@
 export type Locale = "en" | "ru";
+export const MEDIA_ORIENTATIONS = ["vertical", "horizontal"] as const;
+export type MediaOrientation = (typeof MEDIA_ORIENTATIONS)[number];
 
 export interface AdminUser {
   id: string;
@@ -57,8 +59,8 @@ export interface DraftContent {
   media: Array<LegacyMedia | ManagedMedia>;
 }
 export type MediaTranslations = Record<Locale, { alt: string; ariaLabel: string }>;
-export type LegacyMedia = { id: string; sourceType: "legacy"; src: string; role: string; sortOrder: number; translations: MediaTranslations };
-export type ManagedMedia = { id: string; sourceType: "managed"; assetId: string; role: string; sortOrder: number; translations: MediaTranslations };
-export interface UploadedMedia { assetId: string; sourceType: "managed"; role: string; previewUrl: string; thumbnailUrl: string; width: number; height: number; }
+export type LegacyMedia = { id: string; sourceType: "legacy"; src: string; role: "gallery"; orientation: MediaOrientation; sortOrder: number; translations: MediaTranslations };
+export type ManagedMedia = { id: string; sourceType: "managed"; assetId: string; role: "gallery"; orientation: MediaOrientation; sortOrder: number; translations: MediaTranslations };
+export interface UploadedMedia { assetId: string; sourceType: "managed"; role: "gallery"; orientation: MediaOrientation; previewUrl: string; thumbnailUrl: string; width: number; height: number; }
 export interface ProjectRevision { revisionId: string; revisionNumber: number; revisionType: "draft" | "published"; baseRevisionId: string | null; content: DraftContent; createdAt: string; updatedAt: string; publishedAt: string | null; }
 export interface ProjectEditor { project: { id: string; externalKey: string; slug: string; status: string }; published: ProjectRevision; draft: ProjectRevision | null; meta: { hasUnpublishedChanges: boolean }; }

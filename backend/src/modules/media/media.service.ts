@@ -8,6 +8,7 @@ import type { FastifyBaseLogger } from "fastify";
 import type pg from "pg";
 import type { MediaStorageRegistry, MediaVariant } from "../media-storage/media-storage.js";
 import { buildMediaStorageKey } from "../media-storage/media-storage.js";
+import type { MediaOrientation } from "./media-orientation.js";
 
 const accepted = new Map([["image/jpeg", "jpg"], ["image/png", "png"], ["image/webp", "webp"]]);
 const signatures: Record<string, number[]> = {
@@ -17,6 +18,10 @@ const signatures: Record<string, number[]> = {
 };
 
 export class MediaValidationError extends Error { code = "MEDIA_VALIDATION_ERROR"; }
+export class MediaOrientationMismatchError extends Error {
+  code = "MEDIA_ORIENTATION_MISMATCH";
+  constructor(readonly details: { selectedOrientation: MediaOrientation; detectedWidth: number; detectedHeight: number; confirmationRequired: true }) { super("Image dimensions do not match the selected orientation."); }
+}
 export type Actor = { userId: string; sessionId: string; requestId: string };
 
 export class MediaService {
@@ -29,7 +34,7 @@ export class MediaService {
     private readonly logger?: FastifyBaseLogger,
   ) {}
 
-  async upload(projectSlug: string, actor: Actor, file: { filename: string; mimetype: string; file: NodeJS.ReadableStream }): Promise<object> {
+  async upload(projectSlug: string, actor: Actor, file: { filename: string; mimetype: string; file: NodeJS.ReadableStream }, orientation: MediaOrientation = "horizontal", confirmOrientationMismatch = false): Promise<object> {
     if (!accepted.has(file.mimetype)) throw new MediaValidationError("Only JPEG, PNG, and WebP images are allowed.");
     const project = (await this.pool.query<{ id: string }>("select id from projects where slug=$1", [projectSlug])).rows[0];
     if (!project) throw Object.assign(new Error("Project not found."), { code: "PROJECT_NOT_FOUND" });
@@ -51,6 +56,8 @@ export class MediaService {
       const thumbnailKey = buildMediaStorageKey(this.keyPrefix, assetId, "thumbnail");
       const display = await sharp(tmpPath, { limitInputPixels: 40_000_000, failOn: "error" }).rotate().resize({ width: 2400, height: 2400, fit: "inside", withoutEnlargement: true }).webp({ quality: 82 }).toBuffer({ resolveWithObject: true });
       const thumbnail = await sharp(tmpPath, { limitInputPixels: 40_000_000, failOn: "error" }).rotate().resize({ width: 480, height: 480, fit: "inside", withoutEnlargement: true }).webp({ quality: 76 }).toBuffer({ resolveWithObject: true });
+      const mismatch = (orientation === "vertical" && display.info.width >= display.info.height) || (orientation === "horizontal" && display.info.height > display.info.width);
+      if (mismatch && !confirmOrientationMismatch) throw new MediaOrientationMismatchError({ selectedOrientation: orientation, detectedWidth: display.info.width, detectedHeight: display.info.height, confirmationRequired: true });
 
       await this.putStoredObject(displayKey, display.data, { contentType: "image/webp", checksumSha256: sha256Base64(display.data) });
       uploadedKeys.push(displayKey);
@@ -73,7 +80,7 @@ export class MediaService {
       } finally {
         client.release();
       }
-      return { assetId, sourceType: "managed", role: "gallery", previewUrl: this.storage.writeProvider.getPublicUrl(assetId, "display"), thumbnailUrl: this.storage.writeProvider.getPublicUrl(assetId, "thumbnail"), width: display.info.width, height: display.info.height };
+      return { assetId, sourceType: "managed", role: "gallery", orientation, previewUrl: this.storage.writeProvider.getPublicUrl(assetId, "display"), thumbnailUrl: this.storage.writeProvider.getPublicUrl(assetId, "thumbnail"), width: display.info.width, height: display.info.height };
     } catch (error) {
       await this.cleanupUploadedObjects(uploadedKeys, error);
       throw error;

@@ -7,6 +7,7 @@ import { HttpError } from "../../middleware/error-handler.js";
 import type { AuthService } from "../auth/auth.service.js";
 import { createMediaStorageRegistry } from "../media-storage/media-storage.js";
 import { MediaService, MediaValidationError } from "./media.service.js";
+import { MEDIA_ORIENTATIONS } from "./media-orientation.js";
 
 export function registerMediaRoutes(app: FastifyInstance, pool: pg.Pool, env: AppEnv, auth: AuthService): void {
   const storage = createMediaStorageRegistry(env);
@@ -19,7 +20,9 @@ export function registerMediaRoutes(app: FastifyInstance, pool: pg.Pool, env: Ap
     try {
       const file = await request.file();
       if (!file) throw new HttpError(400, "MEDIA_VALIDATION_ERROR", "A single image file is required.");
-      return { data: await service.upload(slug, { userId: context.user.id, sessionId: context.sessionId, requestId: request.id }, file) };
+      const orientation = z.enum(MEDIA_ORIENTATIONS).parse((file.fields.orientation as { value?: unknown } | undefined)?.value);
+      const confirmOrientationMismatch = z.enum(["true", "false"]).optional().transform((value) => value === "true").parse((file.fields.confirmOrientationMismatch as { value?: unknown } | undefined)?.value);
+      return { data: await service.upload(slug, { userId: context.user.id, sessionId: context.sessionId, requestId: request.id }, file, orientation, confirmOrientationMismatch) };
     } catch (error) { throw mediaError(error); }
   });
 
@@ -36,6 +39,7 @@ export function registerMediaRoutes(app: FastifyInstance, pool: pg.Pool, env: Ap
 
 function mediaError(error: unknown): HttpError | unknown {
   if (error instanceof MediaValidationError) return new HttpError(error.message.startsWith("Only ") ? 415 : 400, error.code, error.message);
+  if (error instanceof Error && (error as unknown as { code?: string }).code === "MEDIA_ORIENTATION_MISMATCH") return new HttpError(409, "media_orientation_mismatch", error.message, (error as unknown as { details: unknown }).details);
   const code = (error as { code?: string }).code;
   if (code === "PROJECT_NOT_FOUND") return new HttpError(404, code, "Project not found.");
   if (code === "MEDIA_STORAGE_UNAVAILABLE") return new HttpError(503, code, "Media storage is unavailable.");

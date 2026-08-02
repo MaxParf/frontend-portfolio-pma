@@ -25,7 +25,7 @@ case "$PORT" in *[!0-9]*|"") printf 'PORT must be a valid integer.\n' >&2; exit 
 [ "$DATABASE_PURPOSE" = "production" ] || { printf 'DATABASE_PURPOSE must be production.\n' >&2; exit 1; }
 [ "$PRODUCTION_DATABASE_NAME" = "$POSTGRES_DB" ] || { printf 'Production database identity does not match POSTGRES_DB.\n' >&2; exit 1; }
 [ "$COOKIE_SECURE" = "true" ] || { printf 'COOKIE_SECURE must be true.\n' >&2; exit 1; }
-[ "$CORS_ORIGINS" = "https://maxpar.ru" ] || { printf 'CORS_ORIGINS must be the public production origin.\n' >&2; exit 1; }
+[ "$CORS_ORIGINS" = "https://maxpar.ru,https://www.maxpar.ru,https://cms.maxpar.ru" ] || { printf 'CORS_ORIGINS must list the public and CMS production origins.\n' >&2; exit 1; }
 [ "$CMS_ORIGINS" = "https://cms.maxpar.ru" ] || { printf 'CMS_ORIGINS must be the CMS production origin.\n' >&2; exit 1; }
 [ "$CMS_API_BASE_URL" = "https://api.maxpar.ru" ] || { printf 'CMS_API_BASE_URL must use the API production origin.\n' >&2; exit 1; }
 [ "$PUBLIC_API_BASE_URL" = "https://api.maxpar.ru/api/v1" ] || { printf 'PUBLIC_API_BASE_URL must use the published API base URL.\n' >&2; exit 1; }
