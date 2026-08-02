@@ -17,6 +17,7 @@ export const projectTranslations = pgTable(
     primaryActionLabel: text("primary_action_label"),
     secondaryActionLabel: text("secondary_action_label"),
     technologiesTitle: text("technologies_title"),
+    displayType: text("display_type").notNull().default(""),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },

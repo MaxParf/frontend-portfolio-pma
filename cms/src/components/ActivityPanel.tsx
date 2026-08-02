@@ -7,7 +7,7 @@ interface ActivityPanelProps {
 export function ActivityPanel({ events }: ActivityPanelProps) {
   return (
     <section className="activity-panel" aria-labelledby="activity-title">
-      <h2 id="activity-title">Session activity — local UI only</h2>
+      <h2 id="activity-title">Активность сессии — только локальный интерфейс</h2>
       {events.length ? (
         <ol>
           {events.map((event) => (
@@ -18,7 +18,7 @@ export function ActivityPanel({ events }: ActivityPanelProps) {
           ))}
         </ol>
       ) : (
-        <p>No local UI activity yet.</p>
+        <p>Локальных действий пока нет.</p>
       )}
     </section>
   );

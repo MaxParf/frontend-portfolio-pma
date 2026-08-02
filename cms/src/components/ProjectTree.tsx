@@ -1,4 +1,5 @@
 import type { AdminProject } from "../api/types";
+import { projectDisplayTitle } from "./project-display-title";
 
 interface ProjectTreeProps {
   projects: AdminProject[];
@@ -7,33 +8,35 @@ interface ProjectTreeProps {
   selectedProjectId: string | null;
   onRetry: () => void;
   onProjectSelected: (projectId: string) => void;
+  onCreateProject: () => void;
 }
 
-const inactiveSections = ["About", "Technologies", "Contacts", "Media", "SEO", "System"];
+const inactiveSections = ["About", "Technologies", "Contacts", "Media", "System"];
 
-export function ProjectTree({ projects, status, error, selectedProjectId, onRetry, onProjectSelected }: ProjectTreeProps) {
+export function ProjectTree({ projects, status, error, selectedProjectId, onRetry, onProjectSelected, onCreateProject }: ProjectTreeProps) {
   return (
-    <aside className="site-tree" aria-label="CMS content tree">
+    <aside className="site-tree" aria-label="Дерево содержимого CMS">
       <div className="panel-heading">
-        <h1>Portfolio</h1>
-            <span className="phase-badge">Phase 3B</span>
+        <h1>Портфолио</h1>
+            <span className="phase-badge">Локальная CMS</span>
       </div>
 
-      <nav className="tree" aria-label="Portfolio structure">
+      <nav className="tree" aria-label="Структура портфолио">
+        <div className="tree-create"><button type="button" onClick={onCreateProject}>Создать проект</button></div>
         <button className="tree-row tree-row--root" type="button">
-          Overview
+          Обзор
         </button>
         <div className="tree-row tree-row--section" aria-expanded="true">
-          <span>Projects</span>
+          <span>Проекты</span>
           <span className="count-badge">{projects.length}</span>
         </div>
 
-        {status === "loading" ? <p className="tree-state">Project list loading...</p> : null}
+        {status === "loading" ? <p className="tree-state">Загрузка списка проектов...</p> : null}
         {status === "error" ? (
           <div className="tree-state tree-state--error">
-            <p>{error ?? "API unavailable."}</p>
+            <p>{error ?? "API недоступен."}</p>
             <button type="button" onClick={onRetry}>
-              Retry
+              Повторить
             </button>
           </div>
         ) : null}
@@ -47,8 +50,8 @@ export function ProjectTree({ projects, status, error, selectedProjectId, onRetr
               aria-current={project.id === selectedProjectId ? "page" : undefined}
               onClick={() => onProjectSelected(project.id)}
             >
-              <span className="project-row__label">{project.translations.en.title}</span>
-              <span className="status status--published">{project.status === "published" ? "Published" : project.status}</span>
+              <span className="project-row__label">{projectDisplayTitle(project)}</span>
+              <span className="status status--published">{project.status === "published" ? "Опубликован" : project.status === "draft" ? "Черновик" : project.status}</span>
             </button>
           ))}
         </div>
@@ -56,7 +59,7 @@ export function ProjectTree({ projects, status, error, selectedProjectId, onRetr
         {inactiveSections.map((section) => (
           <button className="tree-row tree-row--disabled" type="button" key={section} aria-disabled="true">
             <span>{section}</span>
-            <small>Not available in this phase</small>
+            <small>Недоступно на этом этапе</small>
           </button>
         ))}
       </nav>

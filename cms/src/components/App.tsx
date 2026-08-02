@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getCurrentUser, login as loginRequest, logout as logoutRequest } from "../api/auth";
 import { ApiError, API_BASE_URL } from "../api/client";
-import { getEditor, listProjects } from "../api/projects";
+import { createProject, getEditor, listProjects } from "../api/projects";
 import type { AdminProject, AdminUser, DraftContent, Locale, ProjectEditor } from "../api/types";
 import { LoginScreen } from "./LoginScreen";
 import { CmsShell } from "./CmsShell";
 import { AccessibleDialog } from "./AccessibleDialog";
+import { projectDisplayTitle } from "./project-display-title";
 
 export type AuthState =
   | { status: "checking" }
@@ -34,7 +35,7 @@ export function App() {
   const [previewContent, setPreviewContent] = useState<DraftContent | null>(null);
   const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
   const [editorDirty, setEditorDirty] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{ type: "switch"; projectId: string } | { type: "logout" } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ type: "switch"; projectId: string } | { type: "create" } | { type: "logout" } | null>(null);
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) ?? projects[0] ?? null,
@@ -64,19 +65,45 @@ export function App() {
       setProjects(response.data);
       setSelectedProjectId((current) => current ?? response.data[0]?.id ?? null);
       setProjectsStatus("ready");
-      addActivity("project list loaded");
+      addActivity("список проектов загружен");
     } catch (error) {
       setProjectsStatus("error");
-      setProjectsError(error instanceof ApiError ? error.message : "API unavailable.");
+      setProjectsError(error instanceof ApiError ? error.message : "API недоступен.");
     }
   }
 
   async function loadEditor(project: AdminProject | null): Promise<ProjectEditor | null> {
     if (!project) return null;
     setEditorLoading(true);
-    try { const response = await getEditor(project.slug); setEditor(response.data); setPreviewContent(response.data.draft?.content ?? response.data.published.content); return response.data; }
-    catch (error) { setProjectsError(error instanceof ApiError ? error.message : "Unable to load project editor."); return null; }
+    try { const response = await getEditor(project.slug); setEditor(response.data); setPreviewContent(response.data.editable.content); return response.data; }
+    catch (error) { setProjectsError(error instanceof ApiError ? error.message : "Не удалось загрузить редактор проекта."); return null; }
     finally { setEditorLoading(false); }
+  }
+
+  async function refreshSelectedProject(): Promise<ProjectEditor | null> {
+    const response = await listProjects();
+    setProjects(response.data);
+    const refreshed = response.data.find((project) => project.id === selectedProjectId) ?? null;
+    return loadEditor(refreshed);
+  }
+
+  async function handleProjectDeleted(projectId: string): Promise<void> {
+    setEditorDirty(false);
+    setEditor(null);
+    setPreviewContent(null);
+    setProjectsStatus("loading");
+    setProjectsError(null);
+    try {
+      const response = await listProjects();
+      const remaining = response.data.filter((project) => project.id !== projectId);
+      setProjects(remaining);
+      setSelectedProjectId(remaining[0]?.id ?? null);
+      setProjectsStatus("ready");
+      addActivity("неопубликованный проект удалён");
+    } catch (error) {
+      setProjectsStatus("error");
+      setProjectsError(error instanceof ApiError ? error.message : "Не удалось обновить список проектов.");
+    }
   }
 
   useEffect(() => {
@@ -95,7 +122,7 @@ export function App() {
   async function handleLogin(login: string, password: string) {
     const response = await loginRequest(login, password);
     setAuth({ status: "authenticated", user: response.data });
-    addActivity("login successful");
+    addActivity("вход выполнен");
   }
 
   async function handleLogout() {
@@ -104,7 +131,7 @@ export function App() {
   }
 
   async function performLogout() {
-    addActivity("logout initiated");
+    addActivity("начат выход из CMS");
     try {
       await logoutRequest();
     } finally {
@@ -122,27 +149,59 @@ export function App() {
     if (editorDirty) { setPendingAction({ type: "switch", projectId }); return; }
     setSelectedProjectId(projectId);
     const project = projects.find((item) => item.id === projectId);
-    addActivity(`project selected: ${project?.translations.en.title ?? projectId}`);
+    addActivity(`выбран проект: ${project ? projectDisplayTitle(project) : projectId}`);
+  }
+
+  async function createNewProject() {
+    try {
+      const response = await createProject();
+      setEditor(response.data); setPreviewContent(response.data.editable.content); setSelectedProjectId(response.data.project.id); setEditorDirty(false);
+      await loadProjects();
+      addActivity("создан новый черновик проекта");
+    } catch (error) { setProjectsError(error instanceof ApiError ? error.message : "Не удалось создать проект."); }
+  }
+
+  function handleCreateProject() {
+    if (editorDirty) { setPendingAction({ type: "create" }); return; }
+    void createNewProject();
   }
 
   function discardAndContinue() {
     if (!pendingAction) return;
     if (pendingAction.type === "logout") { setPendingAction(null); void performLogout(); return; }
+    if (pendingAction.type === "create") { setEditorDirty(false); setPendingAction(null); void createNewProject(); return; }
     const project = projects.find((item) => item.id === pendingAction.projectId);
     setEditorDirty(false); setSelectedProjectId(pendingAction.projectId); setPendingAction(null);
-    addActivity(`project selected: ${project?.translations.en.title ?? pendingAction.projectId}`);
+    addActivity(`выбран проект: ${project ? projectDisplayTitle(project) : pendingAction.projectId}`);
   }
 
   function handleLocaleChanged(nextLocale: Locale) {
     setLocale(nextLocale);
-    addActivity(`locale switched: ${nextLocale.toUpperCase()}`);
+    addActivity(`язык предпросмотра: ${nextLocale.toUpperCase()}`);
   }
+
+  const handlePreviewChanged = useCallback((content: DraftContent) => {
+    setPreviewContent(content);
+    setProjects((current) => current.map((project) => {
+      if (project.id !== selectedProjectId || project.status !== "draft") return project;
+      return {
+        ...project,
+        translations: {
+          ...project.translations,
+          values: {
+            en: { ...project.translations.values.en, title: content.translations.en.title },
+            ru: { ...project.translations.values.ru, title: content.translations.ru.title },
+          },
+        },
+      };
+    }));
+  }, [selectedProjectId]);
 
   if (auth.status === "checking") {
     return (
       <main className="auth-check" aria-live="polite">
         <div className="auth-check__mark">M</div>
-        <p>Checking CMS session...</p>
+        <p>Проверка сессии CMS...</p>
       </main>
     );
   }
@@ -168,17 +227,19 @@ export function App() {
       apiBaseUrl={API_BASE_URL}
       onRetryProjects={loadProjects}
       onProjectSelected={handleProjectSelected}
+      onCreateProject={handleCreateProject}
       onLocaleChanged={handleLocaleChanged}
       onLogout={handleLogout}
-      onEditorSaved={() => loadEditor(selectedProject)}
-      onPreviewChanged={setPreviewContent}
+      onEditorSaved={refreshSelectedProject}
+      onProjectDeleted={handleProjectDeleted}
+      onPreviewChanged={handlePreviewChanged}
       onDirtyChange={setEditorDirty}
       />
       {pendingAction ? <AccessibleDialog
-      title={pendingAction.type === "logout" ? "Discard unsaved changes and log out?" : `Discard unsaved changes and switch to “${projects.find((item) => item.id === pendingAction.projectId)?.translations.en.title ?? "this project"}”?`}
-      description={pendingAction.type === "logout" ? "Your local unsaved changes will be discarded. Saved drafts remain available." : `You have unsaved changes in “${selectedProject?.translations.en.title ?? "the current project"}”. Saved drafts remain available.`}
-      confirmLabel={pendingAction.type === "logout" ? "Discard changes and log out" : "Discard changes and switch"}
-      cancelLabel={pendingAction.type === "logout" ? "Stay" : "Stay and continue editing"}
+      title={pendingAction.type === "logout" ? "Отменить несохранённые изменения и выйти?" : pendingAction.type === "create" ? "Отменить несохранённые изменения и создать проект?" : `Отменить несохранённые изменения и перейти к «${(() => { const project = projects.find((item) => item.id === pendingAction.projectId); return project ? projectDisplayTitle(project) : "этому проекту"; })()}»?`}
+      description="Несохранённые локальные изменения будут отменены. Сохранённые черновики останутся доступными."
+      confirmLabel={pendingAction.type === "logout" ? "Отменить изменения и выйти" : pendingAction.type === "create" ? "Отменить изменения и создать" : "Отменить изменения и перейти"}
+      cancelLabel="Остаться в редакторе"
       onCancel={() => setPendingAction(null)} onConfirm={discardAndContinue}
       /> : null}
     </>

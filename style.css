@@ -521,12 +521,20 @@ ul {
   object-fit: cover;
 }
 
-.project-card__gallery--mobile-screens {
+.project-card__image--contain {
+  aspect-ratio: auto;
+  object-fit: contain;
+  border: 0;
+}
+
+.project-card__gallery--mobile-screens,
+.project-card__gallery--mobile {
   justify-items: center;
   align-items: start;
 }
 
-.project-card__gallery--bradbury-mobile {
+.project-card__gallery--bradbury-mobile,
+.project-card__gallery--mobile {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   justify-items: center;
   align-items: start;
@@ -536,7 +544,8 @@ ul {
   max-width: 220px;
 }
 
-.project-card__gallery--bradbury-desktop {
+.project-card__gallery--bradbury-desktop,
+.project-card__gallery--desktop {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: start;
 }
@@ -796,7 +805,8 @@ ul {
   .about__media {
     max-width: 360px;
   }
-  .project-card__gallery--bradbury-desktop {
+  .project-card__gallery--bradbury-desktop,
+  .project-card__gallery--desktop {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -841,7 +851,8 @@ ul {
     gap: 34px;
     padding: 58px 0;
   }
-  .project-card__gallery--bradbury-mobile {
+  .project-card__gallery--bradbury-mobile,
+  .project-card__gallery--mobile {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -879,7 +890,9 @@ ul {
   }
   .project-card__gallery,
   .project-card__gallery--bradbury-mobile,
-  .project-card__gallery--bradbury-desktop {
+  .project-card__gallery--bradbury-desktop,
+  .project-card__gallery--mobile,
+  .project-card__gallery--desktop {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
@@ -890,6 +903,9 @@ ul {
     border-radius: var(--radius-sm);
     background: var(--color-surface);
     object-fit: contain;
+  }
+  .project-card__gallery .project-card__image--contain {
+    border: 0;
   }
   .project-card__gallery-button {
     border-radius: var(--radius-sm);
@@ -951,7 +967,9 @@ ul {
 @media (max-width: 359px) {
   .project-card__gallery,
   .project-card__gallery--bradbury-mobile,
-  .project-card__gallery--bradbury-desktop {
+  .project-card__gallery--bradbury-desktop,
+  .project-card__gallery--mobile,
+  .project-card__gallery--desktop {
     grid-template-columns: 1fr;
   }
 }

@@ -39,12 +39,12 @@ test("production compose separates private, edge, and S3 egress networks", async
   assert.match(db, /cap_add: \[CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID\]/);
   assert.doesNotMatch(db, /portfolio-production-edge|portfolio-production-egress/);
   assert.match(api, /networks: \[portfolio-production-private, portfolio-production-edge, portfolio-production-egress\]/);
-  assert.match(api, /command: \["node", "dist\/src\/server\.js"\]/);
-  assert.doesNotMatch(api, /dist\/scripts\/migrate\.js/);
+  assert.match(api, /command: \["node", "dist\/backend\/src\/server\.js"\]/);
+  assert.doesNotMatch(api, /dist\/backend\/scripts\/migrate\.js/);
   assert.match(probe, /networks: \[portfolio-production-egress\]/);
   assert.doesNotMatch(probe, /portfolio-production-private|portfolio-production-edge|depends_on:|DATABASE_URL/);
   assert.match(migrate, /networks: \[portfolio-production-private\]/);
-  assert.match(migrate, /command: \["node", "dist\/scripts\/migrate-production\.js"\]/);
+  assert.match(migrate, /command: \["node", "dist\/backend\/scripts\/migrate-production\.js"\]/);
   assert.match(ownerBootstrap, /networks: \[portfolio-production-private\]/);
   assert.match(cms, /networks: \[portfolio-production-private, portfolio-production-edge\]/);
   assert.match(publicSite, /networks: \[portfolio-production-private, portfolio-production-edge\]/);
@@ -55,8 +55,8 @@ test("production compose separates private, edge, and S3 egress networks", async
   assert.match(cms, /http:\/\/127\.0\.0\.1:8080\/health/);
   assert.match(publicSite, /http:\/\/127\.0\.0\.1:8080\/health/);
   assert.match(cmsDockerfile, /FROM nginxinc\/nginx-unprivileged:1\.29-bookworm AS runtime/);
-  assert.match(cmsDockerfile, /COPY --from=build --chown=101:101 \/app\/dist \/usr\/share\/nginx\/html/);
-  assert.match(cmsDockerfile, /COPY --chown=101:101 --chmod=0644 nginx\.conf \/etc\/nginx\/conf\.d\/default\.conf/);
+  assert.match(cmsDockerfile, /COPY --from=build --chown=101:101 \/app\/cms\/dist \/usr\/share\/nginx\/html/);
+  assert.match(cmsDockerfile, /COPY cms\/nginx\.conf \/etc\/nginx\/conf\.d\/default\.conf/);
   assert.match(cmsDockerfile, /USER 101\s*$/m);
   assert.match(publicDockerfile, /FROM nginxinc\/nginx-unprivileged:1\.29-bookworm/);
   assert.match(publicDockerfile, /index\.html script\.js i18n\.js analytics\.js style\.css runtime-config\.js/);

@@ -29,14 +29,14 @@ services:
 
   portfolio-migrate:
     image: maxpar-portfolio-api:production
-    build: { context: ./backend, dockerfile: Dockerfile }
+    build: { context: ., dockerfile: backend/Dockerfile }
     profiles: [operations]
     restart: "no"
     env_file:
       - "${PORTFOLIO_ENV_FILE:?Set PORTFOLIO_ENV_FILE to the VPS production env file}"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@portfolio-db:5432/${POSTGRES_DB}
-    command: ["node", "dist/scripts/migrate-production.js"]
+    command: ["node", "dist/backend/scripts/migrate-production.js"]
     depends_on:
       portfolio-db: { condition: service_healthy }
     networks: [portfolio-production-private]
@@ -53,7 +53,7 @@ services:
       - "${PORTFOLIO_ENV_FILE:?Set PORTFOLIO_ENV_FILE to the VPS production env file}"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@portfolio-db:5432/${POSTGRES_DB}
-    command: ["node", "dist/scripts/bootstrap-admin.js"]
+    command: ["node", "dist/backend/scripts/bootstrap-admin.js"]
     depends_on:
       portfolio-db: { condition: service_healthy }
     networks: [portfolio-production-private]
@@ -64,7 +64,7 @@ services:
 
   portfolio-api:
     image: maxpar-portfolio-api:production
-    build: { context: ./backend, dockerfile: Dockerfile }
+    build: { context: ., dockerfile: backend/Dockerfile }
     restart: unless-stopped
     env_file:
       - "${PORTFOLIO_ENV_FILE:?Set PORTFOLIO_ENV_FILE to the VPS production env file}"
@@ -72,7 +72,7 @@ services:
       HOST: 0.0.0.0
       PORT: 3101
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@portfolio-db:5432/${POSTGRES_DB}
-    command: ["node", "dist/src/server.js"]
+    command: ["node", "dist/backend/src/server.js"]
     ports: ["127.0.0.1:3101:3101"]
     volumes:
       # Kept mounted as a benign compatibility/migration aid for existing local managed media.
@@ -98,8 +98,8 @@ services:
   portfolio-cms:
     image: maxpar-portfolio-cms:production
     build:
-      context: ./cms
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cms/Dockerfile
       args:
         VITE_API_BASE_URL: "${CMS_API_BASE_URL:?Set CMS_API_BASE_URL in the production env file}"
     restart: unless-stopped
@@ -150,7 +150,7 @@ services:
     restart: "no"
     env_file:
       - "${PORTFOLIO_ENV_FILE:?Set PORTFOLIO_ENV_FILE to the VPS production env file}"
-    command: ["node", "dist/scripts/verify-s3-storage.js"]
+    command: ["node", "dist/backend/scripts/verify-s3-storage.js"]
     networks: [portfolio-production-egress]
     read_only: true
     tmpfs: [/tmp]

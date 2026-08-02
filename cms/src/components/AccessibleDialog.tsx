@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 interface AccessibleDialogProps {
   title: string;
@@ -7,13 +7,14 @@ interface AccessibleDialogProps {
   cancelLabel?: string;
   busy?: boolean;
   error?: string | null;
+  children?: ReactNode;
   onCancel: () => void;
   onConfirm: () => void;
 }
 
 const focusable = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function AccessibleDialog({ title, description, confirmLabel, cancelLabel = "Cancel", busy = false, error, onCancel, onConfirm }: AccessibleDialogProps) {
+export function AccessibleDialog({ title, description, confirmLabel, cancelLabel = "Отмена", busy = false, error, children, onCancel, onConfirm }: AccessibleDialogProps) {
   const dialogRef = useRef<HTMLElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
@@ -40,8 +41,9 @@ export function AccessibleDialog({ title, description, confirmLabel, cancelLabel
   return <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onCancel(); }}>
     <section ref={dialogRef} className="publish-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description">
       <h2 id="dialog-title">{title}</h2><p id="dialog-description">{description}</p>
+      {children}
       {error ? <p ref={errorRef} className="editor-error" role="alert" tabIndex={-1}>{error}</p> : null}
-      <div className="dialog-actions"><button ref={cancelRef} type="button" onClick={onCancel} disabled={busy}>{cancelLabel}</button><button type="button" onClick={onConfirm} disabled={busy}>{busy ? "Working..." : confirmLabel}</button></div>
+      <div className="dialog-actions"><button ref={cancelRef} type="button" onClick={onCancel} disabled={busy}>{cancelLabel}</button><button type="button" onClick={onConfirm} disabled={busy}>{busy ? "Выполняется..." : confirmLabel}</button></div>
     </section>
   </div>;
 }

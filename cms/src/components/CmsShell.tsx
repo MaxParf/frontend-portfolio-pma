@@ -21,9 +21,11 @@ interface CmsShellProps {
   apiBaseUrl: string;
   onRetryProjects: () => void;
   onProjectSelected: (projectId: string) => void;
+  onCreateProject?: () => void;
   onLocaleChanged: (locale: Locale) => void;
   onLogout: () => void;
   onEditorSaved?: () => Promise<ProjectEditor | null>;
+  onProjectDeleted?: (projectId: string) => Promise<void>;
   onPreviewChanged?: (content: DraftContent) => void;
   onDirtyChange?: (dirty: boolean) => void;
 }
@@ -38,14 +40,14 @@ export function CmsShell(props: CmsShellProps) {
             <strong className="brand">Maxpar CMS</strong>
             <span className="environment">
               <span className="environment__dot" aria-hidden="true" />
-              Local
+              Локально
             </span>
             <span className="api-status" aria-live="polite">
-              API online: {props.apiBaseUrl}
+              API доступен: {props.apiBaseUrl}
             </span>
           </div>
           <div className="topbar__actions">
-            <div className="language-switch" aria-label="Preview locale">
+            <div className="language-switch" aria-label="Язык предпросмотра">
               <button type="button" className={props.locale === "en" ? "is-active" : ""} onClick={() => props.onLocaleChanged("en")}>
                 EN
               </button>
@@ -55,10 +57,10 @@ export function CmsShell(props: CmsShellProps) {
             </div>
             <span className="user-pill">
               {props.user.login}
-              <span>Owner</span>
+              <span>Владелец</span>
             </span>
             <button className="logout-button" type="button" onClick={props.onLogout}>
-              Logout
+              Выйти
             </button>
           </div>
         </header>
@@ -71,10 +73,11 @@ export function CmsShell(props: CmsShellProps) {
             selectedProjectId={props.selectedProjectId}
             onRetry={props.onRetryProjects}
             onProjectSelected={props.onProjectSelected}
+            onCreateProject={props.onCreateProject ?? (() => undefined)}
           />
-          <ProjectInspector editor={props.editor ?? null} locale={props.locale} loading={props.editorLoading ?? false} onSaved={props.onEditorSaved ?? (async () => null)} onPreview={props.onPreviewChanged ?? (() => undefined)} onDirtyChange={props.onDirtyChange ?? (() => undefined)} />
-          <aside className="preview-panel" aria-label="Draft preview">
-            <PublishedPreview content={props.previewContent ?? null} locale={props.locale} />
+          <ProjectInspector editor={props.editor ?? null} locale={props.locale} loading={props.editorLoading ?? false} onSaved={props.onEditorSaved ?? (async () => null)} onProjectDeleted={props.onProjectDeleted ?? (async () => undefined)} onPreview={props.onPreviewChanged ?? (() => undefined)} onDirtyChange={props.onDirtyChange ?? (() => undefined)} />
+          <aside className="preview-panel" aria-label="Предпросмотр">
+            <PublishedPreview content={props.previewContent ?? null} locale={props.locale} source={props.editor?.readOnly ? "published" : "draft"} />
             <ActivityPanel events={props.activityEvents} />
           </aside>
         </main>
