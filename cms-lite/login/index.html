@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Portfolio CMS Lite — вход</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/cms.css">
+  </head>
+  <body class="cms-lite-body cms-lite-login-body">
+    <main class="cms-login">
+      <section class="cms-login__panel" aria-labelledby="cms-login-title">
+        <h1 id="cms-login-title">Portfolio CMS</h1>
+        <form data-login-form method="post">
+          <label>Login<input name="login" autocomplete="username" required></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+          <p class="cms-form-error" data-login-error hidden role="alert"></p>
+          <button class="button button--primary" type="submit">Login</button>
+        </form>
+      </section>
+    </main>
+    <script type="module" src="/login.js"></script>
+  </body>
+</html>

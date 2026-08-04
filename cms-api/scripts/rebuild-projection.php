@@ -1,0 +1,1 @@
+<?php declare(strict_types=1); require dirname(__DIR__) . '/src/common.php'; if (PHP_SAPI!=='cli') exit(1); write_projection(read_json(path_private('projects.json'))); fwrite(STDOUT,"Public projection rebuilt.\n");

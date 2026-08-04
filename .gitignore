@@ -17,3 +17,5 @@ cms/.env.*
 .env.*
 !.env.example
 !.env.*.example
+
+cms-api/private-dev/

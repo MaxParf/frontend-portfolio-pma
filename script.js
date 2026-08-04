@@ -1,6 +1,5 @@
 import { renderProjects } from "./components/project-renderer.js";
-import { ProjectApiError } from "./services/projects-api.js";
-import { loadProjects } from "./services/projects-source.js";
+import { ProjectSourceError, loadProjectState } from "./services/projects-source.js";
 
 const CMS_LOGIN_URL = globalThis.__PORTFOLIO_CONFIG__?.cmsLoginUrl;
 
@@ -36,13 +35,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function setProjectsStatus(locale, loading) {
+  function setProjectsStatus(locale, status) {
     if (projectsRoot) {
-      projectsRoot.setAttribute("aria-busy", String(loading));
+      projectsRoot.setAttribute("aria-busy", String(status === "loading"));
     }
 
     if (projectsStatus) {
-      projectsStatus.textContent = loading ? (locale === "ru" ? "Загрузка проектов…" : "Loading projects…") : (locale === "ru" ? "Проекты загружены." : "Projects loaded.");
+      projectsStatus.textContent = status === "loading"
+        ? (locale === "ru" ? "Загрузка проектов…" : "Loading projects…")
+        : status === "error"
+          ? (locale === "ru" ? "Не удалось загрузить проекты." : "Projects could not be loaded.")
+          : (locale === "ru" ? "Проекты загружены." : "Projects loaded.");
     }
   }
 
@@ -51,10 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const requestController = new AbortController();
     const requestSequence = ++projectRequestSequence;
     projectRequestController = requestController;
-    setProjectsStatus(locale, true);
+    setProjectsStatus(locale, "loading");
 
     try {
-      const result = await loadProjects({ locale, signal: requestController.signal });
+      const result = await loadProjectState({ signal: requestController.signal });
       if (requestSequence !== projectRequestSequence) {
         return;
       }
@@ -66,14 +69,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const renderedProjects = renderProjectCards(result.projects, locale);
       document.documentElement.dataset.projectsSource = result.source;
       window.dispatchEvent(new CustomEvent("portfolio:projects-loaded", { detail: { source: result.source, count: renderedProjects.length, locale } }));
-      if (result.source === "fallback") {
-        console.warn("[portfolio] Project API unavailable; static fallback used.");
-      }
-      setProjectsStatus(locale, false);
+      setProjectsStatus(locale, "ready");
     } catch (error) {
-      if (!(error instanceof ProjectApiError) || error.kind !== "aborted") {
+      if (!(error instanceof ProjectSourceError) || error.kind !== "aborted") {
         console.warn("[portfolio] Project loading did not complete.");
-        setProjectsStatus(locale, false);
+        if (projectsRoot) {
+          const message = document.createElement("p");
+          message.className = "projects-load-error";
+          message.setAttribute("role", "alert");
+          message.textContent = locale === "ru" ? "Не удалось загрузить проекты. Обновите страницу позже." : "Projects could not be loaded. Please try again later.";
+          projectsRoot.replaceChildren(message);
+        }
+        document.documentElement.dataset.projectsSource = "error";
+        setProjectsStatus(locale, "error");
       }
     }
   }
