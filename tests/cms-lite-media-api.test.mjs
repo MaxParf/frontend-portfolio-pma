@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:net";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, readdir, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -46,6 +46,10 @@ test("isolated PHP media saves persist root-relative images and retain applicati
     assert.deepEqual(rejected, { status: 422, body: { code: "VALIDATION_ERROR" } });
 
     state = await load(); const textOnly = await save(state, []); assert.equal(textOnly.status, 200);
+    assert.equal((await stat(join(publicRoot, "data/projects.lite.json"))).mode & 0o777, 0o644);
+    assert.equal((await stat(join(privateRoot, "projects.json"))).mode & 0o777, 0o600);
+    const backups = await readdir(join(privateRoot, "backups")); assert.equal(backups.length, 1);
+    assert.equal((await stat(join(privateRoot, "backups", backups[0]))).mode & 0o777, 0o600);
     state = await load(); const desktop = await save(state, [media(state, "desktop", "desktop-upload")], { "desktop-upload": new Blob([png], { type: "image/png" }) }); assert.equal(desktop.status, 200);
     state = await load(); const mobile = await save(state, [media(state, "mobile", "mobile-upload")], { "mobile-upload": new Blob([png], { type: "image/png" }) }); assert.equal(mobile.status, 200);
     state = await load(); const both = await save(state, [media(state, "desktop", "desktop-both"), media(state, "mobile", "mobile-both")], { "desktop-both": new Blob([png], { type: "image/png" }), "mobile-both": new Blob([png], { type: "image/png" }) }); assert.equal(both.status, 200);
