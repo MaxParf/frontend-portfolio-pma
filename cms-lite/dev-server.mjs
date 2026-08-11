@@ -27,7 +27,7 @@ export function resolveCmsLiteRoute(requestUrl) {
   const pathname = safePathname(requestUrl); if (!pathname) return null;
   if (pathname === "/" || pathname === "/index.html") return contained(cmsRoot, "index.html");
   if (pathname === "/login" || pathname === "/login/") return contained(cmsRoot, "login/index.html");
-  const cmsFiles = new Set(["/cms.css", "/cms.js", "/login.js", "/session.js", "/password-change.js", "/api.js"]);
+  const cmsFiles = new Set(["/cms.css", "/cms.js", "/login.js", "/session.js", "/password-change.js", "/api.js", "/runtime-config.js"]);
   if (cmsFiles.has(pathname)) return contained(cmsRoot, pathname.slice(1));
   const roots = [
     ["/editor/", cmsRoot], ["/storage/", cmsRoot], ["/project-core/", repositoryRoot], ["/components/", repositoryRoot], ["/services/", repositoryRoot], ["/images/", repositoryRoot],
