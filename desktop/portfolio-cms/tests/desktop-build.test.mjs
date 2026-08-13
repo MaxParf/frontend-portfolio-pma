@@ -23,8 +23,8 @@ test("bundle contains executable pinned Node and required plist", () => {
   assert.equal(plistValue("CFBundleIdentifier"), "ru.maxpar.portfolio-cms");
   assert.equal(plistValue("CFBundleName"), "Portfolio CMS");
   assert.equal(plistValue("CFBundleDisplayName"), "Portfolio CMS");
-  assert.equal(plistValue("CFBundleShortVersionString"), "1.0.0");
-  assert.equal(plistValue("CFBundleVersion"), "1");
+  assert.equal(plistValue("CFBundleShortVersionString"), "1.0.1");
+  assert.equal(plistValue("CFBundleVersion"), "2");
   assert.equal(plistValue("LSUIElement"), "true");
   const sourceIcon = join(project, "resources/AppIcon.icns");
   const bundledIcon = join(contents, "Resources/AppIcon.icns");
@@ -33,7 +33,9 @@ test("bundle contains executable pinned Node and required plist", () => {
   execFileSync("codesign", ["--verify", "--deep", "--strict", app]);
 });
 test("runtime is immutable-commit output with no secrets or forbidden paths", () => {
-  assert.match(readFileSync(join(runtime, "VERSION"), "utf8"), /source_commit=cf5832091250c28363eedf56888074798a727146/);
+  assert.match(readFileSync(join(runtime, "VERSION"), "utf8"), /source_commit=db5e30957b67460ecf8881f0191404e8a72d8ee0/);
+  assert.equal(existsSync(join(runtime, "components/project-renderer.js")), true);
+  assert.equal(existsSync(join(runtime, "project-core/plain-text-paragraphs.js")), true);
   assert.match(readFileSync(join(runtime, "cms-lite/runtime-config.js"), "utf8"), /https:\/\/www\.maxpar\.ru\/cms-api/);
   assert.match(readFileSync(join(runtime, "cms-lite/dev-server.mjs"), "utf8"), /127\.0\.0\.1/);
   for (const forbidden of ["cms", "cms-api", "backend", "tests", "docs", ".git", "node_modules", "package.json"]) assert.equal(existsSync(join(runtime, forbidden)), false, forbidden);

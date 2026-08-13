@@ -2,7 +2,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPOSITORY_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-SOURCE_COMMIT="cf5832091250c28363eedf56888074798a727146"
+SOURCE_COMMIT="db5e30957b67460ecf8881f0191404e8a72d8ee0"
 OUTPUT_DIR="${1:-/tmp/portfolio-cms-desktop-build/runtime}"
 [[ "$OUTPUT_DIR" == /tmp/portfolio-cms-desktop-build/* || "$OUTPUT_DIR" == /tmp/portfolio-cms-app.*/* ]] || { echo "Refusing runtime output outside approved build staging" >&2; exit 64; }
 git -C "$REPOSITORY_ROOT" cat-file -e "$SOURCE_COMMIT^{commit}"
@@ -15,7 +15,7 @@ RUNTIME_PATHS=(
   cms-lite/editor/media-previews.js cms-lite/editor/state.js cms-lite/index.html
   cms-lite/login.js cms-lite/login/index.html cms-lite/password-change.js
   cms-lite/runtime-config.js cms-lite/session.js cms-lite/storage/php-api.js
-  project-core/project-model.js project-core/project-normalizer.js project-core/project-validator.js
+  project-core/plain-text-paragraphs.js project-core/project-model.js project-core/project-normalizer.js project-core/project-validator.js
   components/project-renderer.js services/projects-source.js
   data/projects.lite.json script.js style.css i18n.js analytics.js images
 )
