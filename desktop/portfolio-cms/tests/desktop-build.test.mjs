@@ -18,8 +18,18 @@ test("identity and foreign-listener logic are present", () => {
 test("bundle contains executable pinned Node and required plist", () => {
   const launcher = join(contents, "MacOS/PortfolioCMSLauncher"); assert.equal(existsSync(launcher), true); assert.ok(statSync(launcher).mode & 0o111);
   assert.match(execFileSync(join(contents, "Resources/node/node"), ["--version"], { encoding: "utf8" }), /^v24\.19\.0\s*$/);
-  const plist = readFileSync(join(contents, "Info.plist"), "utf8"); for (const value of ["ru.maxpar.portfolio-cms", "Portfolio CMS", "1.0.0", "<key>CFBundleVersion</key><string>1</string>", "LSUIElement", "<true/>", "13.0"]) assert.ok(plist.includes(value));
-  assert.equal(existsSync(join(contents, "Resources/AppIcon.icns")), false, "no approved icon is bundled when no source icon exists");
+  const plistPath = join(contents, "Info.plist");
+  const plistValue = (key) => execFileSync("/usr/libexec/PlistBuddy", ["-c", `Print :${key}`, plistPath], { encoding: "utf8" }).trim();
+  assert.equal(plistValue("CFBundleIdentifier"), "ru.maxpar.portfolio-cms");
+  assert.equal(plistValue("CFBundleName"), "Portfolio CMS");
+  assert.equal(plistValue("CFBundleDisplayName"), "Portfolio CMS");
+  assert.equal(plistValue("CFBundleShortVersionString"), "1.0.0");
+  assert.equal(plistValue("CFBundleVersion"), "1");
+  assert.equal(plistValue("LSUIElement"), "true");
+  const sourceIcon = join(project, "resources/AppIcon.icns");
+  const bundledIcon = join(contents, "Resources/AppIcon.icns");
+  assert.equal(existsSync(bundledIcon), existsSync(sourceIcon), "approved source icon is copied exactly when present");
+  if (existsSync(sourceIcon)) assert.equal(plistValue("CFBundleIconFile"), "AppIcon");
   execFileSync("codesign", ["--verify", "--deep", "--strict", app]);
 });
 test("runtime is immutable-commit output with no secrets or forbidden paths", () => {
