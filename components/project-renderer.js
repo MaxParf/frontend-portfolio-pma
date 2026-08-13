@@ -1,3 +1,5 @@
+import { splitPlainTextParagraphs } from "../project-core/plain-text-paragraphs.js";
+
 const PUBLIC_STATUSES = new Set(["published"]);
 const DEFAULT_LOCALE = "en";
 
@@ -24,9 +26,7 @@ function createProjectMeta(project, locale) {
 
 function createDescription(project, locale) {
   const fragment = document.createDocumentFragment();
-  localized(project.description, locale, []).filter(Boolean).forEach((description) => {
-    fragment.append(createElement("p", "project-card__description", description));
-  });
+  localized(project.description, locale, []).flatMap(splitPlainTextParagraphs).forEach((paragraph) => fragment.append(createElement("p", "project-card__description", paragraph)));
   return fragment;
 }
 

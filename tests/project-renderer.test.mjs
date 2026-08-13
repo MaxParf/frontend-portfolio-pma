@@ -75,3 +75,17 @@ test("renderer preserves links, gallery grouping, contain styling, and aria labe
   const galleryButtons = descendants(root, (node) => node.className === "project-card__gallery-button");
   assert.equal(galleryButtons.find((node) => node.dataset.gallery === "project-bradbury").attributes.get("aria-label"), "Open screenshot: Project Bradbury mobile home feed");
 });
+
+test("renderer uses plain-text paragraph boundaries for public cards and CMS preview", () => {
+  const project = structuredClone(fixture.projects[0]);
+  project.description = {
+    ru: ["\nПервый\r\nпродолжение\r\n\r\n\r\nВторой\n\n<script>not html</script>\n"],
+    en: ["First\ncontinued\n\nSecond"],
+  };
+  const root = new FakeNode("div");
+  renderProjects({ root, projects: [project], locale: "ru" });
+  assert.deepEqual(descendants(root, (node) => node.className === "project-card__description").map((node) => node.textContent), ["Первый продолжение", "Второй", "<script>not html</script>"]);
+  renderProjects({ root, projects: [project], locale: "en" });
+  assert.deepEqual(descendants(root, (node) => node.className === "project-card__description").map((node) => node.textContent), ["First continued", "Second"]);
+  assert.equal(descendants(root, (node) => node.className === "project-card__note").length, project.notes.en.length);
+});
