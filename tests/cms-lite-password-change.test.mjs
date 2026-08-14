@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { validatePasswordChange } from "../cms-lite/password-change.js";
 
-const cmsSource = readFileSync(new URL("../cms-lite/cms.js", import.meta.url), "utf8");
+const cmsSource = `${readFileSync(new URL("../cms-lite/cms.js", import.meta.url), "utf8")}\n${readFileSync(new URL("../cms-lite/editor/app.js", import.meta.url), "utf8")}`;
 
 test("password-change action renders a modal with the three required password controls", () => {
   assert.match(cmsSource, /<button data-change-password class="cms-account-action" type="button">Сменить пароль<\/button>/);
@@ -30,7 +30,7 @@ test("password-change UI prevents navigation, clears sensitive fields, and does 
 
 test("password adapter is isolated from the dialog and sends only current/new values", () => {
   const apiSource = readFileSync(new URL("../cms-lite/api.js", import.meta.url), "utf8");
-  assert.match(cmsSource, /changePassword\(token, \{ currentPassword: credentials\.currentPassword, newPassword: credentials\.newPassword \}\)/);
+  assert.match(cmsSource, /changePassword\(sessionStorage\.getItem\(CMS_SESSION_KEY\) \?\? "", \{ currentPassword: credentials\.currentPassword, newPassword: credentials\.newPassword \}\)/);
   assert.match(apiSource, /change-password\.php/);
   assert.doesNotMatch(apiSource, /confirmPassword/);
 });

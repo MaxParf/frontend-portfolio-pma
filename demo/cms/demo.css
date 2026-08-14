@@ -1,0 +1,4 @@
+.cms-demo-notice { max-width: 38rem; color: #d8eaf7; font-size: .78rem; line-height: 1.25; }
+.cms-reset-demo { border: 1px solid rgba(255,255,255,.55); border-radius: 6px; padding: 7px 11px; color: #fff; background: transparent; cursor: pointer; font: inherit; }
+.cms-reset-dialog { width: min(calc(100% - 32px), 440px); border: 0; border-radius: 12px; color: #222; box-shadow: 0 18px 55px rgba(16,37,54,.28); }
+.cms-reset-dialog form { display: grid; gap: 14px; padding: 18px; }.cms-reset-dialog__actions { display: flex; gap: 10px; }

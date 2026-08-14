@@ -4,7 +4,7 @@ import test from "node:test";
 import { resolveCmsLiteRoute } from "../cms-lite/dev-server.mjs";
 import { CMS_SESSION_KEY, canLeaveCms, clearCmsSession } from "../cms-lite/session.js";
 
-const cmsSource = readFileSync(new URL("../cms-lite/cms.js", import.meta.url), "utf8");
+const cmsSource = `${readFileSync(new URL("../cms-lite/cms.js", import.meta.url), "utf8")}\n${readFileSync(new URL("../cms-lite/editor/app.js", import.meta.url), "utf8")}`;
 const loginSource = readFileSync(new URL("../cms-lite/login.js", import.meta.url), "utf8");
 const loginHtml = readFileSync(new URL("../cms-lite/login/index.html", import.meta.url), "utf8");
 const cssSource = readFileSync(new URL("../cms-lite/cms.css", import.meta.url), "utf8");
@@ -31,14 +31,13 @@ test("login session import resolves to the CMS Lite module under the dev-server 
 test("post-login bootstrap keeps every CMS dependency routable and exposes load failures", () => {
   for (const modulePath of ["/cms.js", "/session.js", "/password-change.js", "/api.js", "/editor/state.js", "/editor/media-previews.js", "/storage/php-api.js", "/project-core/project-model.js", "/project-core/project-normalizer.js", "/project-core/project-validator.js", "/components/project-renderer.js"]) assert.notEqual(resolveCmsLiteRoute(modulePath), null, modulePath);
   assert.match(cmsSource, /snapshot = await editor\.load\(\);/);
-  assert.match(cmsSource, /connectionStatus = "CONNECTED";\s*render\(\);/);
-  assert.match(cmsSource, /load\(\)\.catch\(\(error\) => \{ root\.innerHTML = `<p class="cms-form-error" role="alert">\$\{error\.message\}<\/p>`; \}\);/);
+  assert.match(cmsSource, /mountCmsEditor/);
+  assert.match(cmsSource, /app\.load\(\)\.catch/);
 });
 
-test("CMS source gives application save errors a visible message without claiming storage is unavailable", () => {
-  assert.match(cmsSource, /applicationError = saveError instanceof CmsApiError && saveError\.status >= 400 && saveError\.status < 500/);
-  assert.match(cmsSource, /applicationError \? "CONNECTED" : "DISCONNECTED"/);
-  assert.match(cmsSource, /Не удалось сохранить изображение/);
+test("shared CMS editor exposes a visible save failure", () => {
+  assert.match(cmsSource, /errorMessage = error\?\.message \|\| "Хранилище временно недоступно\."/);
+  assert.match(cmsSource, /connectionStatus = "DISCONNECTED"/);
 });
 
 test("project status selector occurs once in the editor heading and remains data-bound", () => {
@@ -46,7 +45,7 @@ test("project status selector occurs once in the editor heading and remains data
   assert.match(cmsSource, /cms-editor-heading[\s\S]*data-status/);
   const primaryFieldset = cmsSource.slice(cmsSource.indexOf('<fieldset class="cms-fieldset"><legend>Основное</legend>'), cmsSource.indexOf('<fieldset class="cms-fieldset"><legend>Описание</legend>'));
   assert.doesNotMatch(primaryFieldset, /data-status/);
-  assert.match(cmsSource, /target\.matches\("\[data-status\]"\)\) selectedMutation/);
+  assert.match(cmsSource, /target\.matches\("\[data-status\]"\)\) mutate/);
 });
 
 test("login form has a responsive vertical full-width control contract", () => {

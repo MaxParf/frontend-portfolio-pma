@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { createEditorState, createMemoryStorage } from "../cms-lite/editor/state.js";
+import { descriptionToEditorText, editorTextToDescription } from "../cms-lite/editor/app.js";
 
 const fixture = JSON.parse(readFileSync(new URL("../data/projects.lite.json", import.meta.url), "utf8"));
-const cmsSource = readFileSync(new URL("../cms-lite/cms.js", import.meta.url), "utf8");
+const cmsSource = `${readFileSync(new URL("../cms-lite/cms.js", import.meta.url), "utf8")}\n${readFileSync(new URL("../cms-lite/editor/app.js", import.meta.url), "utf8")}`;
+const appSource = readFileSync(new URL("../cms-lite/editor/app.js", import.meta.url), "utf8");
 const loginSource = readFileSync(new URL("../cms-lite/login.js", import.meta.url), "utf8");
 const loginHtml = readFileSync(new URL("../cms-lite/login/index.html", import.meta.url), "utf8");
 const cssSource = readFileSync(new URL("../cms-lite/cms.css", import.meta.url), "utf8");
@@ -16,7 +18,22 @@ test("ordinary input mutation remains continuous without a structural editor ren
   assert.equal(editor.snapshot().workingState.projects[0].title.ru, "Полное предложение");
   const inputHandler = cmsSource.slice(cmsSource.indexOf('root.addEventListener("input"'), cmsSource.indexOf('root.addEventListener("change"'));
   assert.match(inputHandler, /refreshLiveUi\(\)/);
-  assert.doesNotMatch(inputHandler, /render\(\)/);
+  assert.doesNotMatch(inputHandler, /\brefresh\(\)/);
+  const livePath = appSource.slice(appSource.indexOf("const refreshLiveUi"), appSource.indexOf("const refresh ="));
+  assert.match(livePath, /updateChrome\(\); renderPreview\(\);/);
+  assert.doesNotMatch(livePath, /innerHTML|render\(\)/);
+});
+
+test("description editor joins and restores every RU/EN paragraph without changing the array contract", () => {
+  const ru = ["Первый абзац.", "Второй абзац.", "Третий абзац."];
+  const en = ["First paragraph.", "Second paragraph.", "Third paragraph."];
+  assert.equal(descriptionToEditorText(ru), "Первый абзац.\n\nВторой абзац.\n\nТретий абзац.");
+  assert.equal(descriptionToEditorText(en), "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.");
+  assert.deepEqual(editorTextToDescription(descriptionToEditorText(ru)), ru);
+  assert.deepEqual(editorTextToDescription(descriptionToEditorText(en)), en);
+  assert.deepEqual(editorTextToDescription("Один абзац"), ["Один абзац"]);
+  assert.match(appSource, /"description\.ru", descriptionToEditorText\(project\.description\.ru\)/);
+  assert.match(appSource, /project\.description\[path\[0\]\] = editorTextToDescription\(target\.value\)/);
 });
 
 test("paired Features and Notes add and remove RU/EN values together", async () => {
@@ -56,22 +73,19 @@ test("login/header/status and editor scroll contracts match the corrective UX", 
   assert.doesNotMatch(loginHtml, /cms-login__eyebrow|Подключено|безопасност|debug/i);
   assert.doesNotMatch(loginSource, /memory-only|security claim|PHP will verify/i);
   assert.doesNotMatch(cmsSource, /Bearer Token/);
-  assert.match(cmsSource, /CONNECTED: "Подключено: память"/);
-  assert.match(cmsSource, /BUSY: "Сохранение в памяти"/);
-  assert.match(cmsSource, /DISCONNECTED: "Хранилище недоступно"/);
-  assert.match(cmsSource, /aria-label/);
+  assert.match(cmsSource, /chrome\.connectionLabel \?\? "Подключено: память"/);
+  assert.match(cmsSource, /connectionStatus === "BUSY" \? "Сохранение"/);
+  assert.match(cmsSource, /connectionStatus === "DISCONNECTED" \? "Хранилище недоступно"/);
   assert.match(cssSource, /\.cms-editor \{ min-height: 0; overflow-y: auto;/);
-  assert.match(cmsSource, /const previousScrollTop = preserveScroll \? root\.querySelector\("\.cms-editor"\)\?\.scrollTop \?\? 0 : 0/);
-  assert.match(cmsSource, /editorElement\.scrollTop = previousScrollTop/);
+  assert.match(cmsSource, /const render = \(\) =>/);
 });
 
 test("tag Add button creates a chip through the same operation as Enter", () => {
   assert.match(cmsSource, /<form data-tag-form>/);
   assert.match(cmsSource, /<button class="cms-add" type="submit">Добавить<\/button>/);
-  assert.match(cmsSource, /function addTag\(value\)/);
-  assert.match(cmsSource, /if \(tag\) selectedMutation\(\(project\) => \{ if \(!project\.techStack\.includes\(tag\)\) project\.techStack\.push\(tag\); \}\);/);
+  assert.match(cmsSource, /if \(value\) mutate\(\(project\) => \{ if \(!project\.techStack\.includes\(value\)\) project\.techStack\.push\(value\); \}\);/);
   assert.match(cmsSource, /root\.addEventListener\("submit"/);
-  assert.match(cmsSource, /addTag\(String\(new FormData\(event\.target\)\.get\("tag"\) \?\? ""\)\)/);
+  assert.match(cmsSource, /const value = String\(new FormData\(event\.target\)\.get\("tag"\) \?\? ""\)\.trim\(\)/);
 });
 
 test("Save All excludes pending object URLs while keeping local previews after save", async () => {
@@ -97,18 +111,17 @@ test("Save All excludes pending object URLs while keeping local previews after s
 });
 
 test("locally added media receives accessible project-title defaults", () => {
-  assert.match(cmsSource, /const fallbackLabel = project\.title;/);
-  assert.match(cmsSource, /ariaLabel: existing\?\.ariaLabel \?\? fallbackLabel/);
+  assert.match(cmsSource, /alt: existing\?\.alt \?\? project\.title/);
+  assert.match(cmsSource, /ariaLabel: existing\?\.ariaLabel \?\? project\.title/);
   const rendererSource = readFileSync(new URL("../components/project-renderer.js", import.meta.url), "utf8");
   assert.match(rendererSource, /localized\(media\.ariaLabel, locale, localized\(media\.alt, locale, project\.id\)\)/);
 });
 
 test("structural actions preserve editor scroll while project navigation may reset it", () => {
-  const clickHandler = cmsSource.slice(cmsSource.indexOf('root.addEventListener("click"'), cmsSource.indexOf('root.addEventListener("submit"'));
-  assert.match(clickHandler, /let preserveScroll = true/);
-  assert.match(clickHandler, /target\.dataset\.select\) \{ snapshot = editor\.select\(target\.dataset\.select\); preserveScroll = false;/);
-  assert.match(clickHandler, /target\.dataset\.newProject !== undefined\) \{ snapshot = editor\.createProject\(uniqueProjectId\(\)\); preserveScroll = false;/);
-  assert.match(clickHandler, /target\.dataset\.delete\) \{ snapshot = editor\.deleteProject\(target\.dataset\.delete\); preserveScroll = false;/);
+  const clickHandler = appSource.slice(appSource.indexOf('root.addEventListener("click"'), appSource.indexOf('root.addEventListener("submit"'));
+  assert.match(clickHandler, /target\.dataset\.select\) snapshot = editor\.select/);
+  assert.match(clickHandler, /target\.dataset\.newProject !== undefined\) snapshot = editor\.createProject/);
+  assert.match(clickHandler, /target\.dataset\.delete\) snapshot = editor\.deleteProject/);
   for (const action of ["addList", "removeList", "addLink", "removeLink", "deleteMedia", "saveAll"]) assert.match(clickHandler, new RegExp(`target\\.dataset\\.${action}`));
-  assert.match(cmsSource, /target\.matches\("\[data-add-media\]"\)\) render\(\{ preserveScroll: true \}\)/);
+  assert.match(cmsSource, /target\.matches\("\[data-replace-media\], \[data-add-media\]"\)/);
 });

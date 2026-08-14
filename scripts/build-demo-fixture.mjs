@@ -1,0 +1,22 @@
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { createPublicProjectState, normalizeProjectState } from "../project-core/project-normalizer.js";
+import { validateProjectState } from "../project-core/project-validator.js";
+
+const requestedCommit = process.argv[2];
+if (!requestedCommit) throw new Error("Usage: node scripts/build-demo-fixture.mjs <public-projection-git-object>");
+const commit = execFileSync("git", ["rev-parse", `${requestedCommit}^{commit}`], { encoding: "utf8" }).trim();
+const sourcePath = "data/projects.lite.json";
+const raw = execFileSync("git", ["show", `${commit}:${sourcePath}`], { encoding: "utf8" });
+const input = JSON.parse(raw); const validation = validateProjectState(input);
+if (!validation.valid) throw new Error(`Projection contract failed: ${validation.issues.map((item) => item.path).join(", ")}`);
+const fixture = createPublicProjectState(normalizeProjectState(input));
+const serialized = `${JSON.stringify(fixture, null, 2)}\n`;
+const hash = createHash("sha256").update(serialized).digest("hex");
+for (const media of fixture.projects.flatMap((project) => [...project.gallery.desktop, ...project.gallery.mobile])) execFileSync("git", ["cat-file", "-e", `${commit}:${media.src.replace(/^\//, "")}`]);
+const output = join("demo", "cms", "fixture"); await mkdir(output, { recursive: true });
+await writeFile(join(output, "projects.fixture.json"), serialized);
+await writeFile(join(output, "manifest.json"), `${JSON.stringify({ fixtureVersion: `git-${commit}-${hash.slice(0, 12)}`, sourceCommit: commit, sourcePath, sha256: hash, projectCount: fixture.projects.length }, null, 2)}\n`);
+console.log(hash);
