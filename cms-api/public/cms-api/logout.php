@@ -1,0 +1,1 @@
+<?php require dirname(__DIR__, 2) . '/src/common.php'; begin_api(['POST']); try { $auth=require_auth(); revoke_token($auth['hash']); json_response(200,['loggedOut'=>true]); } catch (Throwable) { api_error(500,'LOGOUT_FAILED'); }

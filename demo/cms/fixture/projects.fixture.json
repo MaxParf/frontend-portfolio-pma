@@ -1,0 +1,422 @@
+{
+  "version": 8,
+  "projects": [
+    {
+      "id": "construction-management-control-center",
+      "order": 10,
+      "status": "published",
+      "category": {
+        "ru": "Внутренняя система управления компанией",
+        "en": "Internal company management system"
+      },
+      "title": {
+        "ru": "Центр управления строительством",
+        "en": "Construction Management Control Center"
+      },
+      "role": {
+        "ru": "Solo Fullstack Developer / самостоятельная разработка",
+        "en": "Solo Fullstack Developer (end-to-end development)"
+      },
+      "description": {
+        "ru": [
+          "Fullstack-система для управления операционными процессами компании: сотрудники, отделы, строительные объекты, задачи, права доступа, жизненный цикл задач, файлообмен и интеграция с корпоративным мессенджером Mattermost. Проект разработан самостоятельно — от архитектуры и модели данных до frontend, backend, инфраструктуры и production-деплоя."
+        ],
+        "en": [
+          "A fullstack internal company management system for handling employees, departments, construction objects, tasks, permissions, task lifecycle, file exchange and Mattermost corporate messenger integration. Built independently from architecture and data modeling to frontend, backend, infrastructure and production deployment."
+        ]
+      },
+      "statusLabel": {
+        "ru": "Production",
+        "en": "Production"
+      },
+      "features": {
+        "ru": [
+          "Управление сотрудниками и отделами",
+          "Структура компании",
+          "Управление строительными объектами",
+          "Постановка и контроль задач",
+          "Жизненный цикл задач",
+          "Роли и права доступа (RBAC)",
+          "Файлообмен внутри системы",
+          "Интеграция с Mattermost",
+          "Production deployment (Docker, Nginx, VPS)"
+        ],
+        "en": [
+          "Employees and departments management",
+          "Company structure",
+          "Construction objects management",
+          "Task creation and control",
+          "Task lifecycle",
+          "Role-based access control (RBAC)",
+          "File exchange within the system",
+          "Mattermost integration",
+          "Production deployment (Docker, Nginx, VPS)"
+        ]
+      },
+      "notes": {
+        "ru": [
+          "Демо-доступ предоставляется по запросу."
+        ],
+        "en": [
+          "Demo access available on request."
+        ]
+      },
+      "techStack": [
+        "React",
+        "TypeScript",
+        "NestJS",
+        "PostgreSQL",
+        "TypeORM",
+        "Docker",
+        "Nginx",
+        "VPS",
+        "Mattermost"
+      ],
+      "links": [
+        {
+          "label": {
+            "ru": "GitHub",
+            "en": "GitHub"
+          },
+          "url": "https://github.com/MaxParf",
+          "target": "_blank"
+        },
+        {
+          "label": {
+            "ru": "Демо доступно по запросу",
+            "en": "Demo available on request"
+          },
+          "url": "#contact",
+          "target": "_self"
+        }
+      ],
+      "gallery": {
+        "desktop": [
+          {
+            "id": "dashboard",
+            "src": "images/projects/cus/cus-dashboard.png",
+            "alt": {
+              "ru": "Управляющая консоль системы",
+              "en": "Admin dashboard overview"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: дашборд Construction Management Control Center",
+              "en": "Open screenshot: Construction Management Control Center dashboard"
+            },
+            "presentation": "cover"
+          },
+          {
+            "id": "files",
+            "src": "images/projects/cus/cus-file-exchange.png",
+            "alt": {
+              "ru": "Интерфейс файлообмена",
+              "en": "File exchange system interface"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: файлообмен Construction Management Control Center",
+              "en": "Open screenshot: Construction Management Control Center file exchange"
+            },
+            "presentation": "cover"
+          }
+        ],
+        "mobile": []
+      }
+    },
+    {
+      "id": "project-bradbury",
+      "order": 20,
+      "status": "published",
+      "category": {
+        "ru": "Тихая социальная платформа",
+        "en": "Quiet social platform"
+      },
+      "title": {
+        "ru": "Project Bradbury",
+        "en": "Project Bradbury"
+      },
+      "role": {
+        "ru": "Founder, Product Owner, Solo Fullstack Developer",
+        "en": "Founder, Product Owner, Solo Fullstack Developer"
+      },
+      "description": {
+        "ru": [
+          "Project Bradbury — это социальная платформа, построенная вокруг личных историй, тёплых моментов, размышлений, личной переписки, публичных профилей, друзей, подписок, настроек приватности и инструментов модерации.",
+          "Проект создавался как альтернатива шумным социальным сетям, которые всё чаще превращаются в маркетплейсы внимания, новостные ленты и площадки для постоянной борьбы за реакцию. Project Bradbury не отказывается от вовлечённости, но предлагает другой её принцип: не через давление, тревогу и бесконечный поток, а через смысл, доверие, человеческое присутствие и желание возвращаться в тихое, уютное пространство из повседневного хаоса.",
+          "На данный момент платформа включает регистрацию по invite-коду, личное пространство пользователя, публичные профили, истории, фотоальбомы, эмоциональные реакции, личные сообщения, социальные связи, настройки приватности, сценарии жалоб, административные инструменты и адаптивный интерфейс для мобильных устройств и desktop."
+        ],
+        "en": [
+          "Project Bradbury is a quiet social platform built around personal stories, warm moments, reflections, private correspondence, public profiles, friendships, follows, privacy controls and moderation tools.",
+          "The project was created as an alternative to noisy social networks that increasingly turn into attention marketplaces, news feeds and places of constant competition for reaction. Project Bradbury does not reject engagement, but proposes a different principle for it: not through pressure, anxiety and endless flow, but through meaning, trust, human presence and the desire to return to a quiet, warm space from everyday chaos.",
+          "At the moment, the platform includes invite-based registration, personal user space, public profiles, stories, photo shelves, emotional reactions, private messages, social connections, privacy settings, reporting flows, admin tools and a responsive interface for mobile and desktop."
+        ]
+      },
+      "statusLabel": {
+        "ru": "Закрытое тестирование",
+        "en": "Closed Alpha"
+      },
+      "features": {
+        "ru": [
+          "Регистрация по invite-коду и размещённая closed alpha",
+          "Личное пространство, публичные профили, истории и фотоальбомы",
+          "Личные сообщения, друзья, подписки и эмоциональные реакции",
+          "Настройки приватности, жалобы, модерация и admin tools",
+          "Адаптивный интерфейс для mobile и desktop"
+        ],
+        "en": [
+          "Invite-based registration and hosted closed alpha",
+          "Personal space, public profiles, stories and photo shelves",
+          "Private messages, friendships, follows and emotional reactions",
+          "Privacy controls, reporting flows, moderation and admin tools",
+          "Responsive mobile and desktop interface"
+        ]
+      },
+      "notes": {
+        "ru": [
+          "Проект уже размещён на хостинге prbdbr.com и сейчас находится на этапе закрытого тестирования. Открытая регистрация пока недоступна. Доступ предоставляется только по invite-коду.",
+          "Важно: в некоторых регионах часть контента платформы может корректно подгружаться только при включённом VPN."
+        ],
+        "en": [
+          "Hosted at prbdbr.com and currently in closed testing. Open registration is not available yet; access is provided only by invite code.",
+          "Please note: in some regions, parts of the platform content may load correctly only when VPN is enabled."
+        ]
+      },
+      "techStack": [
+        "React",
+        "TypeScript",
+        "Vite",
+        "Supabase",
+        "PostgreSQL",
+        "RLS",
+        "SCSS",
+        "VPS",
+        "Nginx"
+      ],
+      "links": [
+        {
+          "label": {
+            "ru": "Открыть платформу",
+            "en": "Live platform"
+          },
+          "url": "https://prbdbr.com/",
+          "target": "_blank"
+        }
+      ],
+      "gallery": {
+        "desktop": [
+          {
+            "id": "desktop-home",
+            "src": "images/projects/bradbury/desktop_home_feed.webp",
+            "alt": {
+              "ru": "Главная лента Project Bradbury на desktop",
+              "en": "Project Bradbury desktop home feed"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: главная лента Project Bradbury на desktop",
+              "en": "Open screenshot: Project Bradbury desktop home feed"
+            },
+            "presentation": "cover"
+          },
+          {
+            "id": "desktop-messages",
+            "src": "images/projects/bradbury/desktop_messages.webp",
+            "alt": {
+              "ru": "Сообщения Project Bradbury на desktop",
+              "en": "Project Bradbury desktop messages"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: сообщения Project Bradbury",
+              "en": "Open screenshot: Project Bradbury desktop messages"
+            },
+            "presentation": "cover"
+          },
+          {
+            "id": "desktop-room",
+            "src": "images/projects/bradbury/desktop_my_room_maraellis.webp",
+            "alt": {
+              "ru": "Личное пространство Project Bradbury на desktop",
+              "en": "Project Bradbury desktop personal room"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: личное пространство Project Bradbury на desktop",
+              "en": "Open screenshot: Project Bradbury desktop personal room"
+            },
+            "presentation": "cover"
+          },
+          {
+            "id": "admin-console",
+            "src": "images/projects/bradbury/admin_console.webp",
+            "alt": {
+              "ru": "Административная консоль Project Bradbury",
+              "en": "Project Bradbury admin console"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: административная консоль Project Bradbury",
+              "en": "Open screenshot: Project Bradbury admin console"
+            },
+            "presentation": "cover"
+          }
+        ],
+        "mobile": [
+          {
+            "id": "mobile-home",
+            "src": "images/projects/bradbury/mobile_home_feed.webp",
+            "alt": {
+              "ru": "Мобильная главная лента Project Bradbury",
+              "en": "Project Bradbury mobile home feed"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: мобильная главная лента Project Bradbury",
+              "en": "Open screenshot: Project Bradbury mobile home feed"
+            },
+            "presentation": "contain"
+          },
+          {
+            "id": "mobile-profile",
+            "src": "images/projects/bradbury/mobile_public_profile_maraellis.webp",
+            "alt": {
+              "ru": "Мобильный публичный профиль Project Bradbury",
+              "en": "Project Bradbury mobile public profile"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: публичный профиль Project Bradbury",
+              "en": "Open screenshot: Project Bradbury public profile"
+            },
+            "presentation": "contain"
+          },
+          {
+            "id": "mobile-messages",
+            "src": "images/projects/bradbury/mobile_messages_list.webp",
+            "alt": {
+              "ru": "Мобильный список сообщений Project Bradbury",
+              "en": "Project Bradbury mobile messages list"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: сообщения Project Bradbury",
+              "en": "Open screenshot: Project Bradbury messages"
+            },
+            "presentation": "contain"
+          },
+          {
+            "id": "mobile-stories",
+            "src": "images/projects/bradbury/mobile_photo_stories_maraellis.webp",
+            "alt": {
+              "ru": "Мобильные фотоистории Project Bradbury",
+              "en": "Project Bradbury mobile photo stories"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: фотоистории Project Bradbury",
+              "en": "Open screenshot: Project Bradbury photo stories"
+            },
+            "presentation": "contain"
+          }
+        ]
+      }
+    },
+    {
+      "id": "foodai",
+      "order": 30,
+      "status": "published",
+      "category": {
+        "ru": "Grocery intelligence / meal planning startup product prototype",
+        "en": "Grocery intelligence / meal planning product prototype"
+      },
+      "title": {
+        "ru": "FoodAI",
+        "en": "FoodAI"
+      },
+      "role": {
+        "ru": "Founder, Product Owner & Solo Fullstack Developer / самостоятельная разработка",
+        "en": "Founder, Product Owner & Solo Fullstack Developer"
+      },
+      "description": {
+        "ru": [
+          "Тест изменения текста и сохранение изменений.\n\nПродуктовый прототип для анализа продуктовых покупок и планирования питания. Проект помогает сравнивать продукты, учитывать protein-per-dollar логику и формировать более осознанные сценарии покупок. Разработан самостоятельно — от идеи и продуктовой концепции до архитектуры мобильного приложения, UX-сценариев, backend-интеграции и landing page."
+        ],
+        "en": [
+          "Test text changes and save changes.\n\nA grocery intelligence and meal planning product prototype focused on helping users compare food options, understand value through protein-per-dollar logic, and build smarter shopping habits. Built independently from idea and product concept to mobile app architecture, UI flows, backend integration direction and landing page."
+        ]
+      },
+      "statusLabel": {
+        "ru": "Prototype ",
+        "en": "Prototype"
+      },
+      "features": {
+        "ru": [
+          "Сравнение продуктов и protein-per-dollar логика",
+          "Сохранённые сравнения и onboarding-сценарий",
+          "Концепции meal planning и списка покупок",
+          "Архитектура на React Native / Expo, Supabase и Zustand",
+          "FoodAI website / landing page и направление AI/API-интеграций"
+        ],
+        "en": [
+          "Product comparison and protein-per-dollar logic",
+          "Saved comparisons and onboarding flow",
+          "Meal planning and grocery list concepts",
+          "React Native / Expo, Supabase, and Zustand architecture",
+          "FoodAI website / landing page and AI/API integration direction"
+        ]
+      },
+      "notes": {
+        "ru": [],
+        "en": []
+      },
+      "techStack": [
+        "Expo",
+        "React Native",
+        "Supabase",
+        "Zustand",
+        "React",
+        "Vite"
+      ],
+      "links": [
+        {
+          "label": {
+            "ru": "GitHub",
+            "en": "GitHub"
+          },
+          "url": "https://github.com/MaxParf",
+          "target": "_blank"
+        },
+        {
+          "label": {
+            "ru": "Сайт приложения",
+            "en": "App Website"
+          },
+          "url": "https://foodai.pro/",
+          "target": "_blank"
+        }
+      ],
+      "gallery": {
+        "desktop": [],
+        "mobile": [
+          {
+            "id": "meal-plan",
+            "src": "images/projects/foodai/foodai-meal-plan.png",
+            "alt": {
+              "ru": "Интерфейс плана питания на неделю",
+              "en": "Weekly meal plan with budget and nutrition targets"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: план питания FoodAI",
+              "en": "Open screenshot: FoodAI meal plan"
+            },
+            "presentation": "contain"
+          },
+          {
+            "id": "grocery-split",
+            "src": "images/projects/foodai/foodai-grocery-split.png",
+            "alt": {
+              "ru": "Список покупок с разбивкой по магазинам",
+              "en": "Grocery list split by store with price optimization"
+            },
+            "ariaLabel": {
+              "ru": "Открыть скриншот: список покупок FoodAI",
+              "en": "Open screenshot: FoodAI grocery split"
+            },
+            "presentation": "contain"
+          }
+        ]
+      }
+    }
+  ]
+}

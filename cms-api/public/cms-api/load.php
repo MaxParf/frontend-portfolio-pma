@@ -1,0 +1,1 @@
+<?php require dirname(__DIR__, 2) . '/src/common.php'; begin_api(['GET']); try { require_auth(); json_response(200,read_json(path_private('projects.json'))); } catch (Throwable) { api_error(500,'LOAD_FAILED'); }
