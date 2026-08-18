@@ -33,6 +33,7 @@ export function createSandboxMediaRepository(db, { staticMediaBaseUrl = globalTh
       if (used + blob.size > MAX_TOTAL_BYTES) throw new Error("Превышен лимит изображений демо (32 МБ).");
       await transaction(db, "media", "readwrite", (store) => store.put({ id: keyFor(id), blob }, keyFor(id)));
       this.revoke(id);
+      urls.set(id, URL.createObjectURL(blob));
     },
     async remove(id) { this.revoke(id); await transaction(db, "media", "readwrite", (store) => store.delete(keyFor(id))); },
     async prune(references) { const entries = await transaction(db, "media", "readonly", (store) => store.getAll()); for (const entry of entries) { const id = entry?.id?.startsWith("sandbox:") ? entry.id.slice(8) : null; if (id && !references.has(`images/demo/${id}`)) await this.remove(id); } },
