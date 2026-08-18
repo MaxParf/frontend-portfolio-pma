@@ -237,13 +237,66 @@ test("saving a deleted Demo image prunes only its matching persisted Blob", asyn
   media.dispose();
 });
 
-test("Demo-only reset clears only the existing Demo-owned stores", async () => {
+test("Demo reset removes the saved override and media but preserves fixture metadata", async () => {
   const indexedDBImpl = fakeIndexedDB(savedRecords(fixture, [{ id: "sandbox:image", blob: new Blob(["demo"]) }]));
   const db = await new Promise((resolve) => { const request = indexedDBImpl.open(); request.onsuccess = () => resolve(request.result); });
   const media = { disposed: false, dispose() { this.disposed = true; } };
   await resetDemoSandbox({ db, media });
   assert.equal(media.disposed, true);
-  for (const store of indexedDBImpl.stores.values()) assert.equal(store.size, 0);
+  assert.equal(indexedDBImpl.stores.get("state").size, 0);
+  assert.equal(indexedDBImpl.stores.get("media").size, 0);
+  assert.deepEqual([...indexedDBImpl.stores.get("metadata").entries()], [["fixtureVersion", DEMO_FIXTURE_VERSION]]);
+  await resetDemoSandbox({ db, media });
+  assert.equal(indexedDBImpl.stores.get("state").size, 0);
+  assert.equal(indexedDBImpl.stores.get("media").size, 0);
+});
+
+test("reset discards every saved Demo scenario and returns a fresh public reader to static JSON", async () => {
+  const replacement = fixture.projects[0].gallery.desktop[0];
+  const scenarios = [
+    { name: "text", mutate: (state) => { state.projects[0].title.en = "Changed title"; }, pending: [] },
+    { name: "created project", mutate: (state) => { const project = structuredClone(state.projects[0]); project.id = "created-project"; project.order = 99; state.projects.push(project); }, pending: [] },
+    { name: "deleted project", mutate: (state) => { state.projects = state.projects.filter((project) => project.id !== fixture.projects[1].id); }, pending: [] },
+    { name: "replacement", mutate: () => {}, pending: [{ id: replacement.id, projectId: fixture.projects[0].id, galleryKind: "desktop", file: new Blob(["replacement"], { type: "image/webp" }), replacesCanonical: true, alt: replacement.alt, ariaLabel: replacement.ariaLabel, presentation: replacement.presentation }] },
+    { name: "multiple images", mutate: () => {}, pending: ["one", "two"].map((id) => ({ id, projectId: fixture.projects[0].id, galleryKind: "desktop", file: new Blob([id], { type: "image/webp" }), replacesCanonical: false, alt: fixture.projects[0].title, ariaLabel: fixture.projects[0].title, presentation: "cover" })) },
+  ];
+  for (const scenario of scenarios) {
+    const indexedDBImpl = fakeIndexedDB({ state: new Map(), media: new Map(), metadata: new Map([["fixtureVersion", DEMO_FIXTURE_VERSION]]) });
+    const db = await new Promise((resolve) => { const request = indexedDBImpl.open(); request.onsuccess = () => resolve(request.result); });
+    const media = createSandboxMediaRepository(db);
+    const storage = createSandboxStorage({ db, fixture, fixtureVersion: DEMO_FIXTURE_VERSION, media });
+    const modified = structuredClone(fixture); scenario.mutate(modified);
+    await storage.save(modified, scenario.pending);
+    assert.equal(indexedDBImpl.stores.get("state").has("saved"), true, scenario.name);
+    const beforeReset = await loadSavedDemoSandbox({ fixtureVersion: DEMO_FIXTURE_VERSION, indexedDBImpl });
+    assert.equal(beforeReset.source, "demo-indexeddb", scenario.name);
+    beforeReset.dispose();
+    await storage.reset();
+    assert.equal(indexedDBImpl.stores.get("state").has("saved"), false, scenario.name);
+    assert.equal(indexedDBImpl.stores.get("media").size, 0, scenario.name);
+    assert.equal(indexedDBImpl.stores.get("metadata").get("fixtureVersion"), DEMO_FIXTURE_VERSION, scenario.name);
+    assert.deepEqual(await storage.load(), fixture, scenario.name);
+    assert.equal(await loadSavedDemoSandbox({ fixtureVersion: DEMO_FIXTURE_VERSION, indexedDBImpl }), null, scenario.name);
+    const source = await loadProjectState({ demoFixtureVersionLoader: async () => DEMO_FIXTURE_VERSION, demoStateLoader: (options) => loadSavedDemoSandbox({ ...options, indexedDBImpl }), fetchImpl: async () => ({ ok: true, status: 200, json: async () => fixture }) });
+    assert.equal(source.source, "static-json", scenario.name);
+    media.dispose();
+  }
+});
+
+test("a failed reset transaction does not report a pristine editor state", async () => {
+  const transaction = { error: new Error("reset failed"), objectStore: () => ({ delete() {}, clear() {} }) };
+  const db = { transaction: () => { queueMicrotask(() => transaction.onabort?.()); return transaction; } };
+  const media = { disposed: false, dispose() { this.disposed = true; } };
+  await assert.rejects(resetDemoSandbox({ db, media }), /reset failed/);
+  assert.equal(media.disposed, false);
+});
+
+test("cancelling Reset Demo does not reach the persistence reset action", () => {
+  const source = readFileSync(new URL("../demo/cms/demo-entry.js", import.meta.url), "utf8");
+  const cancelBranch = source.match(/if \(action\.cancelReset[^\n]+/);
+  assert.ok(cancelBranch);
+  assert.match(cancelBranch[0], /\.close\(\).*return true/);
+  assert.doesNotMatch(cancelBranch[0], /storage\.reset/);
 });
 
 test("public Demo modules have no API, authorization, reset, or mutation-network dependency", () => {
