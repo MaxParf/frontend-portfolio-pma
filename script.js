@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastFocusedGalleryButton = null;
   let projectRequestController = null;
   let projectRequestSequence = 0;
+  let activeProjectSource = null;
 
   function getCurrentLocale() {
     return window.getCurrentLanguage?.() || document.documentElement.lang || "en";
@@ -59,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const result = await loadProjectState({ signal: requestController.signal });
       if (requestSequence !== projectRequestSequence) {
+        result.dispose?.();
         return;
       }
 
@@ -66,6 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
         closeLightbox();
       }
 
+      activeProjectSource?.dispose?.();
+      activeProjectSource = result;
       const renderedProjects = renderProjectCards(result.projects, locale);
       document.documentElement.dataset.projectsSource = result.source;
       window.dispatchEvent(new CustomEvent("portfolio:projects-loaded", { detail: { source: result.source, count: renderedProjects.length, locale } }));
@@ -282,6 +286,8 @@ document.addEventListener("DOMContentLoaded", () => {
       closeLightbox();
     }
   });
+
+  window.addEventListener("pagehide", () => activeProjectSource?.dispose?.(), { once: true });
 
   document.addEventListener("keydown", (event) => {
     const activeElement = document.activeElement;

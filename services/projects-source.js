@@ -1,5 +1,6 @@
 import { createPublicProjectState, normalizeProjectState } from "../project-core/project-normalizer.js";
 import { validateProjectState } from "../project-core/project-validator.js";
+import { loadSavedDemoSandbox } from "../demo/cms/sandbox/read-state.js";
 
 export const STATIC_PROJECTS_URL = "data/projects.lite.json";
 
@@ -11,8 +12,12 @@ export class ProjectSourceError extends Error {
   }
 }
 
-/** Loads the sole public project source; no API or legacy-data fallback is permitted. */
-export async function loadProjectState({ signal, fetchImpl = fetch } = {}) {
+/** Chooses a saved browser-local Demo projection before the sole production source. */
+export async function loadProjectState({ signal, fetchImpl = fetch, demoStateLoader = loadSavedDemoSandbox } = {}) {
+  let demoState = null;
+  try { demoState = await demoStateLoader(); } catch { /* Browser-local Demo storage must fail safely to production. */ }
+  if (demoState) return demoState;
+
   let response;
   try {
     response = await fetchImpl(STATIC_PROJECTS_URL, { method: "GET", headers: { Accept: "application/json" }, signal });

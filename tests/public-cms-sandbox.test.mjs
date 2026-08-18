@@ -51,3 +51,16 @@ test("Reset visibility is persisted-state based and always confirmed", () => {
   assert.match(source, /data-confirm-reset/);
   assert.match(source, /await storage\.reset\(\)/);
 });
+
+test("Demo Reset is visually prominent and fixture media is packaged at the Demo entrypoint", async () => {
+  const css = readFileSync(new URL("../demo/cms/demo.css", import.meta.url), "utf8");
+  const fixture = JSON.parse(readFileSync(new URL("../demo/cms/fixture/projects.fixture.json", import.meta.url), "utf8"));
+  assert.match(css, /\.cms-reset-demo \{[^}]*background:\s*#ff5722/i);
+  assert.match(css, /\.cms-reset-demo \{[^}]*color:\s*#fff/i);
+  assert.match(css, /\.cms-reset-demo:hover/);
+  assert.match(css, /\.cms-reset-demo:focus-visible/);
+  const output = "/tmp/public-cms-sandbox-test-build";
+  const { execFileSync } = await import("node:child_process");
+  execFileSync(process.execPath, ["scripts/build-public-cms-demo.mjs", output], { cwd: root });
+  for (const src of fixture.projects.flatMap((project) => [...project.gallery.desktop, ...project.gallery.mobile]).map((item) => item.src)) assert.equal(existsSync(resolve(output, src)), true, src);
+});

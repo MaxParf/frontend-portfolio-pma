@@ -1,5 +1,7 @@
-const DB_NAME = "portfolio-public-demo-cms";
-const DB_VERSION = 1;
+import { DEMO_DATABASE_NAME, DEMO_DATABASE_STORES, DEMO_DATABASE_VERSION, isDemoMediaReference, resolveStaticMediaUrl } from "./contract.js";
+
+const DB_NAME = DEMO_DATABASE_NAME;
+const DB_VERSION = DEMO_DATABASE_VERSION;
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 32 * 1024 * 1024;
 const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -7,7 +9,7 @@ const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 export function openDemoDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => { const db = request.result; for (const name of ["state", "media", "metadata"]) if (!db.objectStoreNames.contains(name)) db.createObjectStore(name); };
+    request.onupgradeneeded = () => { const db = request.result; for (const name of DEMO_DATABASE_STORES) if (!db.objectStoreNames.contains(name)) db.createObjectStore(name); };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error("Не удалось открыть хранилище демо."));
   });
@@ -21,7 +23,7 @@ export async function validateSandboxImage(file) {
   bitmap.close();
 }
 
-export function createSandboxMediaRepository(db) {
+export function createSandboxMediaRepository(db, { staticMediaBaseUrl = globalThis.document?.baseURI } = {}) {
   const urls = new Map();
   const keyFor = (id) => `sandbox:${id}`;
   return {
@@ -35,7 +37,7 @@ export function createSandboxMediaRepository(db) {
     async remove(id) { this.revoke(id); await transaction(db, "media", "readwrite", (store) => store.delete(keyFor(id))); },
     async prune(references) { const entries = await transaction(db, "media", "readonly", (store) => store.getAll()); for (const entry of entries) { const id = entry?.id?.startsWith("sandbox:") ? entry.id.slice(8) : null; if (id && !references.has(`images/demo/${id}`)) await this.remove(id); } },
     async clear() { this.dispose(); await transaction(db, "media", "readwrite", (store) => store.clear()); },
-    resolve(src) { if (!src.startsWith("images/demo/")) return src; const id = src.slice("images/demo/".length); return urls.get(id) ?? src; },
+    resolve(src) { if (!isDemoMediaReference(src)) return resolveStaticMediaUrl(src, staticMediaBaseUrl); const id = src.slice("images/demo/".length); return urls.get(id) ?? null; },
     async hydrate() { const entries = await transaction(db, "media", "readonly", (store) => store.getAll()); for (const entry of entries) { const id = entry?.id ?? ""; if (entry?.blob && id.startsWith("sandbox:")) urls.set(id.slice(8), URL.createObjectURL(entry.blob)); } },
     async urlFor(id) { const record = await transaction(db, "media", "readonly", (store) => store.get(keyFor(id))); if (!record?.blob) return null; this.revoke(id); const url = URL.createObjectURL(record.blob); urls.set(id, url); return url; },
     revoke(id) { const url = urls.get(id); if (url) URL.revokeObjectURL(url); urls.delete(id); },
