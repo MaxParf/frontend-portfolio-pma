@@ -1,12 +1,31 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { renderProjects } from "../components/project-renderer.js";
 import { DEMO_FIXTURE_VERSION, resolveStaticMediaUrl } from "../demo/cms/sandbox/contract.js";
+import { createSandboxMediaRepository } from "../demo/cms/sandbox/media.js";
 import { loadSavedDemoSandbox } from "../demo/cms/sandbox/read-state.js";
 import { resetDemoSandbox } from "../demo/cms/sandbox/reset-state.js";
+import { createSandboxStorage } from "../demo/cms/sandbox/storage.js";
+import { loadProjectState } from "../services/projects-source.js";
 
 const fixture = JSON.parse(readFileSync(new URL("../demo/cms/fixture/projects.fixture.json", import.meta.url), "utf8"));
 const manifest = JSON.parse(readFileSync(new URL("../demo/cms/fixture/manifest.json", import.meta.url), "utf8"));
+
+class FakeNode {
+  constructor(tagName = "#fragment") { this.tagName = tagName; this.children = []; this.attributes = new Map(); this.dataset = {}; this.className = ""; this.textContent = ""; this.isFragment = tagName === "#fragment"; }
+  append(...children) { children.forEach((child) => { if (child.isFragment) this.children.push(...child.children); else this.children.push(child); }); }
+  replaceChildren(...children) { this.children = []; this.append(...children); }
+  setAttribute(name, value) { this.attributes.set(name, String(value)); }
+}
+
+function descendants(node, predicate, result = []) { node.children.forEach((child) => { if (predicate(child)) result.push(child); descendants(child, predicate, result); }); return result; }
+
+async function withFakeDocument(action) {
+  const original = globalThis.document;
+  globalThis.document = { createElement: (tagName) => new FakeNode(tagName), createDocumentFragment: () => new FakeNode() };
+  try { return await action(); } finally { globalThis.document = original; }
+}
 
 function request(value) {
   const result = { result: value };
@@ -27,6 +46,8 @@ function fakeIndexedDB(records, version = 1) {
           return {
             get: (key) => request(store.get(key)),
             getAll: () => request([...store.values()]),
+            put: (value, key) => { store.set(key, value); return request(undefined); },
+            delete: (key) => { store.delete(key); return request(undefined); },
             clear: () => { store.clear(); },
           };
         },
@@ -62,6 +83,22 @@ test("read-only loader returns no override for absent or incompatible Demo stora
   assert.equal(await loadSavedDemoSandbox({ indexedDBImpl: incompatible }), null);
 });
 
+test("public source selects a saved Demo state using the installed Demo manifest identity", async () => {
+  const installedFixtureVersion = "git-ceb3e6b32748709c9aa0df67292bae37a76cedd5-81cd7429e6c5";
+  const state = structuredClone(fixture);
+  state.projects[2].gallery.mobile[0].src = "images/demo/74f517e4-8b06-40fb-b50a-daf1404bb8f6";
+  const indexedDBImpl = fakeIndexedDB(savedRecords(state, [{ id: "sandbox:74f517e4-8b06-40fb-b50a-daf1404bb8f6", blob: new Blob(["production image"], { type: "image/webp" }) }]));
+  indexedDBImpl.stores.get("metadata").set("fixtureVersion", installedFixtureVersion);
+  const result = await loadProjectState({
+    demoFixtureVersionLoader: async () => installedFixtureVersion,
+    demoStateLoader: (options) => loadSavedDemoSandbox({ ...options, indexedDBImpl, urlApi: { createObjectURL: () => "blob:https://www.maxpar.ru/production-image", revokeObjectURL() {} }, staticMediaBaseUrl: "https://www.maxpar.ru/" }),
+    fetchImpl: async () => { throw new Error("static production projection must not be selected"); },
+  });
+  assert.equal(result.source, "demo-indexeddb");
+  assert.equal(result.projects.find((project) => project.id === "foodai").gallery.mobile[0].src, "blob:https://www.maxpar.ru/production-image");
+  result.dispose();
+});
+
 test("saved Demo state preserves public status/order and resolves static and local media for the public entrypoint", async () => {
   const state = structuredClone(fixture);
   state.projects[0].order = 9;
@@ -93,6 +130,111 @@ test("missing local Demo Blob omits only that media item and keeps the saved pub
   assert.equal(result.source, "demo-indexeddb");
   assert.equal(result.projects[1].gallery.desktop.some((item) => item.src.includes("images/demo/missing")), false);
   assert.equal(result.projects[1].gallery.desktop.length, fixture.projects[1].gallery.desktop.length - 1);
+});
+
+async function saveThenReadFromIndependentPublicContext({ pendingMedia }) {
+  const indexedDBImpl = fakeIndexedDB(savedRecords());
+  const dbA = await new Promise((resolve) => { const request = indexedDBImpl.open(); request.onsuccess = () => resolve(request.result); });
+  const mediaA = createSandboxMediaRepository(dbA);
+  const storage = createSandboxStorage({ db: dbA, fixture, fixtureVersion: DEMO_FIXTURE_VERSION, media: mediaA });
+  const saved = await storage.save(structuredClone(fixture), pendingMedia);
+  mediaA.dispose();
+
+  const canonicalMedia = saved.projects.flatMap((project) => [...project.gallery.desktop, ...project.gallery.mobile]).filter((item) => item.src.startsWith("images/demo/"));
+  const mediaStore = indexedDBImpl.stores.get("media");
+  const dbB = await new Promise((resolve) => { const request = indexedDBImpl.open(); request.onsuccess = () => resolve(request.result); });
+  const mediaB = createSandboxMediaRepository(dbB);
+  await mediaB.hydrate();
+  const cmsUrls = canonicalMedia.map((media) => mediaB.resolve(media.src));
+  mediaB.dispose();
+  const urls = [];
+  const publicResult = await loadSavedDemoSandbox({
+    indexedDBImpl,
+    urlApi: { createObjectURL: (blob) => { assert.ok(blob instanceof Blob); const url = `blob:https://www.maxpar.ru/public-${urls.length}`; urls.push(url); return url; }, revokeObjectURL() {} },
+    staticMediaBaseUrl: "https://www.maxpar.ru/",
+  });
+  return { canonicalMedia, mediaStore, publicResult, urls, cmsUrls };
+}
+
+test("an independent public context reconstructs newly saved Demo media from IndexedDB", async () => {
+  const blob = new Blob(["new Demo image"], { type: "image/webp" });
+  const { canonicalMedia, mediaStore, publicResult, urls, cmsUrls } = await saveThenReadFromIndependentPublicContext({
+    pendingMedia: [{ id: "pending-new", projectId: fixture.projects[0].id, galleryKind: "desktop", file: blob, replacesCanonical: false, alt: fixture.projects[0].title, ariaLabel: fixture.projects[0].title, presentation: "cover" }],
+  });
+  assert.equal(canonicalMedia.length, 1);
+  const canonical = canonicalMedia[0];
+  assert.match(canonical.src, /^images\/demo\/[0-9a-f-]{36}$/);
+  assert.equal(canonical.src.includes("blob:"), false);
+  assert.equal(canonical.src.includes("base64"), false);
+  const id = canonical.src.slice("images/demo/".length);
+  const record = mediaStore.get(`sandbox:${id}`);
+  assert.equal(record.id, `sandbox:${id}`);
+  assert.ok(record.blob instanceof Blob);
+  assert.equal(record.blob.size, blob.size);
+  assert.equal(record.blob.type, "image/webp");
+  assert.match(cmsUrls[0], /^blob:/);
+  assert.equal(publicResult.source, "demo-indexeddb");
+  const publicMedia = publicResult.projects.find((project) => project.id === fixture.projects[0].id).gallery.desktop.at(-1);
+  assert.equal(publicMedia.id, canonical.id);
+  assert.match(publicMedia.src, /^blob:https:\/\/www\.maxpar\.ru\/public-0$/);
+  assert.deepEqual(urls, [publicMedia.src]);
+  publicResult.dispose();
+});
+
+test("FoodAI mobile gallery media crosses the normal public source and renderer pipeline", async () => {
+  const foodai = fixture.projects.find((project) => project.id === "foodai");
+  const { publicResult } = await saveThenReadFromIndependentPublicContext({
+    pendingMedia: [{ id: "pending-foodai-mobile", projectId: foodai.id, galleryKind: "mobile", file: new Blob(["FoodAI"], { type: "image/webp" }), replacesCanonical: false, alt: foodai.title, ariaLabel: foodai.title, presentation: "contain" }],
+  });
+  const source = await loadProjectState({ demoFixtureVersionLoader: async () => DEMO_FIXTURE_VERSION, demoStateLoader: async ({ fixtureVersion }) => { assert.equal(fixtureVersion, DEMO_FIXTURE_VERSION); return publicResult; }, fetchImpl: async () => { throw new Error("sandbox state must be authoritative"); } });
+  const resolvedFoodai = source.projects.find((project) => project.id === "foodai");
+  const added = resolvedFoodai.gallery.mobile.at(-1);
+  assert.match(added.src, /^blob:https:\/\/www\.maxpar\.ru\/public-/);
+  await withFakeDocument(async () => {
+    const root = new FakeNode("div");
+    const rendered = renderProjects({ root, projects: source.projects, locale: "en" });
+    assert.ok(rendered.some((project) => project.id === "foodai"));
+    assert.ok(descendants(root, (node) => node.tagName === "img" && node.src === added.src));
+  });
+  publicResult.dispose();
+});
+
+test("independent public readers preserve replacement and fifth/sixth Demo images without a count limit", async () => {
+  const project = fixture.projects[0];
+  const replacement = project.gallery.desktop[0];
+  const blobs = ["replacement", "fifth", "sixth"].map((value) => new Blob([value], { type: "image/webp" }));
+  const { canonicalMedia, mediaStore, publicResult } = await saveThenReadFromIndependentPublicContext({
+    pendingMedia: [
+      { id: replacement.id, projectId: project.id, galleryKind: "desktop", file: blobs[0], replacesCanonical: true, alt: replacement.alt, ariaLabel: replacement.ariaLabel, presentation: replacement.presentation },
+      { id: "pending-fifth", projectId: project.id, galleryKind: "desktop", file: blobs[1], replacesCanonical: false, alt: project.title, ariaLabel: project.title, presentation: "cover" },
+      { id: "pending-sixth", projectId: project.id, galleryKind: "desktop", file: blobs[2], replacesCanonical: false, alt: project.title, ariaLabel: project.title, presentation: "cover" },
+    ],
+  });
+  assert.equal(canonicalMedia.length, 3);
+  for (const media of canonicalMedia) {
+    const id = media.src.slice("images/demo/".length);
+    assert.ok(mediaStore.get(`sandbox:${id}`)?.blob instanceof Blob);
+  }
+  const publicProject = publicResult.projects.find((candidate) => candidate.id === project.id);
+  assert.equal(publicProject.gallery.desktop.length, project.gallery.desktop.length + 2);
+  assert.equal(publicProject.gallery.desktop[0].src.startsWith("blob:"), true);
+  assert.equal(publicProject.gallery.desktop.slice(-2).every((media) => media.src.startsWith("blob:")), true);
+  publicResult.dispose();
+});
+
+test("saving a deleted Demo image prunes only its matching persisted Blob", async () => {
+  const indexedDBImpl = fakeIndexedDB(savedRecords());
+  const db = await new Promise((resolve) => { const request = indexedDBImpl.open(); request.onsuccess = () => resolve(request.result); });
+  const media = createSandboxMediaRepository(db);
+  const storage = createSandboxStorage({ db, fixture, fixtureVersion: DEMO_FIXTURE_VERSION, media });
+  const saved = await storage.save(structuredClone(fixture), [{ id: "pending-delete", projectId: fixture.projects[0].id, galleryKind: "desktop", file: new Blob(["delete"], { type: "image/webp" }), replacesCanonical: false, alt: fixture.projects[0].title, ariaLabel: fixture.projects[0].title, presentation: "cover" }]);
+  const added = saved.projects.find((project) => project.id === fixture.projects[0].id).gallery.desktop.at(-1);
+  const id = added.src.slice("images/demo/".length);
+  const withoutAdded = structuredClone(saved);
+  withoutAdded.projects.find((project) => project.id === fixture.projects[0].id).gallery.desktop.pop();
+  await storage.save(withoutAdded, []);
+  assert.equal(indexedDBImpl.stores.get("media").has(`sandbox:${id}`), false);
+  media.dispose();
 });
 
 test("Demo-only reset clears only the existing Demo-owned stores", async () => {
