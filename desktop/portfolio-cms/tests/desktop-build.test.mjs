@@ -23,8 +23,8 @@ test("bundle contains executable pinned Node and required plist", () => {
   assert.equal(plistValue("CFBundleIdentifier"), "ru.maxpar.portfolio-cms");
   assert.equal(plistValue("CFBundleName"), "Portfolio CMS");
   assert.equal(plistValue("CFBundleDisplayName"), "Portfolio CMS");
-  assert.equal(plistValue("CFBundleShortVersionString"), "1.0.1");
-  assert.equal(plistValue("CFBundleVersion"), "2");
+  assert.equal(plistValue("CFBundleShortVersionString"), "1.0.2");
+  assert.equal(plistValue("CFBundleVersion"), "3");
   assert.equal(plistValue("LSUIElement"), "true");
   const sourceIcon = join(project, "resources/AppIcon.icns");
   const bundledIcon = join(contents, "Resources/AppIcon.icns");
@@ -32,10 +32,15 @@ test("bundle contains executable pinned Node and required plist", () => {
   if (existsSync(sourceIcon)) assert.equal(plistValue("CFBundleIconFile"), "AppIcon");
   execFileSync("codesign", ["--verify", "--deep", "--strict", app]);
 });
-test("runtime is immutable-commit output with no secrets or forbidden paths", () => {
-  assert.match(readFileSync(join(runtime, "VERSION"), "utf8"), /source_commit=db5e30957b67460ecf8881f0191404e8a72d8ee0/);
+test("runtime is immutable current-commit output with the shared description editor and no secrets", () => {
+  const sourceCommit = execFileSync("git", ["-C", new URL("../../..", import.meta.url).pathname, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  assert.match(readFileSync(join(runtime, "VERSION"), "utf8"), new RegExp(`source_commit=${sourceCommit}`));
   assert.equal(existsSync(join(runtime, "components/project-renderer.js")), true);
   assert.equal(existsSync(join(runtime, "project-core/plain-text-paragraphs.js")), true);
+  const editor = readFileSync(join(runtime, "cms-lite/editor/app.js"), "utf8");
+  assert.match(editor, /descriptionToEditorText/);
+  assert.match(editor, /project\.description\[path\[0\]\] = editorTextToDescription\(target\.value\)/);
+  assert.doesNotMatch(editor, /description\.ru\.0|description\.en\.0/);
   assert.match(readFileSync(join(runtime, "cms-lite/runtime-config.js"), "utf8"), /https:\/\/www\.maxpar\.ru\/cms-api/);
   assert.match(readFileSync(join(runtime, "cms-lite/dev-server.mjs"), "utf8"), /127\.0\.0\.1/);
   for (const forbidden of ["cms", "cms-api", "backend", "tests", "docs", ".git", "node_modules", "package.json"]) assert.equal(existsSync(join(runtime, forbidden)), false, forbidden);

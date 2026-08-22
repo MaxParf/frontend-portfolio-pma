@@ -36,6 +36,51 @@ test("description editor joins and restores every RU/EN paragraph without changi
   assert.match(appSource, /project\.description\[path\[0\]\] = editorTextToDescription\(target\.value\)/);
 });
 
+test("description textarea mutations replace whole locale arrays through Save All and reload", async () => {
+  const initial = structuredClone(fixture);
+  initial.projects[0].description = {
+    ru: ["Первый абзац.", "Второй абзац.", "Третий абзац."],
+    en: ["First paragraph.", "Second paragraph.", "Third paragraph."],
+  };
+  let persisted = structuredClone(initial);
+  let savedPayload;
+  const storage = {
+    async load() { return structuredClone(persisted); },
+    async save(state) { savedPayload = structuredClone(state); persisted = structuredClone(state); return structuredClone(persisted); },
+  };
+  const editor = createEditorState({ initialState: initial, storage });
+  await editor.load();
+  const project = () => editor.snapshot().workingState.projects[0];
+
+  assert.equal(descriptionToEditorText(project().description.ru), "Первый абзац.\n\nВторой абзац.\n\nТретий абзац.");
+  assert.equal(descriptionToEditorText(project().description.en), "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.");
+
+  editor.update((state) => { state.projects[0].description.ru = editorTextToDescription("Первый абзац.\n\nИзменённый второй абзац.\n\nТретий абзац."); });
+  assert.deepEqual(project().description.ru, ["Первый абзац.", "Изменённый второй абзац.", "Третий абзац."]);
+
+  editor.update((state) => { state.projects[0].description.ru = editorTextToDescription("Первый абзац.\n\nТретий абзац."); state.projects[0].description.en = editorTextToDescription("First paragraph.\n\nThird paragraph."); });
+  assert.deepEqual(project().description.ru, ["Первый абзац.", "Третий абзац."]);
+
+  editor.update((state) => { state.projects[0].description.ru = editorTextToDescription("Третий абзац."); state.projects[0].description.en = editorTextToDescription("Third paragraph."); });
+  assert.deepEqual(project().description.ru, ["Третий абзац."]);
+
+  editor.update((state) => { state.projects[0].description.ru = editorTextToDescription("   \r\n\r\n\r\n"); });
+  assert.deepEqual(project().description.ru, []);
+  assert.equal(descriptionToEditorText(project().description.ru), "");
+  editor.update((state) => { state.projects[0].description.en = editorTextToDescription("\n\n"); });
+
+  const saved = await editor.save();
+  assert.equal(saved.saved, true);
+  assert.deepEqual(savedPayload.projects[0].description, { ru: [], en: [] });
+  const reloaded = createEditorState({ initialState: initial, storage });
+  await reloaded.load();
+  assert.deepEqual(reloaded.snapshot().workingState.projects[0].description, { ru: [], en: [] });
+  assert.equal(descriptionToEditorText(reloaded.snapshot().workingState.projects[0].description.ru), "");
+  assert.deepEqual(editorTextToDescription(" First\r\nline \r\n\r\n\r\n Second \r\n"), ["First line", "Second"]);
+  assert.deepEqual(editorTextToDescription("\n\n\t\n"), []);
+  assert.deepEqual(editorTextToDescription("Один абзац"), ["Один абзац"]);
+});
+
 test("paired Features and Notes add and remove RU/EN values together", async () => {
   const editor = createEditorState({ initialState: fixture, storage: createMemoryStorage(fixture) });
   await editor.load();

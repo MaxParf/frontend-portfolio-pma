@@ -2,7 +2,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPOSITORY_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-SOURCE_COMMIT="db5e30957b67460ecf8881f0191404e8a72d8ee0"
+SOURCE_COMMIT="${PORTFOLIO_CMS_SOURCE_COMMIT:-$(git -C "$REPOSITORY_ROOT" rev-parse HEAD)}"
 OUTPUT_DIR="${1:-/tmp/portfolio-cms-desktop-build/runtime}"
 [[ "$OUTPUT_DIR" == /tmp/portfolio-cms-desktop-build/* || "$OUTPUT_DIR" == /tmp/portfolio-cms-app.*/* ]] || { echo "Refusing runtime output outside approved build staging" >&2; exit 64; }
 git -C "$REPOSITORY_ROOT" cat-file -e "$SOURCE_COMMIT^{commit}"
@@ -12,7 +12,7 @@ trap 'rm -rf "$STAGE_DIR"' EXIT
 # Exact runtime route graph; Git archive prevents dirty-worktree input.
 RUNTIME_PATHS=(
   cms-lite/api.js cms-lite/cms.css cms-lite/cms.js cms-lite/dev-server.mjs
-  cms-lite/editor/media-previews.js cms-lite/editor/state.js cms-lite/index.html
+  cms-lite/editor/app.js cms-lite/editor/media-previews.js cms-lite/editor/state.js cms-lite/index.html
   cms-lite/login.js cms-lite/login/index.html cms-lite/password-change.js
   cms-lite/runtime-config.js cms-lite/session.js cms-lite/storage/php-api.js
   project-core/plain-text-paragraphs.js project-core/project-model.js project-core/project-normalizer.js project-core/project-validator.js
