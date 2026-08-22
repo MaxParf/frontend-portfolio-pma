@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { renderProjects } from "../components/project-renderer.js";
-import { DEMO_FIXTURE_VERSION, resolveStaticMediaUrl } from "../demo/cms/sandbox/contract.js";
+import { resolveStaticMediaUrl } from "../demo/cms/sandbox/contract.js";
 import { createSandboxMediaRepository } from "../demo/cms/sandbox/media.js";
 import { loadSavedDemoSandbox } from "../demo/cms/sandbox/read-state.js";
 import { resetDemoSandbox } from "../demo/cms/sandbox/reset-state.js";
@@ -11,6 +11,7 @@ import { loadProjectState } from "../services/projects-source.js";
 
 const fixture = JSON.parse(readFileSync(new URL("../demo/cms/fixture/projects.fixture.json", import.meta.url), "utf8"));
 const manifest = JSON.parse(readFileSync(new URL("../demo/cms/fixture/manifest.json", import.meta.url), "utf8"));
+const fixtureVersion = manifest.fixtureVersion;
 
 class FakeNode {
   constructor(tagName = "#fragment") { this.tagName = tagName; this.children = []; this.attributes = new Map(); this.dataset = {}; this.className = ""; this.textContent = ""; this.isFragment = tagName === "#fragment"; }
@@ -65,22 +66,22 @@ function fakeIndexedDB(records, version = 1) {
 
 function savedRecords(state = fixture, media = []) {
   return {
-    metadata: new Map([["fixtureVersion", DEMO_FIXTURE_VERSION]]),
+    metadata: new Map([["fixtureVersion", fixtureVersion]]),
     state: new Map([["saved", state]]),
     media: new Map(media.map((record) => [record.id, record])),
   };
 }
 
-test("fixture compatibility constant matches the immutable Demo manifest", () => {
-  assert.equal(DEMO_FIXTURE_VERSION, manifest.fixtureVersion);
+test("fixture test helpers derive the installed immutable Demo manifest identity", () => {
+  assert.match(fixtureVersion, /^git-[0-9a-f]+-[0-9a-f]{12}$/);
 });
 
 test("read-only loader returns no override for absent or incompatible Demo storage", async () => {
-  assert.equal(await loadSavedDemoSandbox({ indexedDBImpl: { databases: async () => [] } }), null);
-  assert.equal(await loadSavedDemoSandbox({ indexedDBImpl: fakeIndexedDB(savedRecords(), 2) }), null);
+  assert.equal(await loadSavedDemoSandbox({ fixtureVersion, indexedDBImpl: { databases: async () => [] } }), null);
+  assert.equal(await loadSavedDemoSandbox({ fixtureVersion, indexedDBImpl: fakeIndexedDB(savedRecords(), 2) }), null);
   const incompatible = fakeIndexedDB(savedRecords());
   incompatible.stores.get("metadata").set("fixtureVersion", "old-fixture");
-  assert.equal(await loadSavedDemoSandbox({ indexedDBImpl: incompatible }), null);
+  assert.equal(await loadSavedDemoSandbox({ fixtureVersion, indexedDBImpl: incompatible }), null);
 });
 
 test("public source selects a saved Demo state using the installed Demo manifest identity", async () => {
@@ -109,6 +110,7 @@ test("saved Demo state preserves public status/order and resolves static and loc
   const created = [];
   const revoked = [];
   const result = await loadSavedDemoSandbox({
+    fixtureVersion,
     indexedDBImpl,
     urlApi: { createObjectURL: () => { const url = "blob:demo-image"; created.push(url); return url; }, revokeObjectURL: (url) => revoked.push(url) },
     staticMediaBaseUrl: "https://public.example/",
@@ -126,7 +128,7 @@ test("saved Demo state preserves public status/order and resolves static and loc
 test("missing local Demo Blob omits only that media item and keeps the saved public state", async () => {
   const state = structuredClone(fixture);
   state.projects[1].gallery.desktop[0].src = "images/demo/missing";
-  const result = await loadSavedDemoSandbox({ indexedDBImpl: fakeIndexedDB(savedRecords(state)), staticMediaBaseUrl: "https://public.example/" });
+  const result = await loadSavedDemoSandbox({ fixtureVersion, indexedDBImpl: fakeIndexedDB(savedRecords(state)), staticMediaBaseUrl: "https://public.example/" });
   assert.equal(result.source, "demo-indexeddb");
   assert.equal(result.projects[1].gallery.desktop.some((item) => item.src.includes("images/demo/missing")), false);
   assert.equal(result.projects[1].gallery.desktop.length, fixture.projects[1].gallery.desktop.length - 1);
@@ -136,7 +138,7 @@ async function saveThenReadFromIndependentPublicContext({ pendingMedia }) {
   const indexedDBImpl = fakeIndexedDB(savedRecords());
   const dbA = await new Promise((resolve) => { const request = indexedDBImpl.open(); request.onsuccess = () => resolve(request.result); });
   const mediaA = createSandboxMediaRepository(dbA);
-  const storage = createSandboxStorage({ db: dbA, fixture, fixtureVersion: DEMO_FIXTURE_VERSION, media: mediaA });
+  const storage = createSandboxStorage({ db: dbA, fixture, fixtureVersion, media: mediaA });
   const saved = await storage.save(structuredClone(fixture), pendingMedia);
   mediaA.dispose();
 
@@ -149,6 +151,7 @@ async function saveThenReadFromIndependentPublicContext({ pendingMedia }) {
   mediaB.dispose();
   const urls = [];
   const publicResult = await loadSavedDemoSandbox({
+    fixtureVersion,
     indexedDBImpl,
     urlApi: { createObjectURL: (blob) => { assert.ok(blob instanceof Blob); const url = `blob:https://www.maxpar.ru/public-${urls.length}`; urls.push(url); return url; }, revokeObjectURL() {} },
     staticMediaBaseUrl: "https://www.maxpar.ru/",
@@ -186,7 +189,7 @@ test("FoodAI mobile gallery media crosses the normal public source and renderer 
   const { publicResult } = await saveThenReadFromIndependentPublicContext({
     pendingMedia: [{ id: "pending-foodai-mobile", projectId: foodai.id, galleryKind: "mobile", file: new Blob(["FoodAI"], { type: "image/webp" }), replacesCanonical: false, alt: foodai.title, ariaLabel: foodai.title, presentation: "contain" }],
   });
-  const source = await loadProjectState({ demoFixtureVersionLoader: async () => DEMO_FIXTURE_VERSION, demoStateLoader: async ({ fixtureVersion }) => { assert.equal(fixtureVersion, DEMO_FIXTURE_VERSION); return publicResult; }, fetchImpl: async () => { throw new Error("sandbox state must be authoritative"); } });
+  const source = await loadProjectState({ demoFixtureVersionLoader: async () => fixtureVersion, demoStateLoader: async ({ fixtureVersion: loadedFixtureVersion }) => { assert.equal(loadedFixtureVersion, fixtureVersion); return publicResult; }, fetchImpl: async () => { throw new Error("sandbox state must be authoritative"); } });
   const resolvedFoodai = source.projects.find((project) => project.id === "foodai");
   const added = resolvedFoodai.gallery.mobile.at(-1);
   assert.match(added.src, /^blob:https:\/\/www\.maxpar\.ru\/public-/);
@@ -226,7 +229,7 @@ test("saving a deleted Demo image prunes only its matching persisted Blob", asyn
   const indexedDBImpl = fakeIndexedDB(savedRecords());
   const db = await new Promise((resolve) => { const request = indexedDBImpl.open(); request.onsuccess = () => resolve(request.result); });
   const media = createSandboxMediaRepository(db);
-  const storage = createSandboxStorage({ db, fixture, fixtureVersion: DEMO_FIXTURE_VERSION, media });
+  const storage = createSandboxStorage({ db, fixture, fixtureVersion, media });
   const saved = await storage.save(structuredClone(fixture), [{ id: "pending-delete", projectId: fixture.projects[0].id, galleryKind: "desktop", file: new Blob(["delete"], { type: "image/webp" }), replacesCanonical: false, alt: fixture.projects[0].title, ariaLabel: fixture.projects[0].title, presentation: "cover" }]);
   const added = saved.projects.find((project) => project.id === fixture.projects[0].id).gallery.desktop.at(-1);
   const id = added.src.slice("images/demo/".length);
@@ -245,7 +248,7 @@ test("Demo reset removes the saved override and media but preserves fixture meta
   assert.equal(media.disposed, true);
   assert.equal(indexedDBImpl.stores.get("state").size, 0);
   assert.equal(indexedDBImpl.stores.get("media").size, 0);
-  assert.deepEqual([...indexedDBImpl.stores.get("metadata").entries()], [["fixtureVersion", DEMO_FIXTURE_VERSION]]);
+  assert.deepEqual([...indexedDBImpl.stores.get("metadata").entries()], [["fixtureVersion", fixtureVersion]]);
   await resetDemoSandbox({ db, media });
   assert.equal(indexedDBImpl.stores.get("state").size, 0);
   assert.equal(indexedDBImpl.stores.get("media").size, 0);
@@ -261,23 +264,23 @@ test("reset discards every saved Demo scenario and returns a fresh public reader
     { name: "multiple images", mutate: () => {}, pending: ["one", "two"].map((id) => ({ id, projectId: fixture.projects[0].id, galleryKind: "desktop", file: new Blob([id], { type: "image/webp" }), replacesCanonical: false, alt: fixture.projects[0].title, ariaLabel: fixture.projects[0].title, presentation: "cover" })) },
   ];
   for (const scenario of scenarios) {
-    const indexedDBImpl = fakeIndexedDB({ state: new Map(), media: new Map(), metadata: new Map([["fixtureVersion", DEMO_FIXTURE_VERSION]]) });
+    const indexedDBImpl = fakeIndexedDB({ state: new Map(), media: new Map(), metadata: new Map([["fixtureVersion", fixtureVersion]]) });
     const db = await new Promise((resolve) => { const request = indexedDBImpl.open(); request.onsuccess = () => resolve(request.result); });
     const media = createSandboxMediaRepository(db);
-    const storage = createSandboxStorage({ db, fixture, fixtureVersion: DEMO_FIXTURE_VERSION, media });
+    const storage = createSandboxStorage({ db, fixture, fixtureVersion, media });
     const modified = structuredClone(fixture); scenario.mutate(modified);
     await storage.save(modified, scenario.pending);
     assert.equal(indexedDBImpl.stores.get("state").has("saved"), true, scenario.name);
-    const beforeReset = await loadSavedDemoSandbox({ fixtureVersion: DEMO_FIXTURE_VERSION, indexedDBImpl });
+    const beforeReset = await loadSavedDemoSandbox({ fixtureVersion, indexedDBImpl });
     assert.equal(beforeReset.source, "demo-indexeddb", scenario.name);
     beforeReset.dispose();
     await storage.reset();
     assert.equal(indexedDBImpl.stores.get("state").has("saved"), false, scenario.name);
     assert.equal(indexedDBImpl.stores.get("media").size, 0, scenario.name);
-    assert.equal(indexedDBImpl.stores.get("metadata").get("fixtureVersion"), DEMO_FIXTURE_VERSION, scenario.name);
+    assert.equal(indexedDBImpl.stores.get("metadata").get("fixtureVersion"), fixtureVersion, scenario.name);
     assert.deepEqual(await storage.load(), fixture, scenario.name);
-    assert.equal(await loadSavedDemoSandbox({ fixtureVersion: DEMO_FIXTURE_VERSION, indexedDBImpl }), null, scenario.name);
-    const source = await loadProjectState({ demoFixtureVersionLoader: async () => DEMO_FIXTURE_VERSION, demoStateLoader: (options) => loadSavedDemoSandbox({ ...options, indexedDBImpl }), fetchImpl: async () => ({ ok: true, status: 200, json: async () => fixture }) });
+    assert.equal(await loadSavedDemoSandbox({ fixtureVersion, indexedDBImpl }), null, scenario.name);
+    const source = await loadProjectState({ demoFixtureVersionLoader: async () => fixtureVersion, demoStateLoader: (options) => loadSavedDemoSandbox({ ...options, indexedDBImpl }), fetchImpl: async () => ({ ok: true, status: 200, json: async () => fixture }) });
     assert.equal(source.source, "static-json", scenario.name);
     media.dispose();
   }
